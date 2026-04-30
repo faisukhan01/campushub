@@ -407,12 +407,15 @@ export function AppHeader() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-9 gap-2 px-2 max-w-[180px] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors rounded-md">
-            <Avatar className="h-7 w-7 ring-1 ring-emerald-200 dark:ring-emerald-800 transition-all duration-200 hover:ring-2 hover:ring-emerald-400 dark:hover:ring-emerald-600">
-              <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
-              <AvatarFallback className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-[10px] font-medium">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-7 w-7 ring-1 ring-emerald-200 dark:ring-emerald-800 transition-all duration-200 hover:ring-2 hover:ring-emerald-400 dark:hover:ring-emerald-600">
+                <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
+                <AvatarFallback className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-[10px] font-medium">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-background breathe" />
+            </div>
             <span className="hidden lg:block text-sm truncate">{currentUser?.name}</span>
           </Button>
         </DropdownMenuTrigger>

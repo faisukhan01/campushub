@@ -213,7 +213,7 @@ export function LoginView() {
         <div className="flex items-center justify-center gap-2 mt-2">
           <Badge variant="secondary" className="text-[10px] font-medium tracking-wider uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 border-0 gap-1">
             <Sparkles className="w-3 h-3" />
-            Version 2.0
+            v3.0
           </Badge>
         </div>
         <p className="text-muted-foreground mt-2 text-sm sm:text-base max-w-md mx-auto">
@@ -298,7 +298,7 @@ export function LoginView() {
           <div className="h-[1px] w-6 bg-gradient-to-r from-transparent to-emerald-400/40" />
           <p className="text-[11px] text-muted-foreground/70 flex items-center gap-1">
             Powered by
-            <span className="font-semibold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
+            <span className="font-semibold gradient-text-animated">
               Z.ai
             </span>
           </p>

@@ -42,8 +42,10 @@ import { QuizPage } from "@/components/pages/quiz-page";
 import { TransportPage } from "@/components/pages/transport-page";
 import { HostelPage } from "@/components/pages/hostel-page";
 import { AlumniPage } from "@/components/pages/alumni-page";
-import { Separator } from "@/components/ui/separator";
-
+import { ExamSchedulePage } from "@/components/pages/exam-schedule-page";
+import { GalleryPage } from "@/components/pages/gallery-page";
+import { PlagiarismPage } from "@/components/pages/plagiarism-page";
+import { RubricPage } from "@/components/pages/rubric-page";
 // Page routing map
 const pageComponents: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
@@ -82,6 +84,10 @@ const pageComponents: Record<string, React.ComponentType> = {
   transport: TransportPage,
   hostel: HostelPage,
   alumni: AlumniPage,
+  "exam-schedule": ExamSchedulePage,
+  gallery: GalleryPage,
+  plagiarism: PlagiarismPage,
+  rubric: RubricPage,
 };
 
 function AppShell() {
@@ -119,11 +125,19 @@ function AppShell() {
         </main>
         {/* Sticky Footer */}
         <div className="mt-auto">
-          <Separator className="opacity-50" />
+          {/* Emerald gradient divider line */}
+          <div className="h-[2px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
           <footer className="px-4 sm:px-6 py-3 pb-safe">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-1 text-xs text-muted-foreground">
-              <span>© 2025 CampusHub. All rights reserved.</span>
-              <span className="font-medium">Academic Year 2024-2025</span>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span className="text-muted-foreground/80">© 2025 CampusHub. All rights reserved.</span>
+              <div className="flex items-center gap-3">
+                <a href="#" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Privacy Policy</a>
+                <span className="text-muted-foreground/30">·</span>
+                <a href="#" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Terms</a>
+                <span className="text-muted-foreground/30">·</span>
+                <a href="#" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Contact</a>
+              </div>
+              <span className="font-medium text-emerald-600/70 dark:text-emerald-400/60">Academic Year 2024-2025</span>
             </div>
           </footer>
         </div>

@@ -1129,3 +1129,231 @@
     100% { background-position: 0% 50%; }
   }
 }
+
+/* ===== Round 5: Premium Styling Utilities ===== */
+
+/* Animated gradient text */
+.gradient-text-animated {
+  background: linear-gradient(135deg, oklch(0.55 0.17 155), oklch(0.55 0.15 180), oklch(0.55 0.17 155));
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-text-shift 4s ease-in-out infinite;
+}
+@keyframes gradient-text-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Neon glow card on hover */
+.card-neon {
+  position: relative;
+  transition: all 0.3s ease;
+}
+.card-neon:hover {
+  box-shadow: 0 0 15px oklch(0.55 0.17 155 / 0.15), 0 0 30px oklch(0.55 0.17 155 / 0.08);
+}
+
+/* Subtle breathing animation for live indicators */
+.breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(0.97); }
+}
+
+/* Elegant divider with icon */
+.divider-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.divider-icon::before,
+.divider-icon::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, oklch(0.55 0.17 155 / 0.2), transparent);
+}
+
+/* Stat counter animation */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.stat-animate {
+  animation: count-up 0.5s ease-out forwards;
+}
+.stat-animate:nth-child(1) { animation-delay: 0s; }
+.stat-animate:nth-child(2) { animation-delay: 0.1s; }
+.stat-animate:nth-child(3) { animation-delay: 0.2s; }
+.stat-animate:nth-child(4) { animation-delay: 0.3s; }
+
+/* Hover card with border glow */
+.card-glow {
+  border: 1px solid oklch(0.55 0.17 155 / 0.1);
+  transition: all 0.3s ease;
+}
+.card-glow:hover {
+  border-color: oklch(0.55 0.17 155 / 0.3);
+  box-shadow: 0 4px 20px oklch(0.55 0.17 155 / 0.1);
+}
+
+/* Text gradient underline */
+.text-gradient-underline {
+  background-image: linear-gradient(oklch(0.55 0.17 155), oklch(0.55 0.15 180));
+  background-size: 100% 2px;
+  background-position: bottom;
+  background-repeat: no-repeat;
+  padding-bottom: 2px;
+}
+
+/* Floating action button */
+.fab {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 40;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: oklch(0.55 0.17 155);
+  color: white;
+  box-shadow: 0 4px 12px oklch(0.55 0.17 155 / 0.3);
+  transition: all 0.3s ease;
+}
+.fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px oklch(0.55 0.17 155 / 0.4);
+}
+
+/* Tag cloud style */
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.tag-cloud > * {
+  transition: all 0.2s ease;
+}
+.tag-cloud > *:hover {
+  transform: translateY(-2px);
+}
+
+/* Progress ring SVG container */
+.progress-ring-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.progress-ring-label {
+  position: absolute;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: oklch(0.55 0.17 155);
+}
+
+/* Card with image overlay */
+.card-image-overlay {
+  position: relative;
+  overflow: hidden;
+}
+.card-image-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.6), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.card-image-overlay:hover::after {
+  opacity: 1;
+}
+
+/* Stepper/timeline connector */
+.stepper-line {
+  position: relative;
+}
+.stepper-line::before {
+  content: '';
+  position: absolute;
+  left: 1.125rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: oklch(0.55 0.17 155 / 0.15);
+}
+
+/* Hover brightness on images */
+.img-hover-brightness {
+  transition: filter 0.3s ease;
+}
+.img-hover-brightness:hover {
+  filter: brightness(1.08);
+}
+
+/* Scrollbar for specific containers */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.55 0.17 155 / 0.3) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: oklch(0.55 0.17 155 / 0.3);
+  border-radius: 9999px;
+}
+
+/* Focus within group */
+.focus-within-ring:focus-within {
+  outline: none;
+  box-shadow: 0 0 0 2px oklch(0.55 0.17 155 / 0.3);
+  border-radius: 0.5rem;
+}
+
+/* Table of contents link */
+.toc-link {
+  display: block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8125rem;
+  color: oklch(0.4 0.02 260);
+  border-left: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+.toc-link:hover,
+.toc-link.active {
+  color: oklch(0.55 0.17 155);
+  border-left-color: oklch(0.55 0.17 155);
+  background: oklch(0.55 0.17 155 / 0.05);
+}
+
+/* Skeleton loading with wave effect */
+@keyframes skeleton-wave {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-wave {
+  background: linear-gradient(90deg, oklch(0.92 0.01 260) 25%, oklch(0.96 0.01 260) 50%, oklch(0.92 0.01 260) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-wave 1.5s ease-in-out infinite;
+  border-radius: 0.375rem;
+}
+
+/* Notification badge with bounce */
+.badge-bounce {
+  animation: badge-bounce 0.4s ease;
+}
+@keyframes badge-bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
