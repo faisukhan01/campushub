@@ -307,8 +307,8 @@ export function AppHeader() {
     : "U";
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/80 backdrop-blur-md px-4 sm:px-6 relative">
-      {/* Animated gradient bottom line */}
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/50 bg-background/80 backdrop-blur-xl px-4 sm:px-6 relative">
+      {/* Animated gradient bottom line with glow */}
       <div className="absolute bottom-0 left-0 right-0 h-[2px] overflow-hidden">
         <div
           className="absolute inset-0 animate-[header-gradient-shift_4s_ease-in-out_infinite]"
@@ -317,22 +317,26 @@ export function AppHeader() {
             backgroundSize: '200% 100%',
           }}
         />
+        <div className="absolute -bottom-1 left-0 right-0 h-[6px] blur-md animate-[header-gradient-shift_4s_ease-in-out_infinite] opacity-30" style={{
+          background: 'linear-gradient(90deg, #059669, #0d9488, #10b981, #14b8a6, #059669)',
+          backgroundSize: '200% 100%',
+        }} />
       </div>
       
       <SidebarTrigger className="-ml-1 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors rounded-md" />
 
-      {/* Breadcrumb */}
+      {/* Breadcrumb with trail effect */}
       <Separator orientation="vertical" className="h-5 mx-1 hidden sm:block" />
       <Breadcrumb className="hidden sm:flex">
-        <BreadcrumbList>
+        <BreadcrumbList className="breadcrumb-trail">
           <BreadcrumbItem>
-            <BreadcrumbLink href="#" className="text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors text-sm">
+            <BreadcrumbLink href="#" className="text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors text-sm animated-underline">
               Home
             </BreadcrumbLink>
           </BreadcrumbItem>
-          <BreadcrumbSeparator />
+          <BreadcrumbSeparator className="text-emerald-300/50" />
           <BreadcrumbItem>
-            <BreadcrumbPage className="text-sm font-medium">{currentPageLabel}</BreadcrumbPage>
+            <BreadcrumbPage className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{currentPageLabel}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -347,10 +351,11 @@ export function AppHeader() {
       {/* Search */}
       <Popover>
         <PopoverTrigger asChild>
-          <div className="hidden md:flex relative max-w-xs w-full cursor-pointer group">
+          <div className="hidden md:flex relative max-w-xs w-full cursor-pointer group search-expand">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none transition-colors group-hover:text-emerald-500" />
-            <div className="w-full pl-9 pr-3 h-9 text-sm bg-muted/50 border border-input rounded-lg flex items-center text-muted-foreground hover:bg-muted/70 hover:border-emerald-500/30 transition-all duration-200 group-hover:shadow-sm group-hover:shadow-emerald-500/5">
-              Search...
+            <div className="w-full pl-9 pr-3 h-9 text-sm bg-muted/50 border border-input rounded-lg flex items-center text-muted-foreground hover:bg-muted/70 hover:border-emerald-500/30 focus-within:border-emerald-500/50 focus-within:bg-background focus-within:shadow-md focus-within:shadow-emerald-500/5 transition-all duration-300">
+              <span className="flex-1">Search...</span>
+              <kbd className="ml-2 hidden lg:inline-flex h-5 items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] text-muted-foreground/60 pointer-events-none">⌘K</kbd>
             </div>
           </div>
         </PopoverTrigger>
@@ -390,7 +395,7 @@ export function AppHeader() {
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="icon" className="h-9 w-9 relative hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors group rounded-md">
-            <Bell className="h-4 w-4 transition-transform duration-300 group-hover:animate-bounce" />
+            <Bell className="h-4 w-4 transition-transform duration-300 group-hover:bell-shake" />
             {unreadNotificationCount > 0 && (
               <Badge className="badge-pulse absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
                 {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
@@ -408,7 +413,7 @@ export function AppHeader() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-9 gap-2 px-2 max-w-[180px] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors rounded-md">
             <div className="relative">
-              <Avatar className="h-7 w-7 ring-1 ring-emerald-200 dark:ring-emerald-800 transition-all duration-200 hover:ring-2 hover:ring-emerald-400 dark:hover:ring-emerald-600">
+              <Avatar className="h-7 w-7 ring-1 ring-emerald-200 dark:ring-emerald-800 transition-all duration-300 hover:ring-2 hover:ring-emerald-400 dark:hover:ring-emerald-600">
                 <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
                 <AvatarFallback className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-[10px] font-medium">
                   {initials}

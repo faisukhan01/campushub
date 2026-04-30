@@ -146,8 +146,9 @@ export function LoginView() {
       onMouseMove={handleMouseMove}
       className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden"
     >
-      {/* Multi-layer background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-emerald-950/40 dark:via-background dark:to-teal-950/30 -z-10" />
+      {/* Animated mesh gradient background */}
+      <div className="absolute inset-0 mesh-gradient-bg -z-10" />
+
       {/* Large ambient orbs */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-emerald-200/40 dark:bg-emerald-900/20 rounded-full blur-3xl -z-10" />
       <div className="absolute bottom-0 left-[10%] w-[500px] h-[500px] bg-teal-200/30 dark:bg-teal-900/15 rounded-full blur-3xl -z-10" />
@@ -207,7 +208,7 @@ export function LoginView() {
           <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-emerald-400/20 to-teal-500/20 blur-xl animate-pulse-slow" />
           <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10 text-white relative z-10" />
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold gradient-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
+        <h1 className="text-3xl sm:text-4xl font-bold gradient-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent neon-text">
           CampusHub
         </h1>
         <div className="flex items-center justify-center gap-2 mt-2">
@@ -221,6 +222,13 @@ export function LoginView() {
         </p>
       </motion.div>
 
+      {/* Animated connection lines from logo to cards */}
+      <div className="absolute inset-0 pointer-events-none z-[5] overflow-hidden hidden lg:block">
+        <div className="connection-line left-1/2 top-[28%]" style={{ animationDelay: "0s" }} />
+        <div className="connection-line left-[30%] top-[32%]" style={{ animationDelay: "0.5s" }} />
+        <div className="connection-line left-[70%] top-[32%]" style={{ animationDelay: "1s" }} />
+      </div>
+
       {/* Role cards grid */}
       <motion.div
         variants={containerVariants}
@@ -233,10 +241,17 @@ export function LoginView() {
           return (
             <motion.div key={r.role} variants={cardVariants}>
               <Card
-                className={`group cursor-pointer border-0 border-t-[3px] ${r.borderColor} glass-card gradient-border-hover rounded-xl overflow-hidden transition-transform duration-200 hover:scale-[1.02]`}
+                className={`group cursor-pointer border-0 border-t-[3px] ${r.borderColor} glass-card gradient-border-hover card-spotlight rounded-xl overflow-hidden transition-transform duration-200 hover:scale-[1.02]`}
                 onClick={() => login(r.role)}
+                onMouseMove={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = ((e.clientX - rect.left) / rect.width) * 100;
+                  const y = ((e.clientY - rect.top) / rect.height) * 100;
+                  e.currentTarget.style.setProperty("--mouse-x", `${x}%`);
+                  e.currentTarget.style.setProperty("--mouse-y", `${y}%`);
+                }}
               >
-                <CardContent className="p-5 sm:p-6">
+                <CardContent className="p-5 sm:p-6 relative z-[1]">
                   <div className="flex items-start gap-4">
                     <div
                       className={`flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br ${r.iconBg} shadow-md shadow-emerald-500/10 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-emerald-500/20`}
@@ -271,16 +286,15 @@ export function LoginView() {
         })}
       </motion.div>
 
-      {/* Typewriter hint text */}
+      {/* Typewriter hint text with cursor */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.0 }}
         className="mt-6 relative z-10"
       >
-        <p className="text-sm text-muted-foreground/60 h-5">
+        <p className="text-sm text-muted-foreground/60 h-5 typewriter-cursor">
           {typedText}
-          {!isTypingComplete && <span className="inline-block w-[2px] h-4 bg-emerald-500/70 align-middle ml-0.5 animate-pulse" />}
         </p>
       </motion.div>
 

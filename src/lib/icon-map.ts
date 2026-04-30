@@ -37,6 +37,9 @@ import {
   Bot,
   MessageCircle,
   Video,
+  Download,
+  AlertTriangle,
+  Crown,
   type LucideIcon,
 } from "lucide-react";
 
@@ -79,6 +82,9 @@ const iconMap: Record<string, LucideIcon> = {
   Bot,
   MessageCircle,
   Video,
+  Download,
+  AlertTriangle,
+  Crown,
 };
 
 export function getIcon(name: string): LucideIcon {

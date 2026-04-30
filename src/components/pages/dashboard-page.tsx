@@ -144,12 +144,12 @@ function StatCard({
   color?: string;
 }) {
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="card-glow hover-lift">
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div className="min-w-0">
             <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold mt-1">{value}</p>
+            <p className="text-2xl font-bold mt-1 stat-number">{value}</p>
             {subtitle && (
               <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
             )}
@@ -191,8 +191,8 @@ function ActivityItem({
   time: string;
 }) {
   return (
-    <div className="flex items-start gap-3 py-3">
-      <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
+    <div className="flex items-start gap-3 py-3 table-row-hover -mx-2 px-2 rounded-lg">
+      <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0 status-active" />
       <div className="min-w-0">
         <p className="text-sm font-medium">{title}</p>
         <p className="text-xs text-muted-foreground">{description}</p>
@@ -219,7 +219,7 @@ function QuickActionButton({
   return (
     <Button
       variant="outline"
-      className="flex flex-col items-center gap-2 h-auto py-4 px-3 hover:shadow-md transition-shadow"
+      className="flex flex-col items-center gap-2 h-auto py-4 px-3 hover-lift"
       onClick={() => page && setCurrentPage(page)}
     >
       <div
@@ -398,7 +398,7 @@ export function DashboardPage() {
               return (
                 <Card
                   key={childData.childId}
-                  className="hover:shadow-md transition-shadow"
+                  className="hover:shadow-md transition-shadow hover-lift"
                 >
                   <CardContent className="p-5">
                     <div className="flex items-start gap-4">
@@ -494,6 +494,8 @@ export function DashboardPage() {
             })}
           </div>
         </div>
+
+        <div className="section-fade" />
 
         {/* Bottom Grid: Events, Messages, Announcements */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -640,6 +642,8 @@ export function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        <div className="section-fade" />
 
         {/* Fee Status Summary + Alerts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -844,10 +848,12 @@ export function DashboardPage() {
           />
         </div>
 
+        <div className="section-fade" />
+
         {/* Timetable + Attendance Trend */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Today's Timetable */}
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow hover-lift">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Clock className="w-4 h-4 text-emerald-500" />
@@ -882,7 +888,7 @@ export function DashboardPage() {
           </Card>
 
           {/* Attendance Trend */}
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow hover-lift">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-emerald-500" />
@@ -906,8 +912,10 @@ export function DashboardPage() {
           </Card>
         </div>
 
+        <div className="section-fade" />
+
         {/* Upcoming Deadlines */}
-        <Card className="hover:shadow-md transition-shadow">
+        <Card className="hover:shadow-md transition-shadow hover-lift">
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-amber-500" />
@@ -942,10 +950,12 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
+        <div className="section-fade" />
+
         {/* Announcements + Recent Grades */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Recent Announcements */}
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow hover-lift">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Megaphone className="w-4 h-4 text-emerald-500" />
@@ -976,7 +986,7 @@ export function DashboardPage() {
           </Card>
 
           {/* Recent Grades */}
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow hover-lift">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Award className="w-4 h-4 text-emerald-500" />
@@ -1018,10 +1028,12 @@ export function DashboardPage() {
           </Card>
         </div>
 
+        <div className="section-fade" />
+
         {/* Recent Activity + Progress Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Recent Activity Timeline */}
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow hover-lift">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <History className="w-4 h-4 text-emerald-500" />
@@ -1040,7 +1052,7 @@ export function DashboardPage() {
           </Card>
 
           {/* Progress Overview */}
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow hover-lift">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Target className="w-4 h-4 text-emerald-500" />
@@ -1079,9 +1091,10 @@ export function DashboardPage() {
           </Card>
         </div>
 
+        <div className="section-fade" />
+
         {/* Quick Actions */}
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="pb-3">
+        <Card className="hover:shadow-md transition-shadow hover-lift">          <CardHeader className="pb-3">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <ChevronRight className="w-4 h-4 text-emerald-500" />
               Quick Actions
@@ -1202,10 +1215,12 @@ export function DashboardPage() {
           />
         </div>
 
+        <div className="section-fade" />
+
         {/* Today's Classes + Pending Tasks */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Today's Classes */}
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow hover-lift">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-emerald-500" />
@@ -1240,7 +1255,7 @@ export function DashboardPage() {
           </Card>
 
           {/* Pending Tasks */}
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow hover-lift">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-500" />
@@ -1281,10 +1296,12 @@ export function DashboardPage() {
           </Card>
         </div>
 
+        <div className="section-fade" />
+
         {/* Course Attendance Chart + Low Attendance Flags */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Course Attendance */}
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow hover-lift">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Activity className="w-4 h-4 text-emerald-500" />
@@ -1308,7 +1325,7 @@ export function DashboardPage() {
           </Card>
 
           {/* Low Attendance Flags */}
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow hover-lift">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-red-500" />
@@ -1344,7 +1361,7 @@ export function DashboardPage() {
         {/* Messages + Announcements */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Recent Messages */}
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow hover-lift">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-emerald-500" />
@@ -1376,7 +1393,7 @@ export function DashboardPage() {
           </Card>
 
           {/* Recent Announcements */}
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow hover-lift">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Megaphone className="w-4 h-4 text-emerald-500" />
@@ -1513,10 +1530,12 @@ export function DashboardPage() {
           ))}
         </div>
 
+        <div className="section-fade" />
+
         {/* Enrollment Trend + Attendance Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Enrollment Trend */}
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow hover-lift">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-emerald-500" />
@@ -1547,7 +1566,7 @@ export function DashboardPage() {
           </Card>
 
           {/* Attendance Overview */}
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow hover-lift">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Activity className="w-4 h-4 text-emerald-500" />
@@ -1572,8 +1591,10 @@ export function DashboardPage() {
           </Card>
         </div>
 
+        <div className="section-fade" />
+
         {/* Fee Collection Summary */}
-        <Card className="hover:shadow-md transition-shadow">
+        <Card className="hover:shadow-md transition-shadow hover-lift progress-gradient">
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-emerald-500" />
@@ -1613,7 +1634,7 @@ export function DashboardPage() {
             {/* System Health + Revenue Overview */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* System Health */}
-              <Card className="hover:shadow-md transition-shadow">
+              <Card className="hover:shadow-md transition-shadow hover-lift">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base font-semibold flex items-center gap-2">
                     <Server className="w-4 h-4 text-emerald-500" />
@@ -1662,7 +1683,7 @@ export function DashboardPage() {
               </Card>
 
               {/* Revenue Overview */}
-              <Card className="hover:shadow-md transition-shadow">
+              <Card className="hover:shadow-md transition-shadow hover-lift">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base font-semibold flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-emerald-500" />
@@ -1702,7 +1723,7 @@ export function DashboardPage() {
             </div>
 
             {/* Institute Comparison */}
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:shadow-md transition-shadow hover-lift">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <Building2 className="w-4 h-4 text-emerald-500" />
@@ -1734,10 +1755,12 @@ export function DashboardPage() {
           </>
         )}
 
+        <div className="section-fade" />
+
         {/* Recent Activity + Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Recent Activity */}
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow hover-lift">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Clock className="w-4 h-4 text-emerald-500" />
@@ -1757,7 +1780,7 @@ export function DashboardPage() {
           </Card>
 
           {/* Quick Actions */}
-          <Card className="hover:shadow-md transition-shadow">
+          <Card className="hover:shadow-md transition-shadow hover-lift">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <ChevronRight className="w-4 h-4 text-emerald-500" />

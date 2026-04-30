@@ -37,11 +37,17 @@ export function AppSidebar() {
         .slice(0, 2)
     : "U";
 
+  // Split navigation into groups (first 6 main, rest secondary)
+  const mainItems = navigationItems.slice(0, 6);
+  const secondaryItems = navigationItems.slice(6);
+
   return (
     <Sidebar collapsible="icon">
       {/* Header with gradient */}
-      <SidebarHeader className="px-3 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 border-0">
-        <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
+      <SidebarHeader className="px-3 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 border-0 relative overflow-hidden">
+        {/* Subtle animated gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-teal-400/20 to-emerald-500/0 animate-[gradient-shift_8s_ease-in-out_infinite]" />
+        <div className="relative flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex-shrink-0 border border-white/10 transition-transform duration-200 group-data-[collapsible=icon]:scale-110">
             <GraduationCap className="w-4 h-4 text-white" />
           </div>
@@ -61,13 +67,14 @@ export function AppSidebar() {
 
       {/* Navigation */}
       <SidebarContent>
+        {/* Main Navigation Group */}
         <SidebarGroup>
-          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden text-muted-foreground/70 text-[11px] uppercase tracking-wider">
+          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden text-muted-foreground/70 text-[11px] uppercase tracking-wider font-semibold">
             Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map((item, index) => {
+              {mainItems.map((item, index) => {
                 const Icon = getIcon(item.icon);
                 const isActive = currentPage === item.id;
                 return (
@@ -78,7 +85,7 @@ export function AppSidebar() {
                       onClick={() => setCurrentPage(item.id)}
                       className={`relative transition-all duration-200 rounded-md mx-1 focus-ring ${
                         isActive
-                          ? "bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 shadow-sm border-l-[3px] border-l-emerald-500"
+                          ? "bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 shadow-sm border-l-[3px] border-l-emerald-500 sidebar-active-glow"
                           : "hover:bg-emerald-50/70 dark:hover:bg-emerald-950/20"
                       }`}
                     >
@@ -98,7 +105,7 @@ export function AppSidebar() {
                       </span>
                     </SidebarMenuButton>
                     {item.badge && item.badge > 0 && (
-                      <SidebarMenuBadge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 border-0 text-[10px]">
+                      <SidebarMenuBadge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 border-0 text-[10px] badge-pulse-subtle">
                         {item.badge}
                       </SidebarMenuBadge>
                     )}
@@ -108,15 +115,71 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Animated section divider */}
+        <div className="section-fade mx-4 my-2" />
+
+        {/* Secondary Navigation Group */}
+        {secondaryItems.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden text-muted-foreground/70 text-[11px] uppercase tracking-wider font-semibold">
+              More
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {secondaryItems.map((item) => {
+                  const Icon = getIcon(item.icon);
+                  const isActive = currentPage === item.id;
+                  return (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton
+                        isActive={isActive}
+                        tooltip={item.label}
+                        onClick={() => setCurrentPage(item.id)}
+                        className={`relative transition-all duration-200 rounded-md mx-1 focus-ring ${
+                          isActive
+                            ? "bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 shadow-sm border-l-[3px] border-l-emerald-500 sidebar-active-glow"
+                            : "hover:bg-emerald-50/70 dark:hover:bg-emerald-950/20"
+                        }`}
+                      >
+                        <div className={`flex items-center justify-center transition-all duration-200 ${
+                          isActive
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-muted-foreground"
+                        }`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <span className={`transition-all duration-200 ${
+                          isActive
+                            ? "text-emerald-700 dark:text-emerald-300 font-semibold"
+                            : ""
+                        }`}>
+                          {item.label}
+                        </span>
+                      </SidebarMenuButton>
+                      {item.badge && item.badge > 0 && (
+                        <SidebarMenuBadge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 border-0 text-[10px] badge-pulse-subtle">
+                          {item.badge}
+                        </SidebarMenuBadge>
+                      )}
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       {/* Section divider */}
-      <div className="section-divider mx-4" />
+      <div className="section-fade mx-4" />
 
       {/* Footer with subtle background */}
-      <SidebarFooter className="px-2 py-2 bg-muted/30">
+      <SidebarFooter className="px-2 py-2 bg-muted/30 relative">
+        {/* Subtle top glow line */}
+        <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-emerald-400/20 to-transparent" />
         <div className="flex items-center gap-3 px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-emerald-200 dark:ring-emerald-800 transition-all duration-200">
+          <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-emerald-200 dark:ring-emerald-800 transition-all duration-200 hover:ring-emerald-400 dark:hover:ring-emerald-600">
             <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
             <AvatarFallback className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs font-medium">
               {initials}

@@ -50,6 +50,9 @@ import { CertificatesPage } from "@/components/pages/certificates-page";
 import { FeedbackPage } from "@/components/pages/feedback-page";
 import { MentorshipPage } from "@/components/pages/mentorship-page";
 import { WhiteboardPage } from "@/components/pages/whiteboard-page";
+import { SubscriptionPage } from "@/components/pages/subscription-page";
+import { DataExportPage } from "@/components/pages/data-export-page";
+import { AtRiskPage } from "@/components/pages/at-risk-page";
 // Page routing map
 const pageComponents: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
@@ -96,6 +99,9 @@ const pageComponents: Record<string, React.ComponentType> = {
   feedback: FeedbackPage,
   mentorship: MentorshipPage,
   whiteboard: WhiteboardPage,
+  subscription: SubscriptionPage,
+  "data-export": DataExportPage,
+  "at-risk": AtRiskPage,
 };
 
 function AppShell() {
