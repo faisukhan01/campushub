@@ -207,7 +207,7 @@ export function LoginView() {
           <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-emerald-400/20 to-teal-500/20 blur-xl animate-pulse-slow" />
           <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10 text-white relative z-10" />
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
+        <h1 className="text-3xl sm:text-4xl font-bold gradient-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
           CampusHub
         </h1>
         <div className="flex items-center justify-center gap-2 mt-2">

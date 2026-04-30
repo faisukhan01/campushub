@@ -25,6 +25,7 @@ import {
   GraduationCap,
   Shield,
   ShieldCheck,
+  User,
   UserCog,
   Sparkles,
   Bell,
@@ -32,6 +33,10 @@ import {
   Bus,
   BedDouble,
   Image,
+  PenTool,
+  Bot,
+  MessageCircle,
+  Video,
   type LucideIcon,
 } from "lucide-react";
 
@@ -62,6 +67,7 @@ const iconMap: Record<string, LucideIcon> = {
   GraduationCap,
   Shield,
   ShieldCheck,
+  User,
   UserCog,
   Sparkles,
   Bell,
@@ -69,6 +75,10 @@ const iconMap: Record<string, LucideIcon> = {
   Bus,
   BedDouble,
   Image,
+  PenTool,
+  Bot,
+  MessageCircle,
+  Video,
 };
 
 export function getIcon(name: string): LucideIcon {

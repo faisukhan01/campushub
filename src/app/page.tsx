@@ -46,6 +46,10 @@ import { ExamSchedulePage } from "@/components/pages/exam-schedule-page";
 import { GalleryPage } from "@/components/pages/gallery-page";
 import { PlagiarismPage } from "@/components/pages/plagiarism-page";
 import { RubricPage } from "@/components/pages/rubric-page";
+import { CertificatesPage } from "@/components/pages/certificates-page";
+import { FeedbackPage } from "@/components/pages/feedback-page";
+import { MentorshipPage } from "@/components/pages/mentorship-page";
+import { WhiteboardPage } from "@/components/pages/whiteboard-page";
 // Page routing map
 const pageComponents: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
@@ -88,6 +92,10 @@ const pageComponents: Record<string, React.ComponentType> = {
   gallery: GalleryPage,
   plagiarism: PlagiarismPage,
   rubric: RubricPage,
+  certificates: CertificatesPage,
+  feedback: FeedbackPage,
+  mentorship: MentorshipPage,
+  whiteboard: WhiteboardPage,
 };
 
 function AppShell() {
@@ -125,17 +133,21 @@ function AppShell() {
         </main>
         {/* Sticky Footer */}
         <div className="mt-auto">
-          {/* Emerald gradient divider line */}
-          <div className="h-[2px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
+          {/* Emerald gradient divider line with pulse */}
+          <div className="h-[2px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent footer-divider-pulse" />
           <footer className="px-4 sm:px-6 py-3 pb-safe">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
               <span className="text-muted-foreground/80">© 2025 CampusHub. All rights reserved.</span>
+              {/* Center text visible on desktop */}
+              <span className="hidden sm:inline-block text-muted-foreground/60 text-[11px]">
+                Made with <span className="text-red-400 dark:text-red-400 inline-block animate-pulse">❤️</span> by <span className="font-medium text-emerald-600/70 dark:text-emerald-400/60">CampusHub Team</span>
+              </span>
               <div className="flex items-center gap-3">
-                <a href="#" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Privacy Policy</a>
+                <a href="#" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200 hover:underline underline-offset-2">Privacy Policy</a>
                 <span className="text-muted-foreground/30">·</span>
-                <a href="#" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Terms</a>
+                <a href="#" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200 hover:underline underline-offset-2">Terms</a>
                 <span className="text-muted-foreground/30">·</span>
-                <a href="#" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Contact</a>
+                <a href="#" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200 hover:underline underline-offset-2">Contact</a>
               </div>
               <span className="font-medium text-emerald-600/70 dark:text-emerald-400/60">Academic Year 2024-2025</span>
             </div>

@@ -78,6 +78,9 @@ import {
   CalendarDays,
   Target,
   History,
+  Server,
+  ArrowUpRight,
+  Settings,
 } from "lucide-react";
 
 // ---- Helpers ----
@@ -1604,6 +1607,133 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* SuperAdmin-only sections */}
+        {currentRole === "SuperAdmin" && (
+          <>
+            {/* System Health + Revenue Overview */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* System Health */}
+              <Card className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <Server className="w-4 h-4 text-emerald-500" />
+                    System Health
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">Real-time infrastructure monitoring</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Uptime</span>
+                      <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">99.97%</span>
+                    </div>
+                    <Progress value={99.97} className="h-2" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Response Time</span>
+                      <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0 text-xs">45ms</Badge>
+                    </div>
+                    <Progress value={25} className="h-2 [&>div]:bg-emerald-400" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Active Users</span>
+                      <span className="text-sm font-bold">1,247</span>
+                    </div>
+                    <Progress value={62} className="h-2" />
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3" /> +8.3% from last hour
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Storage</span>
+                      <span className="text-sm font-bold">67.3 GB / 100 GB</span>
+                    </div>
+                    <Progress value={67.3} className="h-2" />
+                  </div>
+                  <div className="flex items-center gap-2 pt-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-xs text-emerald-600 dark:text-emerald-400">All systems operational</span>
+                    <span className="text-xs text-muted-foreground ml-auto">Last checked: 2 min ago</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Revenue Overview */}
+              <Card className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-emerald-500" />
+                    Revenue Overview
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">Platform-wide financial summary</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20">
+                      <p className="text-xs text-muted-foreground">Monthly Recurring Revenue</p>
+                      <p className="text-2xl font-bold mt-1 text-emerald-600 dark:text-emerald-400">$125,000</p>
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1 flex items-center gap-1">
+                        <ArrowUpRight className="w-3 h-3" /> +12.5%
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-muted/50">
+                      <p className="text-xs text-muted-foreground">Total Institutions</p>
+                      <p className="text-2xl font-bold mt-1">12</p>
+                      <p className="text-xs text-muted-foreground mt-1">Enterprise: 4 · Pro: 8</p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-muted/50">
+                      <p className="text-xs text-muted-foreground">Total Active Branches</p>
+                      <p className="text-2xl font-bold mt-1">34</p>
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1 flex items-center gap-1">
+                        <TrendingUp className="w-3 h-3" /> +3 this quarter
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-muted/50">
+                      <p className="text-xs text-muted-foreground">Growth Rate</p>
+                      <p className="text-2xl font-bold mt-1 text-emerald-600 dark:text-emerald-400">+12.5%</p>
+                      <p className="text-xs text-muted-foreground mt-1">Year over year</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Institute Comparison */}
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-emerald-500" />
+                  Institute Comparison
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">Student enrollment across top institutes</p>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={[
+                    { name: "Greenfield Main", students: 3200 },
+                    { name: "Westside Academy", students: 2100 },
+                    { name: "Northgate College", students: 1800 },
+                    { name: "Eastview Institute", students: 1450 },
+                    { name: "Southridge Campus", students: 980 },
+                  ]} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.3} />
+                    <XAxis type="number" tick={{ fontSize: 12 }} />
+                    <YAxis dataKey="name" type="category" width={140} tick={{ fontSize: 12 }} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb" }}
+                      formatter={(value: number) => [value.toLocaleString(), "Students"]}
+                    />
+                    <Bar dataKey="students" fill="#10b981" radius={[0, 4, 4, 0]} barSize={20} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
         {/* Recent Activity + Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Recent Activity */}
@@ -1636,10 +1766,21 @@ export function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-3">
-                <QuickActionButton icon={UserPlus} label="Add Student" color="bg-emerald-500" page="users" />
-                <QuickActionButton icon={BookOpen} label="Create Course" color="bg-teal-500" page="courses" />
-                <QuickActionButton icon={Megaphone} label="Announcements" color="bg-amber-500" page="announcements" />
-                <QuickActionButton icon={FileText} label="Generate Report" color="bg-rose-500" page="reports" />
+                {currentRole === "SuperAdmin" ? (
+                  <>
+                    <QuickActionButton icon={BarChart3} label="View Analytics" color="bg-emerald-500" page="analytics" />
+                    <QuickActionButton icon={Building2} label="Manage Institutes" color="bg-teal-500" page="institutes" />
+                    <QuickActionButton icon={FileText} label="Generate Report" color="bg-amber-500" page="reports" />
+                    <QuickActionButton icon={Settings} label="System Settings" color="bg-rose-500" page="settings" />
+                  </>
+                ) : (
+                  <>
+                    <QuickActionButton icon={UserPlus} label="Add Student" color="bg-emerald-500" page="users" />
+                    <QuickActionButton icon={BookOpen} label="Create Course" color="bg-teal-500" page="courses" />
+                    <QuickActionButton icon={Megaphone} label="Announcements" color="bg-amber-500" page="announcements" />
+                    <QuickActionButton icon={FileText} label="Generate Report" color="bg-rose-500" page="reports" />
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
