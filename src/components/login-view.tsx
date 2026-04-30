@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { GraduationCap, Shield, UserCog, BookOpen, Users, Heart, Sparkles } from "lucide-react";
+import { GraduationCap, Shield, UserCog, BookOpen, Users, Heart, Sparkles, Cloud, Brain, Lock, Zap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { UserRole } from "@/types";
@@ -163,8 +163,8 @@ export function LoginView() {
         }}
       />
 
-      {/* Noise texture overlay */}
-      <div className="noise-overlay -z-10" />
+      {/* Animated noise texture overlay */}
+      <div className="noise-overlay -z-10 animated-noise" />
 
       {/* Emerald dot-grid pattern */}
       <div className="dot-grid -z-10" />
@@ -208,7 +208,7 @@ export function LoginView() {
           <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-emerald-400/20 to-teal-500/20 blur-xl animate-pulse-slow" />
           <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10 text-white relative z-10" />
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold gradient-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent neon-text">
+        <h1 className="text-3xl sm:text-4xl font-bold gradient-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent neon-text title-sweep-underline">
           CampusHub
         </h1>
         <div className="flex items-center justify-center gap-2 mt-2">
@@ -298,12 +298,42 @@ export function LoginView() {
         </p>
       </motion.div>
 
+      {/* Feature Highlights */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8, duration: 0.5 }}
+        className="mt-8 sm:mt-10 max-w-2xl w-full relative z-10"
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          {[
+            { icon: Cloud, label: "Cloud Managed", color: "from-emerald-500 to-teal-500" },
+            { icon: Brain, label: "AI-Powered", color: "from-teal-500 to-emerald-600" },
+            { icon: Lock, label: "Secure", color: "from-green-500 to-emerald-600" },
+            { icon: Zap, label: "Real-time", color: "from-emerald-600 to-teal-700" },
+          ].map((feat) => {
+            const FeatIcon = feat.icon;
+            return (
+              <div
+                key={feat.label}
+                className="glass-card rounded-lg p-3 sm:p-4 text-center hover:scale-[1.03] transition-transform duration-200 cursor-default group"
+              >
+                <div className={`inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br ${feat.color} shadow-sm mb-2 transition-transform duration-200 group-hover:scale-110`}>
+                  <FeatIcon className="w-4 h-4 sm:w-4 sm:h-4 text-white" />
+                </div>
+                <p className="text-[11px] sm:text-xs font-medium text-muted-foreground">{feat.label}</p>
+              </div>
+            );
+          })}
+        </div>
+      </motion.div>
+
       {/* Footer */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
-        className="mt-10 sm:mt-14 text-center space-y-3 relative z-10"
+        className="mt-8 sm:mt-10 text-center space-y-3 relative z-10"
       >
         <p className="text-xs text-muted-foreground">
           Demo application — Select any role to explore the system
@@ -338,6 +368,15 @@ export function LoginView() {
         @keyframes particle-float {
           0%, 100% { opacity: 0.2; transform: translateY(0px) scale(1); }
           50% { opacity: 0.8; transform: translateY(-12px) scale(1.5); }
+        }
+        @keyframes noise-shift {
+          0%, 100% { transform: translate(0, 0); }
+          25% { transform: translate(-2px, 1px); }
+          50% { transform: translate(1px, -1px); }
+          75% { transform: translate(-1px, 2px); }
+        }
+        .animated-noise {
+          animation: noise-shift 8s ease-in-out infinite;
         }
       `}</style>
     </div>

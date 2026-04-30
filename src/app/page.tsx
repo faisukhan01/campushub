@@ -53,6 +53,9 @@ import { WhiteboardPage } from "@/components/pages/whiteboard-page";
 import { SubscriptionPage } from "@/components/pages/subscription-page";
 import { DataExportPage } from "@/components/pages/data-export-page";
 import { AtRiskPage } from "@/components/pages/at-risk-page";
+import { QuestionBankPage } from "@/components/pages/question-bank-page";
+import { LiveChatPage } from "@/components/pages/live-chat-page";
+import { AuditLogPage } from "@/components/pages/audit-log-page";
 // Page routing map
 const pageComponents: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
@@ -102,6 +105,9 @@ const pageComponents: Record<string, React.ComponentType> = {
   subscription: SubscriptionPage,
   "data-export": DataExportPage,
   "at-risk": AtRiskPage,
+  "question-bank": QuestionBankPage,
+  "live-chat": LiveChatPage,
+  "audit-log": AuditLogPage,
 };
 
 function AppShell() {

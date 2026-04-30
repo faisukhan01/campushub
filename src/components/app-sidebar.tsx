@@ -16,10 +16,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+
+// Nav items that should get a "New" pulsing badge
+const newFeatureItems = new Set(["ai-assistant", "live-chat"]);
 
 export function AppSidebar() {
   const navigationItems = useAppStore((s) => s.navigationItems);
@@ -74,20 +76,20 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item, index) => {
+              {mainItems.map((item) => {
                 const Icon = getIcon(item.icon);
                 const isActive = currentPage === item.id;
+                const isNewFeature = newFeatureItems.has(item.id);
                 return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton
                       isActive={isActive}
-                      tooltip={item.label}
                       onClick={() => setCurrentPage(item.id)}
                       className={`relative transition-all duration-200 rounded-md mx-1 focus-ring ${
                         isActive
-                          ? "bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 shadow-sm border-l-[3px] border-l-emerald-500 sidebar-active-glow"
+                          ? "bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 shadow-sm border-l-[3px] border-l-emerald-500"
                           : "hover:bg-emerald-50/70 dark:hover:bg-emerald-950/20"
-                      }`}
+                      }`
                     >
                       <div className={`flex items-center justify-center transition-all duration-200 ${
                         isActive
@@ -103,9 +105,16 @@ export function AppSidebar() {
                       }`}>
                         {item.label}
                       </span>
+                      {/* New feature pulsing badge */}
+                      {isNewFeature && !isActive && (
+                        <span className="ml-auto mr-1 relative flex h-2 w-2 group-data-[collapsible=icon]:hidden">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                        </span>
+                      )}
                     </SidebarMenuButton>
                     {item.badge && item.badge > 0 && (
-                      <SidebarMenuBadge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 border-0 text-[10px] badge-pulse-subtle">
+                      <SidebarMenuBadge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 border-0 text-[10px]">
                         {item.badge}
                       </SidebarMenuBadge>
                     )}
@@ -116,8 +125,8 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Animated section divider */}
-        <div className="section-fade mx-4 my-2" />
+        {/* Animated section divider with gradient */}
+        <div className="mx-4 my-2 h-px bg-gradient-to-r from-transparent via-emerald-300/30 to-transparent dark:via-emerald-700/30" />
 
         {/* Secondary Navigation Group */}
         {secondaryItems.length > 0 && (
@@ -130,17 +139,17 @@ export function AppSidebar() {
                 {secondaryItems.map((item) => {
                   const Icon = getIcon(item.icon);
                   const isActive = currentPage === item.id;
+                  const isNewFeature = newFeatureItems.has(item.id);
                   return (
                     <SidebarMenuItem key={item.id}>
                       <SidebarMenuButton
                         isActive={isActive}
-                        tooltip={item.label}
                         onClick={() => setCurrentPage(item.id)}
                         className={`relative transition-all duration-200 rounded-md mx-1 focus-ring ${
                           isActive
-                            ? "bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 shadow-sm border-l-[3px] border-l-emerald-500 sidebar-active-glow"
+                            ? "bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 shadow-sm border-l-[3px] border-l-emerald-500"
                             : "hover:bg-emerald-50/70 dark:hover:bg-emerald-950/20"
-                        }`}
+                        }`
                       >
                         <div className={`flex items-center justify-center transition-all duration-200 ${
                           isActive
@@ -156,9 +165,16 @@ export function AppSidebar() {
                         }`}>
                           {item.label}
                         </span>
+                        {/* New feature pulsing badge */}
+                        {isNewFeature && !isActive && (
+                          <span className="ml-auto mr-1 relative flex h-2 w-2 group-data-[collapsible=icon]:hidden">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                          </span>
+                        )}
                       </SidebarMenuButton>
                       {item.badge && item.badge > 0 && (
-                        <SidebarMenuBadge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 border-0 text-[10px] badge-pulse-subtle">
+                        <SidebarMenuBadge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 border-0 text-[10px]">
                           {item.badge}
                         </SidebarMenuBadge>
                       )}
@@ -171,20 +187,24 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      {/* Section divider */}
-      <div className="section-fade mx-4" />
+      {/* Gradient divider between nav and footer */}
+      <div className="mx-4 h-px bg-gradient-to-r from-transparent via-emerald-400/25 to-transparent dark:via-emerald-600/20" />
 
       {/* Footer with subtle background */}
       <SidebarFooter className="px-2 py-2 bg-muted/30 relative">
         {/* Subtle top glow line */}
         <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-emerald-400/20 to-transparent" />
         <div className="flex items-center gap-3 px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-emerald-200 dark:ring-emerald-800 transition-all duration-200 hover:ring-emerald-400 dark:hover:ring-emerald-600">
-            <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
-            <AvatarFallback className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs font-medium">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-emerald-200 dark:ring-emerald-800 transition-all duration-200 hover:ring-emerald-400 dark:hover:ring-emerald-600">
+              <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
+              <AvatarFallback className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs font-medium">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            {/* Connection status green dot */}
+            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-background breathe" />
+          </div>
           <div className="min-w-0 group-data-[collapsible=icon]:hidden transition-opacity duration-200">
             <p className="text-sm font-medium text-foreground truncate leading-tight">
               {currentUser?.name}

@@ -50,6 +50,7 @@ import {
   Check,
   X,
   Inbox,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -293,6 +294,14 @@ export function AppHeader() {
   const toggleTheme = useAppStore((s) => s.toggleTheme);
   const unreadNotificationCount = useAppStore((s) => s.unreadNotificationCount);
   const logout = useAppStore((s) => s.logout);
+  const [showCmdHint, setShowCmdHint] = useState(true);
+
+  // Fade command palette hint in/out
+  useMemo(() => {
+    if (!showCmdHint) return;
+    const timer = setTimeout(() => setShowCmdHint(false), 4000);
+    return () => clearTimeout(timer);
+  }, [showCmdHint]);
 
   const currentPageLabel =
     navigationItems.find((item) => item.id === currentPage)?.label ?? "Dashboard";
@@ -325,16 +334,18 @@ export function AppHeader() {
       
       <SidebarTrigger className="-ml-1 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors rounded-md" />
 
-      {/* Breadcrumb with trail effect */}
+      {/* Breadcrumb with chevron separators */}
       <Separator orientation="vertical" className="h-5 mx-1 hidden sm:block" />
       <Breadcrumb className="hidden sm:flex">
         <BreadcrumbList className="breadcrumb-trail">
           <BreadcrumbItem>
-            <BreadcrumbLink href="#" className="text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors text-sm animated-underline">
+            <BreadcrumbLink href="#" className="text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors text-sm animated-underline flex items-center gap-1">
               Home
             </BreadcrumbLink>
           </BreadcrumbItem>
-          <BreadcrumbSeparator className="text-emerald-300/50" />
+          <BreadcrumbSeparator className="text-emerald-300/40">
+            <ChevronRight className="w-3.5 h-3.5" />
+          </BreadcrumbSeparator>
           <BreadcrumbItem>
             <BreadcrumbPage className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{currentPageLabel}</BreadcrumbPage>
           </BreadcrumbItem>
@@ -347,6 +358,12 @@ export function AppHeader() {
       </span>
 
       <div className="flex-1" />
+
+      {/* Command palette hint text */}
+      <div className={cn("hidden lg:flex items-center gap-1.5 text-xs text-muted-foreground/50 transition-opacity duration-500", showCmdHint ? "opacity-100" : "opacity-0")}>
+        <kbd className="h-5 px-1.5 rounded border border-border bg-muted/50 font-mono text-[10px]">⌘</kbd>
+        <span>Type to search...</span>
+      </div>
 
       {/* Search */}
       <Popover>
@@ -391,13 +408,13 @@ export function AppHeader() {
         )}
       </Button>
 
-      {/* Notifications */}
+      {/* Notifications with bounce on count */}
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="icon" className="h-9 w-9 relative hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors group rounded-md">
             <Bell className="h-4 w-4 transition-transform duration-300 group-hover:bell-shake" />
             {unreadNotificationCount > 0 && (
-              <Badge className="badge-pulse absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
+              <Badge className="badge-bounce absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
                 {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
               </Badge>
             )}
@@ -408,7 +425,7 @@ export function AppHeader() {
         </PopoverContent>
       </Popover>
 
-      {/* User dropdown */}
+      {/* User dropdown with connection status and Pro badge */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-9 gap-2 px-2 max-w-[180px] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors rounded-md">
@@ -419,9 +436,18 @@ export function AppHeader() {
                   {initials}
                 </AvatarFallback>
               </Avatar>
+              {/* Connection status green dot */}
               <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-background breathe" />
             </div>
-            <span className="hidden lg:block text-sm truncate">{currentUser?.name}</span>
+            <span className="hidden lg:flex lg:items-center lg:gap-1.5 text-sm truncate">
+              {currentUser?.name}
+              {currentUser?.role === "SuperAdmin" && (
+                <span className="inline-flex items-center gap-0.5 px-1 py-0 rounded text-[9px] font-bold uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-500 text-white leading-none">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  Pro
+                </span>
+              )}
+            </span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">

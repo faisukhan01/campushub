@@ -1445,3 +1445,205 @@ CampusHub is a mature, feature-rich B2B multi-tenant campus management SaaS appl
 6. Build a white-labeling/branding settings page
 7. Mobile responsiveness audit and fixes for complex pages (assessments, quiz)
 8. Add loading skeleton states across all pages
+
+
+---
+Task ID: style-premium
+Agent: frontend-styling-expert
+Task: Add advanced visual polish and premium styling improvements
+
+Work Log:
+
+**1. Enhanced `src/app/globals.css` — Added 20+ premium CSS utility classes:**
+- `.stat-card-interactive` — stat card with animated gradient border on hover (rotating 300% gradient, CSS mask technique)
+- `.counter-animate` — number counter pop-in animation with overshoot bounce
+- `.sidebar-section` — glassmorphism sidebar section with backdrop blur
+- `.nav-underline` — animated underline effect for nav items (expands from center on hover)
+- `.tooltip-arrow` — tooltip with arrow pointer using CSS `::before`/`::after` pseudo-elements
+- `.step-indicator` / `.step-indicator.active` / `.step-indicator.completed` — step indicator for multi-step forms with ring glow on active
+- `.fab` (enhanced) — floating action button with gradient background, 90deg rotation on hover, cubic-bezier spring
+- `.chip` / `.chip-emerald` / `.chip-amber` / `.chip-red` — tag/chip component variants with color-coded backgrounds
+- `.loading-row` — infinite scroll shimmer loading row with avatar and text placeholders
+- `.progress-ring` — animated SVG progress ring with track/fill circles and rotate transform
+- `.card-image-overlay` (enhanced) — card with image overlay + zoom effect on hover
+- `.text-gradient` — premium emerald-to-teal text gradient utility
+- `.animated-bg` — animated background pattern with drifting radial gradients
+- `.toggle-emerald` — custom toggle switch with emerald active state and spring animation
+- `.data-table` — data table with alternating rows, uppercase headers, hover highlight
+- `.title-sweep-underline` — sweeping underline animation for login title
+
+**2. Enhanced `src/components/login-view.tsx` — Premium polish:**
+- Added animated noise texture overlay with subtle drift animation (`noise-shift` keyframe, 8s cycle)
+- Added `title-sweep-underline` class to CampusHub title for animated underline sweep effect
+- Added "Feature Highlights" section below role cards — 4 feature icons (Cloud Managed, AI-Powered, Secure, Real-time) in compact 2x2/4-column grid with glassmorphism cards and gradient icon containers
+- Added parallax scrolling effect via `handleMouseMove` on floating shapes (already existed, confirmed working)
+- Added `noise-shift` CSS keyframe for animated noise movement
+
+**3. Enhanced `src/components/app-sidebar.tsx` — Premium polish:**
+- Added "New" pulsing badge (emerald dot with ping animation) on specific nav items ("ai-assistant", "live-chat") via `newFeatureItems` Set
+- Replaced `SidebarSeparator` with gradient divider lines (`mx-4 h-px bg-gradient-to-r from-transparent via-emerald-300/30 to-transparent`)
+- Added gradient divider between footer and main navigation
+- Improved group header labels with uppercase letter-spacing (already present, confirmed)
+- Added connection status green dot with `breathe` animation on footer avatar
+- Removed unused `SidebarSeparator` import (cleaned up)
+
+**4. Enhanced `src/components/app-header.tsx` — Premium polish:**
+- Added command palette trigger hint text ("⌘ Type to search...") that fades in then out after 4 seconds via `showCmdHint` state
+- Changed notification badge from `badge-pulse` to `badge-bounce` (scale bounce animation on mount)
+- Improved breadcrumb separator with `ChevronRight` icon between items
+- Added "Pro" badge (gradient emerald-to-teal with Sparkles icon) next to username for SuperAdmin role
+- Added connection status green dot with `breathe` animation near user avatar in sidebar
+
+**Design Consistency:**
+- All changes use only emerald/teal/green palette — zero indigo or blue colors
+- Full dark mode support with `.dark` variants
+- ESLint passes with zero errors
+
+Stage Summary:
+- 20+ new premium CSS utility classes added to globals.css
+- Login page enhanced with animated title underline, feature highlights, animated noise texture
+- Sidebar enhanced with "New" pulsing badges, gradient dividers, connection status indicator
+- Header enhanced with command hint animation, bounce notification badge, chevron breadcrumbs, Pro badge
+- ESLint: zero errors
+
+
+---
+Task ID: rewrite-weak-pages
+Agent: rewrite-weak-pages-agent
+Task: Rewrite 3 weak placeholder pages (Batches, Documents, Support) into comprehensive implementations
+
+Work Log:
+
+**PAGE 1: Batches Page (`src/components/pages/batches-page.tsx`)**
+- Rewrote from 50-line placeholder to ~470-line comprehensive batch management page
+- 4 summary stat cards (Total Batches, Active Batches, Total Students, Avg Batch Size) with stat-card-gradient
+- Batch enrollment trend LineChart (recharts) showing monthly enrollment data across 12 months
+- Search by name/code/program/advisor with 4 filter dropdowns (Department, Status, Program, Semester)
+- Batch cards with: name, code badge, program, year range, semester, advisor, student count, status (Active/Completed/Upcoming)
+- Quick actions per batch: Assign Courses, View Students, Generate Report
+- Expandable detail panel with 3 tabs:
+  - Enrolled Students: 8 mock students with avatar, GPA, attendance %, progress bar
+  - Course Assignments: 5 mock courses with code, name, instructor, credits
+  - GPA Distribution: horizontal bar chart showing 6 GPA ranges with counts/percentages
+- Create Batch dialog: name, code, program, department, semester, year, start/end dates, max capacity, advisor, description
+- Edit Batch dialog: pre-filled form with same fields, triggered from batch card Edit button
+- Empty state when no batches match filters
+
+**PAGE 2: Documents Page (`src/components/pages/documents-page.tsx`)**
+- Rewrote from 63-line placeholder to ~420-line comprehensive document management page
+- 4 summary stat cards (Requested, Approved, Pending, Ready for Pickup) with stat-card-gradient
+- 6 mock document requests with rich data: Transcript, Bonafide, Character Certificate, Migration Certificate, Degree Certificate
+- Each document shows: type icon, status badge (Pending/Processing/Approved/Rejected/Ready), purpose, request date, copies, delivery method, fee, estimated delivery
+- Urgent badge with sparkle icon for expedited requests
+- Filter tabs: All, Pending, Approved, Ready for Pickup with counts
+- Search by document type or purpose
+- Expandable activity timeline per document: vertical timeline with color-coded dots (emerald=created/success, amber=progress, red=error, gray=info), timestamps, actor names
+- Request New Document dialog: type selector with descriptions and fees, purpose, copies (1-5), urgent toggle switch, delivery method radio (Collect/Digital/Both), estimated fee calculator
+- Bulk Request dialog with 3 pre-configured packages: Graduation Package ($55), Job Application Package ($40), Study Abroad Package ($45) showing included documents and badges
+- Download button for Approved/Ready documents
+- Empty state when no documents match filters
+
+**PAGE 3: Support Page (`src/components/pages/support-page.tsx`)**
+- Rewrote from 65-line placeholder to ~530-line comprehensive help center and support ticket page
+- 4 quick action cards: Create Ticket, FAQ, Live Chat, System Status with smooth scroll navigation
+- 4 summary stat cards (Open Tickets, In Progress, Resolved This Week, Avg Resolution Time) with stat-card-gradient
+- System Status section: 4 services (API, Database, Email, VPN) with status dots (emerald=Operational, amber=Degraded), uptime percentages
+- 7 mock support tickets with rich data across categories (Technical, Academic, Fees, Account)
+- Each ticket shows: ID (TKT-XXXX), subject, description, priority badge with colored dot (Critical=red, High=orange, Medium=amber, Low=gray), category badge, status badge, created date, assignee, reply count
+- Filters: search by ID/subject/description, priority dropdown, status dropdown, category dropdown
+- Expandable ticket detail with:
+  - Conversation thread: chat-style messages with avatar initials, sender name, role badge, timestamp, emerald-tinted support replies
+  - Reply input with Send button
+  - Resolution section (for resolved tickets): resolution text, resolution time, star satisfaction rating
+- Create Ticket dialog: subject, category (Technical/Academic/Fees/Account/Other), priority (Low/Medium/High/Critical), description textarea, drag-and-drop attachment area
+- Knowledge Base FAQ section: 10 accordion items covering password reset, documents, attendance, grading errors, leave requests, contacting instructors, mobile app, course enrollment, payment methods, technical issues
+- Empty state when no tickets match filters
+
+Stage Summary:
+- All 3 weak placeholder pages replaced with comprehensive, feature-rich implementations
+- Consistent emerald/green theme with stat-card-gradient, card-premium, badge-gradient-danger, page-transition CSS utilities
+- Recharts LineChart for batch enrollment trend
+- Full form dialogs for Create/Edit Batch, Request Document, Bulk Request, Create Ticket
+- Expandable panels with tabs (Batches), timeline (Documents), conversation thread (Support)
+- Mobile-first responsive design with proper grid breakpoints
+- ESLint passes with zero errors
+- Dev server compiles successfully
+
+
+---
+Task ID: feat-question-bank-live-chat-audit-log
+Agent: features-agent
+Task: Create 3 new high-value feature pages (Question Bank, Live Chat, Audit Log)
+
+Work Log:
+- Created `src/components/pages/question-bank-page.tsx` — Question Bank page for Teacher role:
+  - 4 summary stat cards: Total Questions, Subjects Covered, Difficulty Split, Last Updated
+  - Difficulty Distribution PieChart (recharts) and Questions per Subject BarChart (recharts)
+  - 18 mock questions across 6 subjects with type badges (MCQ/True-False/Short Answer/Fill-in-Blank)
+  - Color-coded difficulty badges: Easy (emerald), Medium (amber), Hard (red)
+  - Question cards with subject, topic, marks, usage count, and tags
+  - Expandable question preview: full text, options with correct answer highlight, explanation, metadata
+  - Filter by type, subject, difficulty, tags with Select dropdowns
+  - Full-text search across questions, subjects, and topics
+  - Create Question dialog with type, subject, topic, difficulty, marks, question text, MCQ options, correct answer, explanation, tags management
+  - Checkbox selection with bulk action bar (Export, Share, Duplicate)
+  - Import from Document placeholder button
+  - Analytics tab: difficulty breakdown, question type counts, most used questions list
+  - framer-motion animations with AnimatePresence for card enter/exit and expand/collapse
+
+- Created `src/components/pages/live-chat-page.tsx` — Live Chat page for Student role:
+  - 4 summary stat cards: Active Chats, Unread Messages, Online Tutors, Average Response Time
+  - Two-panel chat layout: sidebar contact list + main chat area
+  - 7 mock contacts across 3 roles: Teachers (2), Counselors (2), Peers (3)
+  - Contact list with: avatar, name, role badge (Teacher/Counselor/Peer), last message preview, timestamp, online/offline status dot, unread count badge
+  - Main chat area with message bubbles (emerald for sent, muted for received), timestamps, avatar initials
+  - Read receipts (single Check for sent, double CheckCheck for read) in emerald color
+  - Message input: text field with rounded design, Send button (enabled/disabled state), attachment button, emoji placeholder
+  - Empty state with MessageCircle illustration and "Select a Conversation" prompt
+  - Chat header: contact name, role badge, online status, phone call placeholder button
+  - Search conversations by name
+  - Filter by role: All, Teachers, Counselors, Peers (pill-style buttons)
+  - Start New Chat dialog: search users, select, start conversation
+  - Responsive: sidebar hidden on mobile when chat is open, back button to return
+  - Mobile-first responsive design
+
+- Created `src/components/pages/audit-log-page.tsx` — Audit Log page for SuperAdmin role:
+  - 4 summary stat cards: Total Events Today, Critical Events, Active Users, Last Sync
+  - "Live" indicator with pulse animation (ping + dot)
+  - Activity Trend LineChart (events per day over 14 days)
+  - Top Action Types horizontal BarChart
+  - Timeline-style activity log with: vertical timeline line, color-coded dots per severity
+  - 16 mock events across 6 action types (Login, Data Change, User Management, System Config, Export, Payment)
+  - Color-coded severity: Critical (red), Warning (amber), Info (emerald) — applied to timeline dot, card border, badges
+  - Status badges: Success (emerald), Warning (amber), Failed (red) with icons
+  - Action type icons: LogIn, Edit, User, Settings, Download, CreditCard
+  - Filter by action type, severity, user with Select dropdowns
+  - Search by action description, user name, or target resource
+  - Expandable event details: before/after state with color-coded panels (red before, emerald after), full metadata JSON display
+  - Pagination controls (8 per page) with page number buttons
+  - Export Audit Log button
+  - Analytics tab: severity breakdown cards, status distribution, activity by user, IP address distribution
+  - framer-motion layout animations for timeline entries
+
+- Updated `src/app/page.tsx` — Added 3 new imports and page component registrations:
+  - `"question-bank": QuestionBankPage`
+  - `"live-chat": LiveChatPage`
+  - `"audit-log": AuditLogPage`
+
+- Updated `src/store/app-store.ts` — Added navigation items:
+  - Teacher nav: `"question-bank"` after "assessments" with icon "Database"
+  - Student nav: `"live-chat"` after "messages" with icon "MessageCircle"
+  - SuperAdmin nav: `"audit-log"` after "analytics" with icon "ScrollText"
+
+- Updated `src/lib/icon-map.ts` — Added 2 new icon imports:
+  - `Database` (from lucide-react)
+  - `ScrollText` (from lucide-react)
+
+Stage Summary:
+- 3 new high-value feature pages created: Question Bank (Teacher), Live Chat (Student), Audit Log (SuperAdmin)
+- All pages use consistent emerald/green theme, shadcn/ui components, recharts charts, framer-motion animations
+- All pages registered in page.tsx routing map and app-store.ts navigation
+- Database and ScrollText icons added to icon-map.ts
+- ESLint passes with zero errors
+- Total page count: 30 pages across 6 roles
+

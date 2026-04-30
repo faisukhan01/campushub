@@ -40,6 +40,8 @@ import {
   Download,
   AlertTriangle,
   Crown,
+  Database,
+  ScrollText,
   type LucideIcon,
 } from "lucide-react";
 
@@ -85,6 +87,8 @@ const iconMap: Record<string, LucideIcon> = {
   Download,
   AlertTriangle,
   Crown,
+  Database,
+  ScrollText,
 };
 
 export function getIcon(name: string): LucideIcon {

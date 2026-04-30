@@ -1786,3 +1786,471 @@
 .breadcrumb-trail li:hover::before {
   transform: scaleX(1);
 }
+
+/* ===== Round 6: Advanced Premium Styling Utilities ===== */
+
+/* Interactive stat card with animated border gradient */
+.stat-card-interactive {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: oklch(1 0 0);
+  border: 1px solid oklch(0.912 0.015 155);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.dark .stat-card-interactive {
+  background: oklch(0.18 0.015 155);
+  border-color: oklch(0.28 0.02 155);
+}
+.stat-card-interactive::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(135deg, oklch(0.55 0.17 155), oklch(0.45 0.15 180), oklch(0.65 0.17 155), oklch(0.50 0.15 160));
+  background-size: 300% 300%;
+  animation: stat-border-rotate 6s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.stat-card-interactive:hover::before {
+  opacity: 1;
+}
+.stat-card-interactive:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px -8px oklch(0.55 0.17 155 / 0.18);
+}
+@keyframes stat-border-rotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Number counter animation */
+.counter-animate {
+  display: inline-block;
+  animation: counter-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes counter-pop {
+  0% { opacity: 0; transform: translateY(10px) scale(0.8); }
+  60% { transform: translateY(-2px) scale(1.05); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Glassmorphism sidebar section */
+.sidebar-section {
+  background: oklch(1 0 0 / 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid oklch(1 0 0 / 0.3);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  margin: 0.5rem 0;
+}
+.dark .sidebar-section {
+  background: oklch(0.22 0.015 155 / 0.4);
+  border-color: oklch(1 0 0 / 0.06);
+}
+
+/* Animated underline effect for nav items */
+.nav-underline {
+  position: relative;
+}
+.nav-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, oklch(0.55 0.17 155), oklch(0.50 0.15 180));
+  transition: width 0.3s ease, left 0.3s ease;
+  border-radius: 1px;
+}
+.nav-underline:hover::after,
+.nav-underline.active::after {
+  width: 100%;
+  left: 0;
+}
+
+/* Tooltip with arrow */
+.tooltip-arrow {
+  position: relative;
+}
+.tooltip-arrow::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: 0.375rem 0.625rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: white;
+  background: oklch(0.25 0.04 155);
+  border-radius: 0.375rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 50;
+  box-shadow: 0 4px 12px oklch(0 0 0 / 0.15);
+}
+.tooltip-arrow::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  border: 5px solid transparent;
+  border-top-color: oklch(0.25 0.04 155);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 51;
+}
+.tooltip-arrow:hover::after,
+.tooltip-arrow:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Step indicator for multi-step forms */
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: oklch(0.96 0.01 155);
+  color: oklch(0.50 0.02 155);
+  border: 2px solid oklch(0.912 0.015 155);
+  transition: all 0.3s ease;
+}
+.dark .step-indicator {
+  background: oklch(0.22 0.015 155);
+  color: oklch(0.65 0.02 155);
+  border-color: oklch(0.28 0.02 155);
+}
+.step-indicator.active {
+  background: oklch(0.55 0.17 155);
+  color: white;
+  border-color: oklch(0.55 0.17 155);
+  box-shadow: 0 0 0 4px oklch(0.55 0.17 155 / 0.15);
+}
+.step-indicator.completed {
+  background: oklch(0.55 0.17 155);
+  color: white;
+  border-color: oklch(0.55 0.17 155);
+}
+
+/* Floating action button (enhanced) */
+.fab {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 40;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, oklch(0.55 0.17 155), oklch(0.50 0.15 180));
+  color: white;
+  box-shadow: 0 4px 14px oklch(0.55 0.17 155 / 0.35);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+}
+.fab:hover {
+  transform: scale(1.12) rotate(90deg);
+  box-shadow: 0 6px 24px oklch(0.55 0.17 155 / 0.45);
+}
+
+/* Tag/chip component variants */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: oklch(0.955 0.03 155);
+  color: oklch(0.45 0.17 155);
+  border: 1px solid oklch(0.55 0.17 155 / 0.15);
+  transition: background-color 0.15s, transform 0.15s;
+}
+.chip:hover {
+  background: oklch(0.935 0.04 155);
+  transform: translateY(-1px);
+}
+.dark .chip {
+  background: oklch(0.55 0.17 155 / 0.15);
+  color: oklch(0.75 0.17 155);
+  border-color: oklch(0.65 0.17 155 / 0.20);
+}
+.dark .chip:hover {
+  background: oklch(0.55 0.17 155 / 0.25);
+}
+.chip-emerald {
+  background: oklch(0.55 0.17 155 / 0.1);
+  color: oklch(0.40 0.17 155);
+  border-color: oklch(0.55 0.17 155 / 0.2);
+}
+.chip-emerald:hover {
+  background: oklch(0.55 0.17 155 / 0.18);
+}
+.dark .chip-emerald {
+  background: oklch(0.65 0.17 155 / 0.15);
+  color: oklch(0.75 0.17 155);
+  border-color: oklch(0.65 0.17 155 / 0.25);
+}
+.chip-amber {
+  background: oklch(0.78 0.15 75 / 0.1);
+  color: oklch(0.55 0.15 75);
+  border-color: oklch(0.78 0.15 75 / 0.2);
+}
+.chip-amber:hover {
+  background: oklch(0.78 0.15 75 / 0.18);
+}
+.dark .chip-amber {
+  background: oklch(0.78 0.15 75 / 0.15);
+  color: oklch(0.85 0.15 75);
+  border-color: oklch(0.78 0.15 75 / 0.25);
+}
+.chip-red {
+  background: oklch(0.63 0.24 25 / 0.1);
+  color: oklch(0.50 0.22 25);
+  border-color: oklch(0.63 0.24 25 / 0.2);
+}
+.chip-red:hover {
+  background: oklch(0.63 0.24 25 / 0.18);
+}
+.dark .chip-red {
+  background: oklch(0.63 0.24 25 / 0.15);
+  color: oklch(0.75 0.22 25);
+  border-color: oklch(0.63 0.24 25 / 0.25);
+}
+
+/* Infinite scroll shimmer loading row */
+.loading-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  animation: loading-row-shimmer 1.5s ease-in-out infinite;
+}
+.loading-row .loading-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: oklch(0.945 0.015 155);
+}
+.dark .loading-row .loading-avatar {
+  background: oklch(0.25 0.02 155);
+}
+.loading-row .loading-text {
+  flex: 1;
+  height: 0.75rem;
+  border-radius: 0.375rem;
+  background: oklch(0.945 0.015 155);
+}
+.dark .loading-row .loading-text {
+  background: oklch(0.25 0.02 155);
+}
+.loading-row .loading-text-short {
+  width: 40%;
+}
+@keyframes loading-row-shimmer {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Animated progress ring (SVG compatible) */
+.progress-ring circle.track {
+  stroke: oklch(0.955 0.02 155);
+  fill: none;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dark .progress-ring circle.track {
+  stroke: oklch(0.28 0.02 155);
+}
+.progress-ring circle.fill {
+  stroke: oklch(0.55 0.17 155);
+  fill: none;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Card with image overlay (enhanced) */
+.card-image-overlay {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+}
+.card-image-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, oklch(0.13 0.015 155 / 0.8), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.card-image-overlay:hover::after {
+  opacity: 1;
+}
+.card-image-overlay img {
+  transition: transform 0.4s ease;
+}
+.card-image-overlay:hover img {
+  transform: scale(1.05);
+}
+
+/* Text gradient utility */
+.text-gradient {
+  background: linear-gradient(135deg, oklch(0.55 0.17 155), oklch(0.50 0.15 180), oklch(0.45 0.14 160));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Animated background pattern */
+.animated-bg {
+  position: relative;
+  overflow: hidden;
+}
+.animated-bg::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(ellipse at 20% 50%, oklch(0.55 0.17 155 / 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 50%, oklch(0.50 0.15 180 / 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 20%, oklch(0.45 0.14 160 / 0.04) 0%, transparent 50%);
+  animation: bg-pattern-drift 20s ease-in-out infinite;
+  pointer-events: none;
+}
+.dark .animated-bg::before {
+  background: radial-gradient(ellipse at 20% 50%, oklch(0.65 0.17 155 / 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 50%, oklch(0.60 0.15 180 / 0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 20%, oklch(0.55 0.14 160 / 0.04) 0%, transparent 50%);
+}
+@keyframes bg-pattern-drift {
+  0%, 100% { transform: rotate(0deg); }
+  33% { transform: rotate(2deg); }
+  66% { transform: rotate(-1deg); }
+}
+
+/* Toggle switch custom styling */
+.toggle-emerald {
+  position: relative;
+  width: 2.5rem;
+  height: 1.375rem;
+  border-radius: 9999px;
+  background: oklch(0.88 0.02 155);
+  border: 2px solid oklch(0.80 0.015 155);
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+.dark .toggle-emerald {
+  background: oklch(0.30 0.02 155);
+  border-color: oklch(0.40 0.02 155);
+}
+.toggle-emerald::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.15);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.toggle-emerald.active {
+  background: oklch(0.55 0.17 155);
+  border-color: oklch(0.55 0.17 155);
+}
+.toggle-emerald.active::after {
+  transform: translateX(calc(100% - 2px));
+  background: white;
+}
+
+/* Data table with alternating rows and hover */
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+}
+.data-table thead th {
+  background: oklch(0.96 0.01 155 / 0.80);
+  color: oklch(0.50 0.02 155);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.625rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid oklch(0.912 0.015 155);
+}
+.dark .data-table thead th {
+  background: oklch(0.22 0.015 155 / 0.80);
+  color: oklch(0.65 0.02 155);
+  border-color: oklch(0.28 0.02 155);
+}
+.data-table tbody td {
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid oklch(0.912 0.015 155 / 0.5);
+  transition: background-color 0.15s;
+}
+.dark .data-table tbody td {
+  border-color: oklch(0.28 0.02 155 / 0.5);
+}
+.data-table tbody tr:nth-child(even) {
+  background: oklch(0.55 0.17 155 / 0.02);
+}
+.dark .data-table tbody tr:nth-child(even) {
+  background: oklch(0.55 0.17 155 / 0.04);
+}
+.data-table tbody tr:hover {
+  background: oklch(0.55 0.17 155 / 0.06);
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.04);
+}
+.dark .data-table tbody tr:hover {
+  background: oklch(0.55 0.17 155 / 0.10);
+}
+
+/* Login title sweep underline animation */
+@keyframes title-underline-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.title-sweep-underline {
+  position: relative;
+  overflow: hidden;
+}
+.title-sweep-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 60%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, oklch(0.55 0.17 155), oklch(0.50 0.15 180), transparent);
+  border-radius: 2px;
+  animation: title-underline-sweep 3s ease-in-out infinite;
+}
