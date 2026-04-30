@@ -17,6 +17,8 @@ import { MessagesPage } from "@/components/pages/messages-page";
 import { AnnouncementsPage } from "@/components/pages/announcements-page";
 import { LeavePage } from "@/components/pages/leave-page";
 import { SupportPage } from "@/components/pages/support-page";
+import { HelpPage } from "@/components/pages/help-page";
+import { ClassesPage } from "@/components/pages/classes-page";
 import { UsersPage } from "@/components/pages/users-page";
 import { SettingsPage } from "@/components/pages/settings-page";
 import { ReportsPage } from "@/components/pages/reports-page";
@@ -34,6 +36,8 @@ import { CalendarPage } from "@/components/pages/calendar-page";
 import { LibraryPage } from "@/components/pages/library-page";
 import { PerformancePage } from "@/components/pages/performance-page";
 import { NotificationsPage } from "@/components/pages/notifications-page";
+import { ProfilePage } from "@/components/pages/profile-page";
+import { ForumPage } from "@/components/pages/forum-page";
 import { Separator } from "@/components/ui/separator";
 
 // Page routing map
@@ -49,6 +53,8 @@ const pageComponents: Record<string, React.ComponentType> = {
   announcements: AnnouncementsPage,
   leave: LeavePage,
   support: SupportPage,
+  help: HelpPage,
+  classes: ClassesPage,
   users: UsersPage,
   settings: SettingsPage,
   reports: ReportsPage,
@@ -66,6 +72,8 @@ const pageComponents: Record<string, React.ComponentType> = {
   library: LibraryPage,
   performance: PerformancePage,
   notifications: NotificationsPage,
+  profile: ProfilePage,
+  forum: ForumPage,
 };
 
 function AppShell() {
@@ -90,7 +98,7 @@ function AppShell() {
       <SidebarInset className="flex flex-col min-h-screen">
         <AppHeader />
         <main className="flex-1 p-4 sm:p-6">
-          {PageComponent ? <div className="page-transition"><PageComponent /></div> : (
+          {PageComponent ? <div key={currentPage} className="page-enter page-enter-active"><PageComponent /></div> : (
             <div className="flex items-center justify-center min-h-[60vh]">
               <div className="text-center">
                 <h2 className="text-xl font-semibold text-muted-foreground">Page Not Found</h2>

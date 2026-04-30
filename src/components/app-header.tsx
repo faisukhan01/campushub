@@ -385,7 +385,7 @@ export function AppHeader() {
           <Button variant="ghost" size="icon" className="h-9 w-9 relative hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors group rounded-md">
             <Bell className="h-4 w-4 transition-transform duration-300 group-hover:animate-bounce" />
             {unreadNotificationCount > 0 && (
-              <Badge className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
+              <Badge className="badge-pulse absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
                 {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
               </Badge>
             )}

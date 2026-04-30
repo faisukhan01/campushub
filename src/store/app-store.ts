@@ -107,6 +107,8 @@ function getNavigationForRole(role: UserRole): NavigationItem[] {
       { id: "reports", label: "Reports", icon: "FileText", href: "reports" },
       { id: "notifications", label: "Notifications", icon: "Bell", href: "notifications", badge: 2 },
       { id: "announcements", label: "Announcements", icon: "Megaphone", href: "announcements" },
+      { id: "profile", label: "My Profile", icon: "User", href: "profile" },
+      { id: "help", label: "Help Center", icon: "LifeBuoy", href: "help" },
       { id: "settings", label: "Settings", icon: "Settings", href: "settings" },
     ],
     BranchAdmin: [
@@ -120,7 +122,7 @@ function getNavigationForRole(role: UserRole): NavigationItem[] {
       { id: "fees", label: "Fee Management", icon: "CreditCard", href: "fees" },
       { id: "reports", label: "Reports", icon: "FileText", href: "reports" },
       { id: "announcements", label: "Announcements", icon: "Megaphone", href: "announcements" },
-      { id: "support", label: "Support", icon: "LifeBuoy", href: "support" },
+      { id: "help", label: "Help Center", icon: "LifeBuoy", href: "help" },
       { id: "settings", label: "Settings", icon: "Settings", href: "settings" },
     ],
     Teacher: [
@@ -136,7 +138,11 @@ function getNavigationForRole(role: UserRole): NavigationItem[] {
       { id: "messages", label: "Messages", icon: "MessageSquare", href: "messages", badge: 3 },
       { id: "notifications", label: "Notifications", icon: "Bell", href: "notifications", badge: 3 },
       { id: "announcements", label: "Announcements", icon: "Megaphone", href: "announcements" },
+      { id: "forum", label: "Forum", icon: "MessageCircle", href: "forum" },
       { id: "calendar", label: "Calendar", icon: "Calendar", href: "calendar" },
+      { id: "classes", label: "Online Classes", icon: "Video", href: "classes" },
+      { id: "profile", label: "My Profile", icon: "User", href: "profile" },
+      { id: "help", label: "Help Center", icon: "LifeBuoy", href: "help" },
     ],
     Student: [
       ...baseNav,
@@ -147,14 +153,17 @@ function getNavigationForRole(role: UserRole): NavigationItem[] {
       { id: "attendance", label: "Attendance", icon: "ClipboardCheck", href: "attendance" },
       { id: "timetable", label: "Timetable", icon: "Calendar", href: "timetable" },
       { id: "calendar", label: "Calendar", icon: "Calendar", href: "calendar" },
+      { id: "classes", label: "Online Classes", icon: "Video", href: "classes" },
       { id: "fees", label: "Fees", icon: "CreditCard", href: "fees", badge: 2 },
       { id: "messages", label: "Messages", icon: "MessageSquare", href: "messages", badge: 5 },
       { id: "notifications", label: "Notifications", icon: "Bell", href: "notifications", badge: 7 },
       { id: "announcements", label: "Announcements", icon: "Megaphone", href: "announcements" },
+      { id: "forum", label: "Forum", icon: "MessageCircle", href: "forum" },
       { id: "leave", label: "Leave Request", icon: "CalendarOff", href: "leave" },
       { id: "documents", label: "Documents", icon: "FileStack", href: "documents" },
       { id: "library", label: "Resource Library", icon: "BookOpen", href: "library" },
-      { id: "support", label: "Support", icon: "LifeBuoy", href: "support" },
+      { id: "profile", label: "My Profile", icon: "User", href: "profile" },
+      { id: "help", label: "Help Center", icon: "LifeBuoy", href: "help" },
       { id: "ai-assistant", label: "AI Assistant", icon: "Bot", href: "ai-assistant" },
     ],
     Parent: [
@@ -167,7 +176,8 @@ function getNavigationForRole(role: UserRole): NavigationItem[] {
       { id: "notifications", label: "Notifications", icon: "Bell", href: "notifications", badge: 2 },
       { id: "announcements", label: "Announcements", icon: "Megaphone", href: "announcements" },
       { id: "leave", label: "Leave Requests", icon: "CalendarOff", href: "leave" },
-      { id: "support", label: "Support", icon: "LifeBuoy", href: "support" },
+      { id: "profile", label: "My Profile", icon: "User", href: "profile" },
+      { id: "help", label: "Help Center", icon: "LifeBuoy", href: "help" },
     ],
   };
 
