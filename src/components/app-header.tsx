@@ -308,9 +308,16 @@ export function AppHeader() {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/80 backdrop-blur-md px-4 sm:px-6 relative">
-      {/* Gradient bottom border */}
-      <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[1px] bg-gradient-to-r from-emerald-500/0 via-emerald-500/40 to-emerald-500/0" />
+      {/* Animated gradient bottom line */}
+      <div className="absolute bottom-0 left-0 right-0 h-[2px] overflow-hidden">
+        <div
+          className="absolute inset-0 animate-[header-gradient-shift_4s_ease-in-out_infinite]"
+          style={{
+            background: 'linear-gradient(90deg, #059669, #0d9488, #10b981, #14b8a6, #059669)',
+            backgroundSize: '200% 100%',
+          }}
+        />
+      </div>
       
       <SidebarTrigger className="-ml-1 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors rounded-md" />
 

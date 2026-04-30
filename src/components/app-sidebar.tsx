@@ -76,22 +76,22 @@ export function AppSidebar() {
                       isActive={isActive}
                       tooltip={item.label}
                       onClick={() => setCurrentPage(item.id)}
-                      className={`relative transition-all duration-200 rounded-md mx-1 ${
+                      className={`relative transition-all duration-200 rounded-md mx-1 focus-ring ${
                         isActive
                           ? "bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 shadow-sm border-l-[3px] border-l-emerald-500"
                           : "hover:bg-emerald-50/70 dark:hover:bg-emerald-950/20"
                       }`}
                     >
                       <div className={`flex items-center justify-center transition-all duration-200 ${
-                        isActive 
-                          ? "text-emerald-600 dark:text-emerald-400" 
+                        isActive
+                          ? "text-emerald-600 dark:text-emerald-400"
                           : "text-muted-foreground"
                       }`}>
                         <Icon className="w-4 h-4" />
                       </div>
                       <span className={`transition-all duration-200 ${
-                        isActive 
-                          ? "text-emerald-700 dark:text-emerald-300 font-semibold" 
+                        isActive
+                          ? "text-emerald-700 dark:text-emerald-300 font-semibold"
                           : ""
                       }`}>
                         {item.label}

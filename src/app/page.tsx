@@ -38,6 +38,10 @@ import { PerformancePage } from "@/components/pages/performance-page";
 import { NotificationsPage } from "@/components/pages/notifications-page";
 import { ProfilePage } from "@/components/pages/profile-page";
 import { ForumPage } from "@/components/pages/forum-page";
+import { QuizPage } from "@/components/pages/quiz-page";
+import { TransportPage } from "@/components/pages/transport-page";
+import { HostelPage } from "@/components/pages/hostel-page";
+import { AlumniPage } from "@/components/pages/alumni-page";
 import { Separator } from "@/components/ui/separator";
 
 // Page routing map
@@ -74,6 +78,10 @@ const pageComponents: Record<string, React.ComponentType> = {
   notifications: NotificationsPage,
   profile: ProfilePage,
   forum: ForumPage,
+  quiz: QuizPage,
+  transport: TransportPage,
+  hostel: HostelPage,
+  alumni: AlumniPage,
 };
 
 function AppShell() {

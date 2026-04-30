@@ -26,6 +26,8 @@ import {
   Sparkles,
   Bell,
   Library,
+  Bus,
+  BedDouble,
   type LucideIcon,
 } from "lucide-react";
 
@@ -57,6 +59,8 @@ const iconMap: Record<string, LucideIcon> = {
   Sparkles,
   Bell,
   Library,
+  Bus,
+  BedDouble,
 };
 
 export function getIcon(name: string): LucideIcon {

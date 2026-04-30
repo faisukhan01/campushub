@@ -104,12 +104,15 @@ function getNavigationForRole(role: UserRole): NavigationItem[] {
       { id: "courses", label: "Courses", icon: "BookOpen", href: "courses" },
       { id: "calendar", label: "Calendar", icon: "Calendar", href: "calendar" },
       { id: "fees", label: "Fee Management", icon: "CreditCard", href: "fees" },
+      { id: "hostel", label: "Hostel Management", icon: "BedDouble", href: "hostel" },
+      { id: "transport", label: "Transport", icon: "Bus", href: "transport" },
       { id: "reports", label: "Reports", icon: "FileText", href: "reports" },
       { id: "notifications", label: "Notifications", icon: "Bell", href: "notifications", badge: 2 },
       { id: "announcements", label: "Announcements", icon: "Megaphone", href: "announcements" },
       { id: "profile", label: "My Profile", icon: "User", href: "profile" },
       { id: "help", label: "Help Center", icon: "LifeBuoy", href: "help" },
       { id: "settings", label: "Settings", icon: "Settings", href: "settings" },
+      { id: "alumni", label: "Alumni", icon: "GraduationCap", href: "alumni" },
     ],
     BranchAdmin: [
       ...baseNav,
@@ -120,10 +123,13 @@ function getNavigationForRole(role: UserRole): NavigationItem[] {
       { id: "timetable", label: "Timetable", icon: "Calendar", href: "timetable" },
       { id: "attendance", label: "Attendance", icon: "ClipboardCheck", href: "attendance" },
       { id: "fees", label: "Fee Management", icon: "CreditCard", href: "fees" },
+      { id: "hostel", label: "Hostel Management", icon: "BedDouble", href: "hostel" },
+      { id: "transport", label: "Transport", icon: "Bus", href: "transport" },
       { id: "reports", label: "Reports", icon: "FileText", href: "reports" },
       { id: "announcements", label: "Announcements", icon: "Megaphone", href: "announcements" },
       { id: "help", label: "Help Center", icon: "LifeBuoy", href: "help" },
       { id: "settings", label: "Settings", icon: "Settings", href: "settings" },
+      { id: "alumni", label: "Alumni", icon: "GraduationCap", href: "alumni" },
     ],
     Teacher: [
       ...baseNav,
@@ -143,6 +149,7 @@ function getNavigationForRole(role: UserRole): NavigationItem[] {
       { id: "classes", label: "Online Classes", icon: "Video", href: "classes" },
       { id: "profile", label: "My Profile", icon: "User", href: "profile" },
       { id: "help", label: "Help Center", icon: "LifeBuoy", href: "help" },
+      { id: "alumni", label: "Alumni", icon: "GraduationCap", href: "alumni" },
     ],
     Student: [
       ...baseNav,
@@ -152,6 +159,7 @@ function getNavigationForRole(role: UserRole): NavigationItem[] {
       { id: "performance", label: "Performance", icon: "BarChart3", href: "performance" },
       { id: "attendance", label: "Attendance", icon: "ClipboardCheck", href: "attendance" },
       { id: "timetable", label: "Timetable", icon: "Calendar", href: "timetable" },
+      { id: "transport", label: "Transport", icon: "Bus", href: "transport" },
       { id: "calendar", label: "Calendar", icon: "Calendar", href: "calendar" },
       { id: "classes", label: "Online Classes", icon: "Video", href: "classes" },
       { id: "fees", label: "Fees", icon: "CreditCard", href: "fees", badge: 2 },
@@ -165,6 +173,8 @@ function getNavigationForRole(role: UserRole): NavigationItem[] {
       { id: "profile", label: "My Profile", icon: "User", href: "profile" },
       { id: "help", label: "Help Center", icon: "LifeBuoy", href: "help" },
       { id: "ai-assistant", label: "AI Assistant", icon: "Bot", href: "ai-assistant" },
+      { id: "quiz", label: "Quiz Center", icon: "FileQuestion", href: "quiz" },
+      { id: "alumni", label: "Alumni", icon: "GraduationCap", href: "alumni" },
     ],
     Parent: [
       ...baseNav,
@@ -178,6 +188,7 @@ function getNavigationForRole(role: UserRole): NavigationItem[] {
       { id: "leave", label: "Leave Requests", icon: "CalendarOff", href: "leave" },
       { id: "profile", label: "My Profile", icon: "User", href: "profile" },
       { id: "help", label: "Help Center", icon: "LifeBuoy", href: "help" },
+      { id: "alumni", label: "Alumni", icon: "GraduationCap", href: "alumni" },
     ],
   };
 
