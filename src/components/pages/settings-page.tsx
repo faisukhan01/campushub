@@ -87,14 +87,14 @@ export function SettingsPage() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-transition">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">Manage your institution configuration and preferences</p>
       </div>
 
       <Tabs defaultValue="general" className="space-y-4">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList className="flex-wrap h-auto tabs-smooth">
           <TabsTrigger value="general" className="gap-1"><Globe className="w-3 h-3" />General</TabsTrigger>
           <TabsTrigger value="branding" className="gap-1"><Palette className="w-3 h-3" />Branding</TabsTrigger>
           <TabsTrigger value="grading" className="gap-1"><GraduationCap className="w-3 h-3" />Grading</TabsTrigger>

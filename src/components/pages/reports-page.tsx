@@ -220,7 +220,7 @@ export function ReportsPage() {
   const [activeReport, setActiveReport] = useState<string | null>(null);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-transition">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Reports</h1>
@@ -239,7 +239,7 @@ export function ReportsPage() {
         {reportTypes.map((report) => {
           const Icon = report.icon;
           return (
-            <Card key={report.id} className="hover:shadow-md transition-shadow">
+            <Card key={report.id} className="card-premium">
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{}}>

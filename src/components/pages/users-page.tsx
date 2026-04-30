@@ -83,7 +83,7 @@ export function UsersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-transition">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -225,7 +225,7 @@ export function UsersPage() {
       </div>
 
       <Tabs value={roleFilter} onValueChange={setRoleFilter}>
-        <TabsList className="flex-wrap h-auto">
+        <TabsList className="flex-wrap h-auto tabs-smooth">
           <TabsTrigger value="all">All ({allUsers.length})</TabsTrigger>
           <TabsTrigger value="SuperAdmin">Admins</TabsTrigger>
           <TabsTrigger value="Teacher">Teachers</TabsTrigger>

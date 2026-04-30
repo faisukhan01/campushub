@@ -49,6 +49,7 @@ import {
   ChevronRight,
   Check,
   X,
+  Inbox,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -126,7 +127,7 @@ function NotificationPanel() {
         {unreadCount > 0 && (
           <button
             onClick={markAllRead}
-            className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-medium flex items-center gap-1"
+            className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-medium flex items-center gap-1 transition-colors"
           >
             <Check className="w-3 h-3" />
             Mark all read
@@ -143,20 +144,22 @@ function NotificationPanel() {
                 key={notif.id}
                 onClick={() => markRead(notif.id)}
                 className={cn(
-                  "w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors",
-                  !notif.isRead && "bg-emerald-50/50 dark:bg-emerald-950/10"
+                  "w-full flex items-start gap-3 px-4 py-3 text-left transition-all duration-200",
+                  notif.isRead 
+                    ? "hover:bg-muted/50" 
+                    : "bg-emerald-50/50 dark:bg-emerald-950/10 hover:bg-emerald-50/80 dark:hover:bg-emerald-950/15"
                 )}
               >
-                <div className={cn("flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-0.5", config.bg)}>
+                <div className={cn("flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-0.5 transition-transform duration-200", config.bg)}>
                   <Icon className={cn("w-4 h-4", config.color)} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
-                    <p className={cn("text-sm leading-tight", !notif.isRead && "font-semibold")}>
+                    <p className={cn("text-sm leading-tight transition-all duration-200", !notif.isRead && "font-semibold")}>
                       {notif.title}
                     </p>
                     {!notif.isRead && (
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 mt-1.5" />
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 mt-1.5 animate-pulse" />
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">
@@ -170,7 +173,7 @@ function NotificationPanel() {
         </div>
       </ScrollArea>
       <div className="border-t px-4 py-2.5">
-        <button className="w-full text-center text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-medium">
+        <button className="w-full text-center text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-medium transition-colors">
           View All Notifications
         </button>
       </div>
@@ -218,7 +221,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
           }}
         />
         {query && (
-          <button onClick={() => setQuery("")} className="text-muted-foreground hover:text-foreground">
+          <button onClick={() => setQuery("")} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="w-3.5 h-3.5" />
           </button>
         )}
@@ -226,7 +229,9 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
       <ScrollArea className="max-h-72">
         {!query.trim() ? (
           <div className="px-4 py-8 text-center">
-            <Search className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+            <div className="empty-state-icon mx-auto !mb-3">
+              <Search className="w-5 h-5" />
+            </div>
             <p className="text-sm text-muted-foreground">Type to search across the system</p>
             <p className="text-xs text-muted-foreground/60 mt-1">
               Courses, students, assignments, announcements
@@ -234,6 +239,9 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
           </div>
         ) : filtered.length === 0 ? (
           <div className="px-4 py-8 text-center">
+            <div className="empty-state-icon mx-auto !mb-3">
+              <Inbox className="w-5 h-5" />
+            </div>
             <p className="text-sm text-muted-foreground">No results found for &ldquo;{query}&rdquo;</p>
           </div>
         ) : (
@@ -299,21 +307,25 @@ export function AppHeader() {
     : "U";
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/80 backdrop-blur-sm px-4 sm:px-6 shadow-[0_1px_3px_0_oklch(0.55_0.17_155/0.06)]">
-      <SidebarTrigger className="-ml-1 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors" />
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/80 backdrop-blur-md px-4 sm:px-6 relative">
+      {/* Gradient bottom border */}
+      <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[1px] bg-gradient-to-r from-emerald-500/0 via-emerald-500/40 to-emerald-500/0" />
+      
+      <SidebarTrigger className="-ml-1 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors rounded-md" />
 
       {/* Breadcrumb */}
       <Separator orientation="vertical" className="h-5 mx-1 hidden sm:block" />
       <Breadcrumb className="hidden sm:flex">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="#" className="text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+            <BreadcrumbLink href="#" className="text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors text-sm">
               Home
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>{currentPageLabel}</BreadcrumbPage>
+            <BreadcrumbPage className="text-sm font-medium">{currentPageLabel}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -328,9 +340,9 @@ export function AppHeader() {
       {/* Search */}
       <Popover>
         <PopoverTrigger asChild>
-          <div className="hidden md:flex relative max-w-xs w-full cursor-pointer">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <div className="w-full pl-9 pr-3 h-9 text-sm bg-muted/50 border border-input rounded-md flex items-center text-muted-foreground hover:bg-muted/70 hover:border-ring/50 transition-all duration-200">
+          <div className="hidden md:flex relative max-w-xs w-full cursor-pointer group">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none transition-colors group-hover:text-emerald-500" />
+            <div className="w-full pl-9 pr-3 h-9 text-sm bg-muted/50 border border-input rounded-lg flex items-center text-muted-foreground hover:bg-muted/70 hover:border-emerald-500/30 transition-all duration-200 group-hover:shadow-sm group-hover:shadow-emerald-500/5">
               Search...
             </div>
           </div>
@@ -343,7 +355,7 @@ export function AppHeader() {
       {/* Mobile search icon */}
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors">
+          <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors rounded-md">
             <Search className="h-4 w-4" />
           </Button>
         </PopoverTrigger>
@@ -356,7 +368,7 @@ export function AppHeader() {
       <Button
         variant="ghost"
         size="icon"
-        className="h-9 w-9 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+        className="h-9 w-9 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors rounded-md"
         onClick={toggleTheme}
         aria-label="Toggle theme"
       >
@@ -370,7 +382,7 @@ export function AppHeader() {
       {/* Notifications */}
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-9 w-9 relative hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors group">
+          <Button variant="ghost" size="icon" className="h-9 w-9 relative hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors group rounded-md">
             <Bell className="h-4 w-4 transition-transform duration-300 group-hover:animate-bounce" />
             {unreadNotificationCount > 0 && (
               <Badge className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
@@ -387,7 +399,7 @@ export function AppHeader() {
       {/* User dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-9 gap-2 px-2 max-w-[180px] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors">
+          <Button variant="ghost" className="h-9 gap-2 px-2 max-w-[180px] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors rounded-md">
             <Avatar className="h-7 w-7 ring-1 ring-emerald-200 dark:ring-emerald-800 transition-all duration-200 hover:ring-2 hover:ring-emerald-400 dark:hover:ring-emerald-600">
               <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
               <AvatarFallback className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-[10px] font-medium">

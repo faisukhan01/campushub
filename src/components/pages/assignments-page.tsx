@@ -66,7 +66,7 @@ export function AssignmentsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-transition">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Assignments</h1>
@@ -174,7 +174,7 @@ export function AssignmentsPage() {
       </div>
 
       <Tabs defaultValue="list" className="space-y-4">
-        <TabsList>
+        <TabsList className="tabs-smooth">
           <TabsTrigger value="list">Assignment List</TabsTrigger>
           <TabsTrigger value="submissions">Submission Review</TabsTrigger>
           <TabsTrigger value="grid">Quick Grading</TabsTrigger>
@@ -198,7 +198,7 @@ export function AssignmentsPage() {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  <Card className="hover:shadow-md transition-shadow">
+                  <Card className="card-premium">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">

@@ -100,7 +100,7 @@ export function GradesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-transition">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Grading</h1>
@@ -138,7 +138,7 @@ export function GradesPage() {
       </div>
 
       <Tabs defaultValue="student" className="space-y-4">
-        <TabsList>
+        <TabsList className="tabs-smooth">
           <TabsTrigger value="student">By Student</TabsTrigger>
           <TabsTrigger value="assignment">By Assessment</TabsTrigger>
           <TabsTrigger value="overview">Overview</TabsTrigger>

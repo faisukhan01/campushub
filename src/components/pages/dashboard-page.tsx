@@ -71,6 +71,13 @@ import {
   HelpCircle,
   Building2,
   FolderTree,
+  Sparkles,
+  Bot,
+  Library,
+  BarChart as BarChartIcon,
+  CalendarDays,
+  Target,
+  History,
 } from "lucide-react";
 
 // ---- Helpers ----
@@ -198,15 +205,19 @@ function QuickActionButton({
   icon: Icon,
   label,
   color,
+  page,
 }: {
   icon: React.ElementType;
   label: string;
   color?: string;
+  page?: string;
 }) {
+  const setCurrentPage = useAppStore((s) => s.setCurrentPage);
   return (
     <Button
       variant="outline"
       className="flex flex-col items-center gap-2 h-auto py-4 px-3 hover:shadow-md transition-shadow"
+      onClick={() => page && setCurrentPage(page)}
     >
       <div
         className={`w-10 h-10 rounded-lg flex items-center justify-center ${
@@ -1004,6 +1015,67 @@ export function DashboardPage() {
           </Card>
         </div>
 
+        {/* Recent Activity + Progress Overview */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Recent Activity Timeline */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <History className="w-4 h-4 text-emerald-500" />
+                Recent Activity
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-0">
+                <ActivityItem title="Submitted Assignment 4" description="Data Structures - Graph Algorithms" time="2 hours ago" />
+                <ActivityItem title="Grade Published" description="Machine Learning Mid-term: A (85/100)" time="1 day ago" />
+                <ActivityItem title="Fee Payment" description="Semester 6 Tuition - $1,250 paid" time="2 days ago" />
+                <ActivityItem title="Attendance Warning" description="Operating Systems below 75%" time="3 days ago" />
+                <ActivityItem title="Course Enrolled" description="Advanced Algorithms (CS401)" time="5 days ago" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Progress Overview */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Target className="w-4 h-4 text-emerald-500" />
+                Progress Overview
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { label: "GPA", value: 3.8, max: 4.0, color: "text-emerald-600 dark:text-emerald-400", trackColor: "stroke-emerald-200 dark:stroke-emerald-900/50" },
+                  { label: "Attendance", value: 88, max: 100, color: "text-teal-600 dark:text-teal-400", trackColor: "stroke-teal-200 dark:stroke-teal-900/50", suffix: "%" },
+                  { label: "Credits", value: 72, max: 140, color: "text-amber-600 dark:text-amber-400", trackColor: "stroke-amber-200 dark:stroke-amber-900/50" },
+                  { label: "Courses Done", value: 18, max: 42, color: "text-rose-600 dark:text-rose-400", trackColor: "stroke-rose-200 dark:stroke-rose-900/50" },
+                ].map((item) => {
+                  const pct = Math.round((item.value / item.max) * 100);
+                  const circumference = 2 * Math.PI * 36;
+                  const offset = circumference - (pct / 100) * circumference;
+                  return (
+                    <div key={item.label} className="flex flex-col items-center p-3 rounded-lg bg-muted/50">
+                      <div className="relative w-20 h-20">
+                        <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+                          <circle cx="40" cy="40" r="36" fill="none" strokeWidth="6" className={item.trackColor} />
+                          <circle cx="40" cy="40" r="36" fill="none" strokeWidth="6" stroke="currentColor" className={item.color} strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className={`text-sm font-bold ${item.color}`}>{item.suffix ? `${item.value}%` : item.value}</span>
+                        </div>
+                      </div>
+                      <p className="text-xs font-medium mt-2">{item.label}</p>
+                      <p className="text-[10px] text-muted-foreground">of {item.suffix ? item.max + "%" : item.max}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Quick Actions */}
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-3">
@@ -1013,12 +1085,15 @@ export function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-              <QuickActionButton icon={FileEdit} label="Assignments" />
-              <QuickActionButton icon={CreditCard} label="Fee Ledger" color="bg-teal-500" />
-              <QuickActionButton icon={MessageSquare} label="Messages" color="bg-amber-500" />
-              <QuickActionButton icon={Calendar} label="Leave Request" />
-              <QuickActionButton icon={HelpCircle} label="Help Center" color="bg-rose-500" />
+            <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-8 gap-3">
+              <QuickActionButton icon={Sparkles} label="AI Assistant" color="bg-gradient-to-br from-emerald-500 to-teal-500" page="ai-assistant" />
+              <QuickActionButton icon={CalendarDays} label="Calendar" page="calendar" />
+              <QuickActionButton icon={Library} label="Resources" color="bg-teal-500" page="library" />
+              <QuickActionButton icon={BarChartIcon} label="Analytics" color="bg-amber-500" page="performance" />
+              <QuickActionButton icon={FileEdit} label="Assignments" page="assignments" />
+              <QuickActionButton icon={CreditCard} label="Fee Ledger" color="bg-teal-500" page="fees" />
+              <QuickActionButton icon={MessageSquare} label="Messages" color="bg-amber-500" page="messages" />
+              <QuickActionButton icon={HelpCircle} label="Help Center" color="bg-rose-500" page="support" />
             </div>
           </CardContent>
         </Card>
@@ -1561,10 +1636,10 @@ export function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-3">
-                <QuickActionButton icon={UserPlus} label="Add Student" color="bg-emerald-500" />
-                <QuickActionButton icon={BookOpen} label="Create Course" color="bg-teal-500" />
-                <QuickActionButton icon={Megaphone} label="Post Announcement" color="bg-amber-500" />
-                <QuickActionButton icon={FileText} label="Generate Report" color="bg-rose-500" />
+                <QuickActionButton icon={UserPlus} label="Add Student" color="bg-emerald-500" page="users" />
+                <QuickActionButton icon={BookOpen} label="Create Course" color="bg-teal-500" page="courses" />
+                <QuickActionButton icon={Megaphone} label="Announcements" color="bg-amber-500" page="announcements" />
+                <QuickActionButton icon={FileText} label="Generate Report" color="bg-rose-500" page="reports" />
               </div>
             </CardContent>
           </Card>

@@ -109,7 +109,7 @@ export function AssessmentsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-transition">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Assessments</h1>
@@ -258,7 +258,7 @@ export function AssessmentsPage() {
       </div>
 
       <Tabs defaultValue="list" className="space-y-4">
-        <TabsList>
+        <TabsList className="tabs-smooth">
           <TabsTrigger value="list">Assessment List</TabsTrigger>
           {isTeacher && <TabsTrigger value="monitor">Live Monitor</TabsTrigger>}
           <TabsTrigger value="results">Results & Review</TabsTrigger>
@@ -273,7 +273,7 @@ export function AssessmentsPage() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <Card className="hover:shadow-md transition-shadow">
+                <Card className="card-premium">
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between mb-3">
                       <div>

@@ -58,7 +58,7 @@ export function CoursesPage() {
   const course = selectedCourse ? mockCourses.find((c) => c.id === selectedCourse) : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-transition">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">My Courses</h1>
@@ -84,7 +84,7 @@ export function CoursesPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className="hover:shadow-md transition-shadow overflow-hidden">
+              <Card className="card-premium overflow-hidden">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="min-w-0">

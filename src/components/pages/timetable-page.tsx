@@ -85,7 +85,7 @@ export function TimetablePage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 page-transition">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-96 rounded" />
       </div>
@@ -119,7 +119,7 @@ export function TimetablePage() {
       </div>
 
       <Tabs value={view} onValueChange={setView}>
-        <TabsList>
+        <TabsList className="tabs-smooth">
           <TabsTrigger value="weekly" className="gap-1"><Grid3X3 className="w-3 h-3" /> Weekly</TabsTrigger>
           <TabsTrigger value="daily" className="gap-1"><List className="w-3 h-3" /> Today</TabsTrigger>
         </TabsList>

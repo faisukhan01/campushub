@@ -153,7 +153,7 @@ export function MessagesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-transition">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Messages</h1>

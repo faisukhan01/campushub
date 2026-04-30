@@ -120,7 +120,7 @@ export function ChildrenPage() {
   ).slice(0, 3);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-transition">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">My Children</h1>
@@ -207,7 +207,7 @@ export function ChildrenPage() {
 
       {/* Detailed Tabs */}
       <Tabs defaultValue="attendance" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-4 tabs-smooth">
           <TabsTrigger value="attendance" className="text-xs sm:text-sm">Attendance</TabsTrigger>
           <TabsTrigger value="grades" className="text-xs sm:text-sm">Grades</TabsTrigger>
           <TabsTrigger value="assignments" className="text-xs sm:text-sm">Assignments</TabsTrigger>

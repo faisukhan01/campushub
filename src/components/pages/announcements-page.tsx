@@ -124,7 +124,7 @@ export function AnnouncementsPage() {
   ).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-transition">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -156,7 +156,7 @@ export function AnnouncementsPage() {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-3 tabs-smooth">
           <TabsTrigger value="school" className="text-xs sm:text-sm gap-1">
             <Megaphone className="w-3.5 h-3.5 hidden sm:block" />
             School
@@ -189,7 +189,7 @@ export function AnnouncementsPage() {
               return (
                 <Card
                   key={announcement.id}
-                  className={`hover:shadow-md transition-shadow cursor-pointer ${
+                  className={`card-premium cursor-pointer ${
                     !isRead ? "border-l-4 border-l-emerald-500" : ""
                   }`}
                   onClick={() => toggleRead(announcement.id)}
@@ -284,7 +284,7 @@ export function AnnouncementsPage() {
                 return (
                   <Card
                     key={announcement.id}
-                    className={`hover:shadow-md transition-shadow cursor-pointer ${
+                    className={`card-premium cursor-pointer ${
                       !isRead ? "border-l-4 border-l-emerald-500" : ""
                     }`}
                     onClick={() => toggleRead(announcement.id)}

@@ -29,6 +29,11 @@ import { InstitutesPage } from "@/components/pages/institutes-page";
 import { ChildrenPage } from "@/components/pages/children-page";
 import { AssessmentsPage } from "@/components/pages/assessments-page";
 import { StudentsPage } from "@/components/pages/students-page";
+import { AiAssistantPage } from "@/components/pages/ai-assistant-page";
+import { CalendarPage } from "@/components/pages/calendar-page";
+import { LibraryPage } from "@/components/pages/library-page";
+import { PerformancePage } from "@/components/pages/performance-page";
+import { NotificationsPage } from "@/components/pages/notifications-page";
 import { Separator } from "@/components/ui/separator";
 
 // Page routing map
@@ -56,6 +61,11 @@ const pageComponents: Record<string, React.ComponentType> = {
   children: ChildrenPage,
   assessments: AssessmentsPage,
   students: StudentsPage,
+  "ai-assistant": AiAssistantPage,
+  calendar: CalendarPage,
+  library: LibraryPage,
+  performance: PerformancePage,
+  notifications: NotificationsPage,
 };
 
 function AppShell() {
@@ -80,7 +90,7 @@ function AppShell() {
       <SidebarInset className="flex flex-col min-h-screen">
         <AppHeader />
         <main className="flex-1 p-4 sm:p-6">
-          {PageComponent ? <PageComponent /> : (
+          {PageComponent ? <div className="page-transition"><PageComponent /></div> : (
             <div className="flex items-center justify-center min-h-[60vh]">
               <div className="text-center">
                 <h2 className="text-xl font-semibold text-muted-foreground">Page Not Found</h2>

@@ -63,7 +63,7 @@ export function BranchesPage() {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-transition">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -139,7 +139,7 @@ export function BranchesPage() {
             onOpenChange={(open) => setExpandedInstitute(open ? institute.id : null)}
           >
             <CollapsibleTrigger asChild>
-              <Card className="cursor-pointer hover:shadow-md transition-shadow">
+              <Card className="cursor-pointer card-premium">
                 <CardContent className="p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
@@ -169,7 +169,7 @@ export function BranchesPage() {
             <CollapsibleContent>
               <div className="ml-4 sm:ml-8 mt-2 space-y-3 border-l-2 border-emerald-200 dark:border-emerald-800 pl-4">
                 {instBranches.map((branch) => (
-                  <Card key={branch.id} className="hover:shadow-md transition-shadow">
+                  <Card key={branch.id} className="card-premium">
                     <CardContent className="p-5">
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div className="min-w-0">

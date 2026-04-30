@@ -8,7 +8,7 @@ import { Layers, Users, Calendar, UserCheck } from "lucide-react";
 
 export function BatchesPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-transition">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Batches</h1>
@@ -19,7 +19,7 @@ export function BatchesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {mockBatches.map((batch) => (
-          <Card key={batch.id} className="hover:shadow-md transition-shadow">
+          <Card key={batch.id} className="card-premium">
             <CardContent className="p-5">
               <div className="flex items-start justify-between mb-3">
                 <div>
