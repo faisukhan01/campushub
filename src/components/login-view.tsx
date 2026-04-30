@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { GraduationCap, Shield, UserCog, BookOpen, Users, Heart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import type { UserRole } from "@/types";
 import { useAppStore } from "@/store/app-store";
 
@@ -12,6 +13,7 @@ interface RoleCard {
   description: string;
   icon: React.ElementType;
   gradient: string;
+  borderColor: string;
 }
 
 const roles: RoleCard[] = [
@@ -21,6 +23,7 @@ const roles: RoleCard[] = [
     description: "Full system access across all institutes, branches, and users",
     icon: Shield,
     gradient: "from-emerald-500 to-teal-600",
+    borderColor: "border-t-emerald-500",
   },
   {
     role: "InstituteAdmin",
@@ -28,6 +31,7 @@ const roles: RoleCard[] = [
     description: "Manage branches, departments, courses, and fee operations",
     icon: UserCog,
     gradient: "from-teal-500 to-cyan-600",
+    borderColor: "border-t-teal-500",
   },
   {
     role: "BranchAdmin",
@@ -35,6 +39,7 @@ const roles: RoleCard[] = [
     description: "Oversee branch operations, batches, timetable, and attendance",
     icon: GraduationCap,
     gradient: "from-green-500 to-emerald-600",
+    borderColor: "border-t-green-500",
   },
   {
     role: "Teacher",
@@ -42,6 +47,7 @@ const roles: RoleCard[] = [
     description: "Manage courses, grade assignments, track attendance and assessments",
     icon: BookOpen,
     gradient: "from-emerald-600 to-green-600",
+    borderColor: "border-t-emerald-600",
   },
   {
     role: "Student",
@@ -49,6 +55,7 @@ const roles: RoleCard[] = [
     description: "View courses, submit assignments, check grades and fees",
     icon: Users,
     gradient: "from-teal-600 to-emerald-700",
+    borderColor: "border-t-teal-600",
   },
   {
     role: "Parent",
@@ -56,6 +63,7 @@ const roles: RoleCard[] = [
     description: "Monitor child progress, attendance, fees, and communicate",
     icon: Heart,
     gradient: "from-green-600 to-teal-700",
+    borderColor: "border-t-green-600",
   },
 ];
 
@@ -92,19 +100,67 @@ export function LoginView() {
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-emerald-950/30 dark:via-background dark:to-teal-950/20 -z-10" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-emerald-200/40 dark:bg-emerald-900/20 rounded-full blur-3xl -z-10" />
 
+      {/* Grid pattern overlay */}
+      <div className="absolute inset-0 -z-10 opacity-[0.03] dark:opacity-[0.05]"
+        style={{
+          backgroundImage: `linear-gradient(oklch(0.55 0.17 155) 1px, transparent 1px), linear-gradient(90deg, oklch(0.55 0.17 155) 1px, transparent 1px)`,
+          backgroundSize: "40px 40px",
+        }}
+      />
+
+      {/* Floating geometric shapes */}
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        {/* Circle 1 */}
+        <div className="absolute top-[10%] left-[8%] w-16 h-16 sm:w-24 sm:h-24 rounded-full border-2 border-emerald-300/30 dark:border-emerald-700/20 animate-[float-shape-1_12s_ease-in-out_infinite]" />
+        {/* Circle 2 */}
+        <div className="absolute top-[20%] right-[12%] w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-emerald-200/20 dark:bg-emerald-800/15 animate-[float-shape-2_15s_ease-in-out_infinite]" />
+        {/* Square 1 */}
+        <div className="absolute bottom-[25%] left-[5%] w-12 h-12 sm:w-20 sm:h-20 rounded-lg border-2 border-teal-300/25 dark:border-teal-700/20 rotate-45 animate-[float-shape-3_18s_ease-in-out_infinite]" />
+        {/* Square 2 */}
+        <div className="absolute top-[60%] right-[8%] w-8 h-8 sm:w-14 sm:h-14 rounded-lg bg-teal-200/15 dark:bg-teal-800/10 rotate-12 animate-[float-shape-1_14s_ease-in-out_infinite_2s]" />
+        {/* Circle 3 */}
+        <div className="absolute bottom-[15%] right-[20%] w-6 h-6 sm:w-10 sm:h-10 rounded-full border border-emerald-400/20 dark:border-emerald-600/15 animate-[float-shape-2_10s_ease-in-out_infinite_4s]" />
+        {/* Diamond */}
+        <div className="absolute top-[40%] left-[15%] w-6 h-6 sm:w-10 sm:h-10 rounded-sm border border-teal-400/20 dark:border-teal-600/15 rotate-45 animate-[float-shape-3_20s_ease-in-out_infinite_1s]" />
+      </div>
+
+      {/* Particle dots */}
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 rounded-full bg-emerald-400/30 dark:bg-emerald-500/20"
+            style={{
+              left: `${(i * 5.2 + 3) % 100}%`,
+              top: `${(i * 7.1 + 5) % 100}%`,
+              animation: `particle-float ${4 + (i % 4)}s ease-in-out infinite`,
+              animationDelay: `${(i * 0.3) % 3}s`,
+            }}
+          />
+        ))}
+      </div>
+
       {/* Branding */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="text-center mb-8 sm:mb-12"
+        className="text-center mb-8 sm:mb-12 relative z-10"
       >
-        <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25 mb-4 sm:mb-6">
-          <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+        <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25 mb-4 sm:mb-6 relative">
+          {/* Pulsing glow ring */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 animate-ping opacity-20" />
+          <div className="absolute -inset-2 rounded-2xl bg-gradient-to-br from-emerald-400/30 to-teal-500/30 blur-md animate-pulse-slow" />
+          <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10 text-white relative z-10" />
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
           CampusHub
         </h1>
+        <div className="flex items-center justify-center gap-2 mt-2">
+          <Badge variant="secondary" className="text-[10px] font-medium tracking-wider uppercase bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 border-0">
+            Version 2.0
+          </Badge>
+        </div>
         <p className="text-muted-foreground mt-2 text-sm sm:text-base max-w-md mx-auto">
           Comprehensive Campus Management System — Select a role to explore the demo
         </p>
@@ -115,20 +171,20 @@ export function LoginView() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-4xl w-full"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-4xl w-full relative z-10"
       >
         {roles.map((r) => {
           const Icon = r.icon;
           return (
             <motion.div key={r.role} variants={cardVariants}>
               <Card
-                className="group cursor-pointer border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white/80 dark:bg-card/80 backdrop-blur-sm"
+                className={`group cursor-pointer border-0 border-t-[3px] ${r.borderColor} glass-card card-hover rounded-xl overflow-hidden`}
                 onClick={() => login(r.role)}
               >
                 <CardContent className="p-5 sm:p-6">
                   <div className="flex items-start gap-4">
                     <div
-                      className={`flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br ${r.gradient} shadow-sm`}
+                      className={`flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br ${r.gradient} shadow-sm transition-transform duration-300 group-hover:scale-110`}
                     >
                       <Icon className="w-5 h-5 text-white" />
                     </div>
@@ -141,7 +197,7 @@ export function LoginView() {
                       </p>
                     </div>
                   </div>
-                  <div className="mt-4 flex items-center text-xs font-medium text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="mt-4 flex items-center text-xs font-medium text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     Click to enter
                     <svg
                       className="ml-1 w-3.5 h-3.5 group-hover:translate-x-1 transition-transform"
@@ -161,14 +217,40 @@ export function LoginView() {
       </motion.div>
 
       {/* Footer */}
-      <motion.p
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
-        className="text-xs text-muted-foreground mt-10 sm:mt-14 text-center"
+        className="mt-10 sm:mt-14 text-center space-y-2 relative z-10"
       >
-        Demo application — Select any role to explore the system
-      </motion.p>
+        <p className="text-xs text-muted-foreground">
+          Demo application — Select any role to explore the system
+        </p>
+        <p className="text-[10px] text-muted-foreground/60">
+          Powered by <span className="font-medium text-emerald-600/60 dark:text-emerald-400/60">Z.ai</span>
+        </p>
+      </motion.div>
+
+      {/* Floating shape keyframes */}
+      <style jsx global>{`
+        @keyframes float-shape-1 {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          33% { transform: translateY(-20px) rotate(5deg); }
+          66% { transform: translateY(10px) rotate(-3deg); }
+        }
+        @keyframes float-shape-2 {
+          0%, 100% { transform: translateY(0px) translateX(0px); }
+          50% { transform: translateY(-15px) translateX(10px); }
+        }
+        @keyframes float-shape-3 {
+          0%, 100% { transform: translateY(0px) rotate(45deg); }
+          50% { transform: translateY(-25px) rotate(50deg); }
+        }
+        @keyframes particle-float {
+          0%, 100% { opacity: 0.2; transform: translateY(0px) scale(1); }
+          50% { opacity: 0.8; transform: translateY(-12px) scale(1.5); }
+        }
+      `}</style>
     </div>
   );
 }

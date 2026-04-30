@@ -5,10 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import { useAppStore } from "@/store/app-store";
 import { getDashboardData } from "@/lib/mock-data";
 import {
   mockParents,
+  mockStudents,
   mockGrades,
   mockMessages,
   mockAnnouncements,
@@ -16,9 +18,30 @@ import {
   mockEnrollments,
   mockFeeInvoices,
   mockAssignments,
+  mockCourses,
+  mockTimetable,
 } from "@/lib/mock-data";
-import { useEffect, useState } from "react";
-import type { DashboardStats, ParentDashboardStats } from "@/types";
+import { useMemo } from "react";
+import type {
+  DashboardStats,
+  ParentDashboardStats,
+  StudentDashboardStats,
+  TeacherDashboardStats,
+  UserRole,
+} from "@/types";
+import {
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import {
   Users,
   GraduationCap,
@@ -36,6 +59,18 @@ import {
   ChevronRight,
   Bell,
   Heart,
+  BookOpen,
+  Award,
+  ClipboardCheck,
+  DollarSign,
+  UserPlus,
+  FileText,
+  Layers,
+  MapPin,
+  Shield,
+  HelpCircle,
+  Building2,
+  FolderTree,
 } from "lucide-react";
 
 // ---- Helpers ----
@@ -68,6 +103,19 @@ function formatDateShort(dateStr: string) {
   });
 }
 
+function getTodayName(): string {
+  return new Date().toLocaleDateString("en-US", { weekday: "long" });
+}
+
+function getTodayFormatted(): string {
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 // ---- Stat Card ----
 
 function StatCard({
@@ -86,7 +134,7 @@ function StatCard({
   color?: string;
 }) {
   return (
-    <Card>
+    <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div className="min-w-0">
@@ -144,30 +192,90 @@ function ActivityItem({
   );
 }
 
+// ---- Quick Action Button ----
+
+function QuickActionButton({
+  icon: Icon,
+  label,
+  color,
+}: {
+  icon: React.ElementType;
+  label: string;
+  color?: string;
+}) {
+  return (
+    <Button
+      variant="outline"
+      className="flex flex-col items-center gap-2 h-auto py-4 px-3 hover:shadow-md transition-shadow"
+    >
+      <div
+        className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+          color ?? "bg-emerald-100 dark:bg-emerald-900/50"
+        }`}
+      >
+        <Icon
+          className={`w-5 h-5 ${
+            color
+              ? "text-white"
+              : "text-emerald-600 dark:text-emerald-400"
+          }`}
+        />
+      </div>
+      <span className="text-xs font-medium">{label}</span>
+    </Button>
+  );
+}
+
+// ---- Urgency Badge ----
+
+function UrgencyBadge({ dueDate }: { dueDate: string }) {
+  const now = new Date();
+  const due = new Date(dueDate);
+  const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return (
+      <Badge variant="destructive" className="text-[10px]">
+        Overdue
+      </Badge>
+    );
+  }
+  if (diffDays <= 3) {
+    return (
+      <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-0 text-[10px]">
+        Due Soon
+      </Badge>
+    );
+  }
+  return (
+    <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0 text-[10px]">
+      Upcoming
+    </Badge>
+  );
+}
+
 // ---- Main Component ----
 
 export function DashboardPage() {
   const currentRole = useAppStore((s) => s.currentUser?.role);
   const currentUser = useAppStore((s) => s.currentUser);
-  const [data, setData] = useState<DashboardStats | null>(null);
+  const data = useMemo<DashboardStats | null>(
+    () => (currentRole ? getDashboardData(currentRole) : null),
+    [currentRole]
+  );
 
-  useEffect(() => {
-    if (currentRole) {
-      setData(getDashboardData(currentRole));
-    }
-  }, [currentRole]);
-
-  if (!data) return null;
+  if (!data || !currentUser) return null;
 
   const stats = data as Record<string, unknown>;
 
-  // ---- PARENT ROLE ----
-  if (currentRole === "Parent" && currentUser) {
+  // ============================================================
+  // PARENT ROLE (keep as-is)
+  // ============================================================
+  if (currentRole === "Parent") {
     const parentData = data as ParentDashboardStats;
     const parent = mockParents.find((p) => p.id === currentUser.id);
     const children = parent?.children ?? mockStudents.slice(0, 1);
 
-    // Fee calculations
     const childIds = children.map((c) => c.id);
     const childFees = mockFeeInvoices.filter((f) =>
       childIds.includes(f.studentId)
@@ -178,12 +286,10 @@ export function DashboardPage() {
       (f) => f.status === "Overdue"
     ).length;
 
-    // Upcoming events
     const upcomingEvents = mockCalendarEvents
       .filter((e) => new Date(e.startDate) >= new Date())
       .slice(0, 4);
 
-    // Recent messages (parent-related)
     const parentMessages = mockMessages
       .filter(
         (m) =>
@@ -192,7 +298,6 @@ export function DashboardPage() {
       .slice(-3)
       .reverse();
 
-    // Recent announcements relevant to parent
     const parentAnnouncements = mockAnnouncements
       .filter(
         (a) =>
@@ -201,7 +306,6 @@ export function DashboardPage() {
       )
       .slice(0, 3);
 
-    // Recent activity items
     const recentActivity = stats.recentActivity as {
       title: string;
       description: string;
@@ -301,7 +405,6 @@ export function DashboardPage() {
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-                      {/* Attendance */}
                       <div className="text-center p-3 rounded-lg bg-muted/50">
                         <p className="text-[11px] text-muted-foreground mb-1">
                           Attendance
@@ -316,7 +419,6 @@ export function DashboardPage() {
                           className="mt-1 h-1.5"
                         />
                       </div>
-                      {/* GPA */}
                       <div className="text-center p-3 rounded-lg bg-muted/50">
                         <p className="text-[11px] text-muted-foreground mb-1">
                           Current GPA
@@ -332,7 +434,6 @@ export function DashboardPage() {
                               : "Average"}
                         </p>
                       </div>
-                      {/* Pending */}
                       <div className="text-center p-3 rounded-lg bg-muted/50">
                         <p className="text-[11px] text-muted-foreground mb-1">
                           Pending Tasks
@@ -344,7 +445,6 @@ export function DashboardPage() {
                           assignments
                         </p>
                       </div>
-                      {/* Recent Grade */}
                       <div className="text-center p-3 rounded-lg bg-muted/50">
                         <p className="text-[11px] text-muted-foreground mb-1">
                           Latest Grade
@@ -364,7 +464,7 @@ export function DashboardPage() {
                               {latestGrade.letterGrade}
                             </Badge>
                             <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
-                              {latestGrade.courseName.split(" ")[0]}...
+                              {latestGrade.courseName.split(" ").slice(0, 2).join(" ")}...
                             </p>
                           </>
                         ) : (
@@ -642,215 +742,844 @@ export function DashboardPage() {
     );
   }
 
-  // ---- OTHER ROLES (original dashboard) ----
-  const recentActivity = stats.recentActivity as
-    | { title: string; description: string; timestamp: string }[]
-    | undefined;
+  // ============================================================
+  // STUDENT ROLE
+  // ============================================================
+  if (currentRole === "Student") {
+    const studentData = data as StudentDashboardStats;
+    const student = mockStudents.find((s) => s.id === currentUser.id) ?? mockStudents[0];
 
-  const cards: {
-    title: string;
-    value: string | number;
-    subtitle?: string;
-    icon: React.ElementType;
-    trend?: string;
-  }[] = [];
+    // Today's timetable
+    const todayName = getTodayName() as "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
+    const todayClasses = mockTimetable.filter(
+      (t) => t.batchId === student.batchId && t.day === todayName
+    ).slice(0, 3);
 
-  if (stats.totalInstitutes)
-    cards.push({
-      title: "Total Institutes",
-      value: stats.totalInstitutes as number,
-      icon: GraduationCap,
-    });
-  if (stats.totalBranches)
-    cards.push({
-      title: "Branches",
-      value: stats.totalBranches as number,
-      icon: BarChart3,
-    });
-  if (stats.totalStudents)
-    cards.push({
-      title: "Total Students",
-      value: stats.totalStudents as number,
-      icon: Users,
-      trend: "+12% this month",
-    });
-  if (stats.totalTeachers)
-    cards.push({
-      title: "Total Teachers",
-      value: stats.totalTeachers as number,
-      icon: GraduationCap,
-    });
-  if (stats.totalCourses)
-    cards.push({
-      title: "Courses",
-      value: stats.totalCourses as number,
-      icon: BarChart3,
-    });
-  if (stats.totalDepartments)
-    cards.push({
-      title: "Departments",
-      value: stats.totalDepartments as number,
-      icon: BarChart3,
-    });
-  if (stats.enrolledCourses)
-    cards.push({
-      title: "Enrolled Courses",
-      value: stats.enrolledCourses as number,
-      icon: BarChart3,
-    });
-  if (stats.completedCourses)
-    cards.push({
-      title: "Completed",
-      value: stats.completedCourses as number,
-      icon: BarChart3,
-    });
-  if (stats.overallGPA)
-    cards.push({
-      title: "Overall GPA",
-      value: stats.overallGPA as number,
-      icon: TrendingUp,
-      trend: "+0.2 from last semester",
-    });
-  if (stats.attendanceRate)
-    cards.push({
-      title: "Attendance Rate",
-      value: `${stats.attendanceRate as number}%`,
-      icon: Activity,
-      trend: "+2.5% this week",
-    });
-  if (stats.todayClasses)
-    cards.push({
-      title: "Today's Classes",
-      value: stats.todayClasses as number,
-      icon: Clock,
-    });
-  if (stats.pendingGrading)
-    cards.push({
-      title: "Pending Grading",
-      value: stats.pendingGrading as number,
-      icon: BarChart3,
-    });
-  if (stats.activeUsers)
-    cards.push({
-      title: "Active Users",
-      value: stats.activeUsers as number,
-      icon: Users,
-      trend: "+8% this week",
-    });
-  if (stats.revenue)
-    cards.push({
-      title: "Revenue",
-      value: `$${((stats.revenue as number) / 1000).toFixed(0)}k`,
-      icon: TrendingUp,
-      trend: "+15% this quarter",
-    });
-  if (stats.monthlyGrowth)
-    cards.push({
-      title: "Monthly Growth",
-      value: `${stats.monthlyGrowth}%`,
-      icon: TrendingUp,
-    });
-  if (stats.pendingTasks)
-    cards.push({
-      title: "Pending Tasks",
-      value: stats.pendingTasks as number,
-      icon: Clock,
-    });
-  if (stats.pendingFees)
-    cards.push({
-      title: "Pending Fees",
-      value: `$${stats.pendingFees as number}`,
-      icon: BarChart3,
-    });
+    // Upcoming assignments
+    const enrolledCourseIds = mockEnrollments
+      .filter((e) => e.studentId === student.id)
+      .map((e) => e.courseId);
+    const upcomingAssignments = mockAssignments
+      .filter((a) => enrolledCourseIds.includes(a.courseId) && new Date(a.dueDate) >= new Date())
+      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+      .slice(0, 5);
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Welcome back, {useAppStore.getState().currentUser?.name?.split(" ")[0]}!
-        </h1>
-        <p className="text-muted-foreground">
-          Here&apos;s what&apos;s happening with your{" "}
-          {currentRole === "Student"
-            ? "academics"
-            : currentRole === "Parent"
-              ? "children"
-              : "institution"}{" "}
-          today.
-        </p>
-      </div>
+    // Recent announcements
+    const studentAnnouncements = mockAnnouncements
+      .filter((a) => a.targetAudience.includes("Student"))
+      .slice(0, 3);
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {cards.slice(0, 8).map((card, i) => (
-          <StatCard key={i} {...card} />
-        ))}
-      </div>
+    // Recent grades
+    const recentGrades = mockGrades
+      .filter((g) => g.studentId === student.id)
+      .slice(0, 3);
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
+    // Attendance trend (mock weekly)
+    const attendanceTrend = studentData.attendanceTrend ?? [
+      { week: "Mon", rate: 90 },
+      { week: "Tue", rate: 85 },
+      { week: "Wed", rate: 92 },
+      { week: "Thu", rate: 88 },
+      { week: "Fri", rate: 95 },
+      { week: "Sat", rate: 78 },
+    ];
+
+    return (
+      <div className="space-y-6">
+        {/* Welcome Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Welcome back, {currentUser.name?.split(" ")[0]}!
+            </h1>
+            <p className="text-muted-foreground">{getTodayFormatted()}</p>
+          </div>
+          <Badge variant="outline" className="w-fit gap-1">
+            <GraduationCap className="w-3 h-3 text-emerald-500" />
+            Student Portal
+          </Badge>
+        </div>
+
+        {/* Stat Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            title="Enrolled Courses"
+            value={studentData.enrolledCourses}
+            icon={BookOpen}
+            color="bg-emerald-500"
+          />
+          <StatCard
+            title="Overall GPA"
+            value={studentData.overallGPA.toFixed(2)}
+            icon={Award}
+            color="bg-teal-500"
+            trend="+0.2 from last semester"
+          />
+          <StatCard
+            title="Attendance Rate"
+            value={`${studentData.attendanceRate}%`}
+            icon={Activity}
+            color={studentData.attendanceRate >= 85 ? "bg-emerald-500" : "bg-amber-500"}
+            trend="+2.5% this week"
+          />
+          <StatCard
+            title="Pending Fees"
+            value={`$${studentData.pendingFees.toLocaleString()}`}
+            icon={CreditCard}
+            color="bg-amber-500"
+          />
+        </div>
+
+        {/* Timetable + Attendance Trend */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Today's Timetable */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Clock className="w-4 h-4 text-emerald-500" />
+                Today&apos;s Timetable
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {todayClasses.length > 0 ? (
+                <div className="space-y-3">
+                  {todayClasses.map((cls, i) => (
+                    <div key={cls.id} className="flex items-center gap-3 py-2">
+                      <div className="text-center min-w-[52px]">
+                        <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{cls.startTime}</p>
+                        <p className="text-[10px] text-muted-foreground">{cls.endTime}</p>
+                      </div>
+                      <Separator orientation="vertical" className="h-10" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{cls.courseName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {cls.roomName} &middot; {cls.teacherName} &middot; {cls.courseCode}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  No classes scheduled for today
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Attendance Trend */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-emerald-500" />
+                Attendance Trend
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={attendanceTrend}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                  <XAxis dataKey="week" tick={{ fontSize: 12 }} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb" }}
+                    formatter={(value: number) => [`${value}%`, "Attendance"]}
+                  />
+                  <Bar dataKey="rate" fill="#10b981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Upcoming Deadlines */}
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">
-              Recent Activity
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-500" />
+              Upcoming Deadlines
             </CardTitle>
           </CardHeader>
-          <CardContent className="divide-y">
-            {recentActivity && recentActivity.length > 0 ? (
-              recentActivity.slice(0, 5).map((item, i) => (
-                <ActivityItem
-                  key={i}
-                  title={item.title}
-                  description={item.description}
-                  time={new Date(item.timestamp).toLocaleDateString()}
-                />
-              ))
+          <CardContent>
+            {upcomingAssignments.length > 0 ? (
+              <div className="space-y-3">
+                {upcomingAssignments.map((asgn) => (
+                  <div key={asgn.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                    <div className="min-w-0 flex-1 mr-4">
+                      <p className="text-sm font-medium truncate">{asgn.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {asgn.courseName} &middot; {asgn.totalMarks} marks
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-xs text-muted-foreground">
+                        {formatDateShort(asgn.dueDate)}
+                      </span>
+                      <UrgencyBadge dueDate={asgn.dueDate} />
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                No recent activity
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No upcoming deadlines
               </p>
             )}
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Announcements + Recent Grades */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Recent Announcements */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Megaphone className="w-4 h-4 text-emerald-500" />
+                Recent Announcements
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {studentAnnouncements.map((ann, i) => (
+                  <div key={ann.id} className="flex items-start gap-3 py-2 border-b last:border-0">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1">
+                        <p className="text-sm font-medium truncate">{ann.title}</p>
+                        {i === 0 && <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />}
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                        {ann.content}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {formatDateShort(ann.createdAt)} &middot; {ann.authorName}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Grades */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Award className="w-4 h-4 text-emerald-500" />
+                Recent Grades
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recentGrades.length > 0 ? (
+                <div className="space-y-3">
+                  {recentGrades.map((grade) => (
+                    <div key={grade.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{grade.courseName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {grade.assessmentName ?? "Assignment"} &middot;{" "}
+                          {grade.marksObtained}/{grade.totalMarks}
+                        </p>
+                      </div>
+                      <Badge
+                        variant={
+                          grade.gradePoint >= 3.5
+                            ? "default"
+                            : grade.gradePoint >= 2.5
+                              ? "secondary"
+                              : "destructive"
+                        }
+                      >
+                        {grade.letterGrade}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No grades yet
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">
-              Quick Info
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <ChevronRight className="w-4 h-4 text-emerald-500" />
+              Quick Actions
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-sm text-muted-foreground">Role</span>
-                <Badge variant="outline">{currentRole}</Badge>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-sm text-muted-foreground">Institute</span>
-                <span className="text-sm font-medium">
-                  Greenfield Education Group
-                </span>
-              </div>
-              {stats.upcomingEvents && (
-                <div className="flex items-center justify-between py-2 border-b">
-                  <span className="text-sm text-muted-foreground">
-                    Upcoming Events
-                  </span>
-                  <span className="text-sm font-medium">
-                    {stats.upcomingEvents as number}
-                  </span>
-                </div>
-              )}
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-muted-foreground">
-                  Notifications
-                </span>
-                <Badge variant="secondary">
-                  {stats.notifications as number} new
-                </Badge>
-              </div>
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+              <QuickActionButton icon={FileEdit} label="Assignments" />
+              <QuickActionButton icon={CreditCard} label="Fee Ledger" color="bg-teal-500" />
+              <QuickActionButton icon={MessageSquare} label="Messages" color="bg-amber-500" />
+              <QuickActionButton icon={Calendar} label="Leave Request" />
+              <QuickActionButton icon={HelpCircle} label="Help Center" color="bg-rose-500" />
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // ============================================================
+  // TEACHER ROLE
+  // ============================================================
+  if (currentRole === "Teacher") {
+    const teacherData = data as TeacherDashboardStats;
+    const teacher = mockCourses.find(
+      (c) => c.teacherId === currentUser.id
+    ) ?? mockCourses[0];
+
+    // Teacher's courses
+    const myCourses = mockCourses.filter((c) => c.teacherId === currentUser.id);
+
+    // Today's classes
+    const todayName = getTodayName() as "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
+    const todayClasses = mockTimetable.filter(
+      (t) => t.teacherId === currentUser.id && t.day === todayName
+    );
+
+    // Course attendance data
+    const courseAttendance = teacherData.chartsData?.courseAttendance ?? [
+      { course: "DS & Algo", rate: 89 },
+      { course: "Machine Learning", rate: 92 },
+    ];
+
+    // Low attendance students
+    const lowAttendanceStudents = [
+      { name: "Liam Johnson", course: "DS & Algo", rate: 72 },
+      { name: "Ava Chen", course: "DS & Algo", rate: 68 },
+      { name: "Noah Williams", course: "Marketing", rate: 74 },
+    ];
+
+    // Teacher messages
+    const teacherMessages = mockMessages
+      .filter(
+        (m) => m.senderId === currentUser.id || m.receiverId === currentUser.id
+      )
+      .slice(-3)
+      .reverse();
+
+    // Teacher announcements
+    const teacherAnnouncements = mockAnnouncements
+      .filter((a) => a.targetAudience.includes("Teacher"))
+      .slice(0, 3);
+
+    // Total students across all courses
+    const totalStudents = myCourses.reduce((s, c) => s + c.enrolledCount, 0);
+
+    return (
+      <div className="space-y-6">
+        {/* Welcome Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Welcome back, {currentUser.name?.split(" ")[0]}!
+            </h1>
+            <p className="text-muted-foreground">{getTodayFormatted()}</p>
+          </div>
+          <Badge variant="outline" className="w-fit gap-1">
+            <ClipboardCheck className="w-3 h-3 text-emerald-500" />
+            Teacher Portal
+          </Badge>
+        </div>
+
+        {/* Stat Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <StatCard
+            title="My Courses"
+            value={myCourses.length}
+            icon={BookOpen}
+            color="bg-emerald-500"
+          />
+          <StatCard
+            title="Total Students"
+            value={totalStudents}
+            icon={Users}
+            color="bg-teal-500"
+          />
+          <StatCard
+            title="Today's Classes"
+            value={todayClasses.length}
+            icon={Clock}
+            color="bg-amber-500"
+          />
+          <StatCard
+            title="Pending Grading"
+            value={teacherData.pendingGrading}
+            icon={FileEdit}
+            color="bg-rose-500"
+          />
+          <StatCard
+            title="Avg Attendance"
+            value={`${teacherData.attendanceRate}%`}
+            icon={Activity}
+            color="bg-emerald-500"
+            trend="+1.5% this week"
+          />
+        </div>
+
+        {/* Today's Classes + Pending Tasks */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Today's Classes */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-emerald-500" />
+                Today&apos;s Classes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {todayClasses.length > 0 ? (
+                <div className="space-y-3">
+                  {todayClasses.map((cls) => (
+                    <div key={cls.id} className="flex items-center gap-3 py-2 border-b last:border-0">
+                      <div className="text-center min-w-[52px]">
+                        <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{cls.startTime}</p>
+                        <p className="text-[10px] text-muted-foreground">{cls.endTime}</p>
+                      </div>
+                      <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ backgroundColor: cls.color ?? "#10b981" }} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{cls.courseName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {cls.roomName} &middot; {cls.batchName} &middot; {cls.courseCode}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  No classes today
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Pending Tasks */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-500" />
+                Pending Tasks
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div>
+                    <p className="text-sm font-medium">3 sessions need attendance marking</p>
+                    <p className="text-xs text-muted-foreground">DS & Algo, Machine Learning</p>
+                  </div>
+                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                    Mark Now
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div>
+                    <p className="text-sm font-medium">5 submissions need grading</p>
+                    <p className="text-xs text-muted-foreground">BST Implementation, Graph Traversal</p>
+                  </div>
+                  <Button size="sm" variant="outline">
+                    Review
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div>
+                    <p className="text-sm font-medium">1 assessment scheduled this week</p>
+                    <p className="text-xs text-muted-foreground">Mid-term Quiz - DS & Algo</p>
+                  </div>
+                  <Button size="sm" variant="outline">
+                    Setup
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Course Attendance Chart + Low Attendance Flags */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Course Attendance */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Activity className="w-4 h-4 text-emerald-500" />
+                Course Attendance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={courseAttendance} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.3} />
+                  <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12 }} />
+                  <YAxis type="category" dataKey="course" tick={{ fontSize: 12 }} width={100} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb" }}
+                    formatter={(value: number) => [`${value}%`, "Attendance"]}
+                  />
+                  <Bar dataKey="rate" fill="#10b981" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Low Attendance Flags */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-500" />
+                Low Attendance Flags
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground mb-3">Students below 75% attendance threshold</p>
+              <div className="space-y-3">
+                {lowAttendanceStudents.map((student, i) => (
+                  <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="text-[10px] bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+                          {getInitials(student.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium">{student.name}</p>
+                        <p className="text-xs text-muted-foreground">{student.course}</p>
+                      </div>
+                    </div>
+                    <span className={`text-sm font-bold ${getAttendanceColor(student.rate)}`}>
+                      {student.rate}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Messages + Announcements */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Recent Messages */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-emerald-500" />
+                Recent Messages
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {teacherMessages.length > 0 ? (
+                  teacherMessages.map((msg) => (
+                    <div key={msg.id} className="flex items-start gap-3 py-2 border-b last:border-0">
+                      <Avatar className="h-8 w-8 flex-shrink-0">
+                        <AvatarFallback className="text-[10px] bg-muted">
+                          {getInitials(msg.senderId === currentUser.id ? msg.receiverName : msg.senderName)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium">{msg.senderId === currentUser.id ? msg.receiverName : msg.senderName}</p>
+                        <p className="text-xs text-muted-foreground truncate max-w-[200px]">{msg.content}</p>
+                        <p className="text-[10px] text-muted-foreground">{formatDateShort(msg.createdAt)}</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">No recent messages</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Announcements */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Megaphone className="w-4 h-4 text-emerald-500" />
+                Recent Announcements
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {teacherAnnouncements.map((ann) => (
+                  <div key={ann.id} className="flex items-start gap-3 py-2 border-b last:border-0">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${ann.isImportant ? "bg-red-100 dark:bg-red-900/30" : "bg-emerald-100 dark:bg-emerald-900/30"}`}>
+                      <Megaphone className={`w-3.5 h-3.5 ${ann.isImportant ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{ann.title}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{ann.content}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{formatDateShort(ann.createdAt)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================================
+  // ADMIN ROLES (SuperAdmin, InstituteAdmin, BranchAdmin)
+  // ============================================================
+  if (
+    currentRole === "SuperAdmin" ||
+    currentRole === "InstituteAdmin" ||
+    currentRole === "BranchAdmin"
+  ) {
+    const roleLabel = currentRole as UserRole;
+
+    // Role-specific stat cards
+    const adminStatCards = [
+      { title: "Total Students", value: (stats.totalStudents as number) ?? 6200, icon: GraduationCap, color: "bg-emerald-500" },
+      { title: "Total Teachers", value: (stats.totalTeachers as number) ?? 420, icon: Users, color: "bg-teal-500" },
+      { title: "Total Courses", value: (stats.totalCourses as number) ?? 45, icon: BookOpen, color: "bg-amber-500" },
+    ];
+
+    if (currentRole === "SuperAdmin") {
+      adminStatCards.push(
+        { title: "Total Branches", value: (stats.totalBranches as number) ?? 3, icon: MapPin, color: "bg-rose-500" },
+        { title: "Fee Collection", value: "87%", icon: DollarSign, color: "bg-emerald-500", trend: "+5% this month" }
+      );
+    } else if (currentRole === "InstituteAdmin") {
+      adminStatCards.push(
+        { title: "Total Branches", value: (stats.totalBranches as number) ?? 3, icon: MapPin, color: "bg-rose-500" },
+        { title: "Revenue", value: "$2.4M", icon: DollarSign, color: "bg-emerald-500", trend: "+12% this quarter" }
+      );
+    } else {
+      adminStatCards.push(
+        { title: "Total Departments", value: (stats.totalDepartments as number) ?? 8, icon: FolderTree, color: "bg-rose-500" },
+        { title: "Fee Collection", value: "82%", icon: DollarSign, color: "bg-amber-500", trend: "+3% this month" }
+      );
+    }
+
+    // Enrollment trend mock data
+    const enrollmentTrend = [
+      { month: "Oct", count: 480 },
+      { month: "Nov", count: 520 },
+      { month: "Dec", count: 390 },
+      { month: "Jan", count: 610 },
+      { month: "Feb", count: 570 },
+      { month: "Mar", count: 640 },
+    ];
+
+    // Attendance overview
+    const attendanceTrend = [
+      { week: "Wk 1", rate: 88 },
+      { week: "Wk 2", rate: 91 },
+      { week: "Wk 3", rate: 86 },
+      { week: "Wk 4", rate: 89 },
+      { week: "Wk 5", rate: 93 },
+      { week: "Wk 6", rate: 90 },
+    ];
+
+    // Fee collection
+    const feeCollected = 72;
+    const feePending = 18;
+    const feeOverdue = 10;
+
+    // Recent activity
+    const recentActivity = stats.recentActivity as {
+      title: string;
+      description: string;
+      timestamp: string;
+    }[] | undefined;
+
+    const activityItems = recentActivity ?? [
+      { title: "New enrollment batch", description: "15 students enrolled in CS 2024-28", timestamp: daysAgo(0).split("T")[0] },
+      { title: "Fee payment received", description: "$45,000 collected from Main Campus", timestamp: daysAgo(1).split("T")[0] },
+      { title: "Attendance alert", description: "5 students below 75% in DS & Algo", timestamp: daysAgo(2).split("T")[0] },
+      { title: "Course created", description: "Advanced Machine Learning added to CS dept", timestamp: daysAgo(3).split("T")[0] },
+      { title: "Exam results published", description: "Mid-term results for Fall 2024 semester", timestamp: daysAgo(4).split("T")[0] },
+    ];
+
+    return (
+      <div className="space-y-6">
+        {/* Welcome Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Welcome back, {currentUser.name?.split(" ")[0]}!
+            </h1>
+            <p className="text-muted-foreground">{getTodayFormatted()}</p>
+          </div>
+          <Badge variant="outline" className="w-fit gap-1">
+            {currentRole === "SuperAdmin" ? (
+              <Shield className="w-3 h-3 text-emerald-500" />
+            ) : (
+              <Building2 className="w-3 h-3 text-emerald-500" />
+            )}
+            {currentRole === "SuperAdmin" ? "Super Admin" : currentRole === "InstituteAdmin" ? "Institute Admin" : "Branch Admin"}
+          </Badge>
+        </div>
+
+        {/* Stat Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          {adminStatCards.map((card, i) => (
+            <StatCard
+              key={i}
+              title={card.title}
+              value={card.value}
+              icon={card.icon}
+              color={card.color}
+              trend={card.trend}
+            />
+          ))}
+        </div>
+
+        {/* Enrollment Trend + Attendance Overview */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Enrollment Trend */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                Enrollment Trend
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">Monthly enrollment for the past 6 months</p>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={enrollmentTrend}>
+                  <defs>
+                    <linearGradient id="enrollGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb" }}
+                    formatter={(value: number) => [value, "Enrollments"]}
+                  />
+                  <Area type="monotone" dataKey="count" stroke="#10b981" strokeWidth={2} fill="url(#enrollGrad)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Attendance Overview */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Activity className="w-4 h-4 text-emerald-500" />
+                Attendance Overview
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">Weekly attendance trend across all courses</p>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={attendanceTrend}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                  <XAxis dataKey="week" tick={{ fontSize: 12 }} />
+                  <YAxis domain={[70, 100]} tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb" }}
+                    formatter={(value: number) => [`${value}%`, "Attendance"]}
+                  />
+                  <Line type="monotone" dataKey="rate" stroke="#10b981" strokeWidth={2} dot={{ fill: "#10b981", r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Fee Collection Summary */}
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-emerald-500" />
+              Fee Collection Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium">Collected</span>
+                  <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{feeCollected}%</span>
+                </div>
+                <Progress value={feeCollected} className="h-3" />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium">Pending</span>
+                  <span className="text-sm font-bold text-amber-600 dark:text-amber-400">{feePending}%</span>
+                </div>
+                <Progress value={feePending} className="h-3 [&>div]:bg-amber-500" />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium">Overdue</span>
+                  <span className="text-sm font-bold text-red-600 dark:text-red-400">{feeOverdue}%</span>
+                </div>
+                <Progress value={feeOverdue} className="h-3 [&>div]:bg-red-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity + Quick Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Recent Activity */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Clock className="w-4 h-4 text-emerald-500" />
+                Recent Activity
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="divide-y">
+              {activityItems.slice(0, 5).map((item, i) => (
+                <ActivityItem
+                  key={i}
+                  title={item.title}
+                  description={item.description}
+                  time={formatDateShort(item.timestamp)}
+                />
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <ChevronRight className="w-4 h-4 text-emerald-500" />
+                Quick Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3">
+                <QuickActionButton icon={UserPlus} label="Add Student" color="bg-emerald-500" />
+                <QuickActionButton icon={BookOpen} label="Create Course" color="bg-teal-500" />
+                <QuickActionButton icon={Megaphone} label="Post Announcement" color="bg-amber-500" />
+                <QuickActionButton icon={FileText} label="Generate Report" color="bg-rose-500" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback (should not reach here)
+  return null;
+}
+
+// Helper function used inline for admin section
+function daysAgo(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString();
 }

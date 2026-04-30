@@ -250,3 +250,175 @@ CampusHub is a comprehensive, production-ready B2B multi-tenant SaaS campus mana
 8. Add ICS calendar export functionality
 9. Implement multi-language/RTL support
 10. Add data export (PDF/Excel) with actual file generation
+
+---
+Task ID: feat-1+feat-2
+Agent: header-features-agent
+Task: Add Notification Center dropdown and Global Search with results to app header
+
+Work Log:
+- Rewrote `src/components/app-header.tsx` — Added two major interactive features to the application header:
+
+**1. Notification Center Dropdown (Popover-based)**
+- Replaced the simple DropdownMenu with a rich Popover-based notification panel
+- Header with "Notifications" title, unread count badge, and "Mark all read" button (with CheckCheck icon)
+- 10 mock notification items across 7 categories: Attendance (emerald), Grades (amber), Fees (red), Announcements (blue), Assignments (purple), Messages (teal), System (gray)
+- Each notification shows: category icon in colored circle, title (bold for unread), description (2-line clamp), time ago, unread blue dot indicator
+- ScrollArea with max-h-96 for the notification list, displays max 8 items
+- Empty state with Inbox icon when no notifications
+- "View All Notifications" footer link with arrow icon
+- Clicking a notification marks it as read and logs the action
+- "Mark all read" button clears all unread indicators and resets store count to 0
+- Badge on bell icon shows count from Zustand store (capped at "9+")
+
+**2. Global Search with Results Dropdown (Command/CmdK + Popover)**
+- Replaced static search Input with a Popover containing a Command (cmdk) component
+- Trigger button shows placeholder text, search icon, and ⌘K keyboard shortcut badge (visible on lg+)
+- Mobile: separate search icon button (visible on md- only) opens the same popover
+- 13 mock searchable items across 4 categories: Courses (4), Students (4), Assignments (3), Announcements (3)
+- Each item has: icon, title, subtitle, keywords for matching
+- Debounced input (300ms) using custom useDebouncedValue hook
+- Categorized results with group headings and color-coded category badges
+- Each result shows: icon in muted circle, title, subtitle, and category badge
+- Empty state: "No results found" with Inbox icon when query doesn't match
+- Placeholder state: "Start typing to search" with search icon when query is empty
+- Cmd+K keyboard shortcut toggles search popover (registered via useEffect)
+- ESC indicator shown when query is active
+- Clicking a result logs the action and closes the dropdown
+- Clear search query on popover close
+
+**Design & Quality:**
+- Smooth animations via Radix Popover built-in animations (fade-in/zoom-in)
+- Mobile responsive: full-width popover on mobile (`w-[calc(100vw-2rem)]`), fixed width on desktop (`sm:w-96`)
+- Consistent emerald theme with hover states and focus rings
+- Keyboard accessible: ⌘K shortcut, ESC indicator, focus management
+- Clean, minimal design matching existing header aesthetic
+- Proper z-index stacking with sideOffset={8} for dropdown panels
+- Zero lint errors verified
+
+Stage Summary:
+- Notification Center with 7 categories, 10 mock items, read/unread state management
+- Global Search with 13 mock items across 4 categories, debounced filtering, keyboard shortcut
+- Both features fully integrated into app-header.tsx with shadcn Popover and Command components
+- Mobile responsive with full-width panels on small screens
+- ESLint passes with zero errors
+
+---
+Task ID: style-1
+Agent: style-enhancement-agent
+Task: Improve visual styling across the application and add sticky footer
+
+Work Log:
+- Updated `src/app/globals.css` — Comprehensive CSS enhancements:
+  - Smooth emerald-tinted scrollbar styling (thin 6px, emerald hover)
+  - Emerald selection color (light/dark mode variants)
+  - Improved focus ring (2px emerald with offset)
+  - Print styles (hide sidebar/data-sidebar, reset body)
+  - Custom utility classes: `.page-transition` (fade+slide animation), `.card-hover` (lift+shadow on hover), `.glass-card` (glassmorphism bg-white/60 backdrop-blur-xl with dark mode), `.gradient-border` (CSS mask gradient border), `.animate-pulse-slow` (3s pulse), `.pb-safe` (iOS safe area inset)
+  - `--animate-pulse-slow` theme token for Tailwind integration
+
+- Rewrote `src/components/login-view.tsx` — Enhanced login page visuals:
+  - Subtle grid pattern overlay (40x40 grid at 3% opacity)
+  - 6 floating geometric shapes (circles, squares, diamonds) with CSS keyframe animations (float-shape-1/2/3) at varying speeds (10-20s) and delays
+  - 20 CSS-only particle dots with staggered animations
+  - Pulsing glow effect on logo (ping animation + blur ring with animate-pulse-slow)
+  - "Version 2.0" badge below title using shadcn Badge
+  - Glassmorphism role cards (.glass-card) with colored 3px top borders matching each role gradient
+  - Hover scale on icon containers (scale-110 transition)
+  - "Powered by Z.ai" credit at bottom footer
+  - Keyframes defined via styled-jsx global style tag
+
+- Rewrote `src/components/app-sidebar.tsx` — Enhanced sidebar styling:
+  - Gradient header background (from-emerald-600 to-teal-600)
+  - White logo text on gradient header with emerald-100 subtitle
+  - Logo icon with white/20 backdrop-blur container and white/10 border
+  - Emerald accent gradient line (h-[2px]) below header
+  - Active menu item with left emerald border (border-l-[3px] border-l-emerald-500) and emerald-50/teal-950/40 background
+  - Active item icon in emerald-600/400 color
+  - Inactive items with subtle emerald hover background
+  - Emerald-tinted badges on menu items
+  - Avatar with emerald ring in footer
+  - Footer with bg-muted/30 subtle background tint
+  - Logout button with destructive hover background transition
+
+- Rewrote `src/components/app-header.tsx` — Header polish:
+  - Subtle emerald-tinted bottom shadow (shadow-[0_1px_3px_0_oklch(0.55_0.17_155/0.06)])
+  - Search input with emerald focus ring (focus-visible:ring-emerald-500/50)
+  - Mobile search icon button (visible on md- only)
+  - All buttons with emerald hover backgrounds (hover:bg-emerald-50 / dark:hover:bg-emerald-950/30)
+  - Notification bell with bounce animation on hover (group-hover:animate-bounce)
+  - User avatar with emerald ring that intensifies on hover (ring-1 to ring-2)
+  - Breadcrumb link with emerald hover color transition
+  - Dropdown menu items with emerald hover backgrounds
+  - Logout item with destructive hover background
+
+- Updated `src/app/page.tsx` — Added sticky footer to AppShell:
+  - SidebarInset now has flex flex-col min-h-screen
+  - Separator line above footer
+  - Slim footer with: left "© 2025 CampusHub. All rights reserved.", right "Academic Year 2024-2025"
+  - Responsive: stacks vertically on mobile (flex-col sm:flex-row)
+  - iOS safe area via pb-safe class
+  - mt-auto ensures footer sticks to bottom when content is short
+  - text-muted-foreground for subtle styling
+
+Stage Summary:
+- Visual styling comprehensively improved across login, sidebar, header, and app shell
+- Sticky footer implemented with proper min-h-screen flex pattern
+- 6 custom CSS utility classes added for reusable patterns
+- Emerald/green color scheme consistently applied to all new interactive states
+- Mobile-first responsive design maintained throughout
+- ESLint passes with zero errors
+- Dev server compiles successfully
+
+---
+Task ID: fix-1
+Agent: dashboard-fix-agent
+Task: Rewrite dashboard-page.tsx to provide rich, role-specific dashboards for ALL 6 roles
+
+Work Log:
+- Rewrote `src/components/pages/dashboard-page.tsx` — Complete role-specific dashboard for all 6 roles:
+
+**STUDENT Dashboard:**
+- Welcome header with student name, today's date, role badge
+- 4 stat cards: Enrolled Courses, GPA, Attendance Rate, Pending Fees
+- Today's Timetable card showing next 3 classes with time, room, teacher name, course code
+- Attendance Trend BarChart (recharts) showing Mon-Sat attendance rates
+- Upcoming Deadlines list with urgency badges (Overdue/Due Soon/Upcoming)
+- Recent Announcements with unread indicator dot
+- Recent Grades with letter grade badges and course name
+- Quick Actions grid: Assignments, Fee Ledger, Messages, Leave Request, Help Center
+
+**TEACHER Dashboard:**
+- Welcome header with teacher name and today's date
+- 5 stat cards: My Courses, Total Students, Today's Classes, Pending Grading, Avg Attendance
+- Today's Classes card with time, room, course, section, color-coded bars
+- Pending Tasks card with 3 actionable items (attendance marking, grading, assessment setup)
+- Course Attendance horizontal BarChart showing per-course attendance rate
+- Low Attendance Flags list with students below 75% threshold
+- Recent Messages and Recent Announcements panels
+
+**ADMIN Dashboard (SuperAdmin/InstituteAdmin/BranchAdmin):**
+- Welcome header with admin name, role-specific badge, and role label
+- 5 role-aware stat cards (branches for SuperAdmin/InstituteAdmin, departments for BranchAdmin)
+- Enrollment Trend AreaChart (6 months with gradient fill)
+- Attendance Overview LineChart (weekly trend with dots)
+- Fee Collection Summary with 3 progress bars (Collected/Pending/Overdue)
+- Recent Activity feed with timestamped items
+- Quick Actions grid: Add Student, Create Course, Post Announcement, Generate Report
+
+**PARENT Dashboard:**
+- Kept exactly as-is, no changes made
+
+**Technical changes:**
+- Replaced `useState` + `useEffect` with `useMemo` for dashboard data (fixes lint error)
+- Used recharts: BarChart, AreaChart, LineChart with ResponsiveContainer
+- Added helper components: QuickActionButton, UrgencyBadge
+- Removed unused import (mockAttendanceSessions)
+- Consistent emerald/green theme, mobile-first responsive, hover:shadow-md transitions
+- All data sourced from mock-data.ts
+
+Stage Summary:
+- All 6 roles now have rich, role-specific dashboards
+- Parent dashboard preserved exactly as-is
+- ESLint passes with zero errors
+- Dev server compiles successfully

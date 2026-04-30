@@ -29,6 +29,7 @@ import { InstitutesPage } from "@/components/pages/institutes-page";
 import { ChildrenPage } from "@/components/pages/children-page";
 import { AssessmentsPage } from "@/components/pages/assessments-page";
 import { StudentsPage } from "@/components/pages/students-page";
+import { Separator } from "@/components/ui/separator";
 
 // Page routing map
 const pageComponents: Record<string, React.ComponentType> = {
@@ -76,7 +77,7 @@ function AppShell() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="flex flex-col min-h-screen">
         <AppHeader />
         <main className="flex-1 p-4 sm:p-6">
           {PageComponent ? <PageComponent /> : (
@@ -90,6 +91,16 @@ function AppShell() {
             </div>
           )}
         </main>
+        {/* Sticky Footer */}
+        <div className="mt-auto">
+          <Separator className="opacity-50" />
+          <footer className="px-4 sm:px-6 py-3 pb-safe">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-1 text-xs text-muted-foreground">
+              <span>© 2025 CampusHub. All rights reserved.</span>
+              <span className="font-medium">Academic Year 2024-2025</span>
+            </div>
+          </footer>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );

@@ -39,29 +39,30 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      {/* Header */}
-      <SidebarHeader className="px-3 py-4">
+      {/* Header with gradient */}
+      <SidebarHeader className="px-3 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 border-0">
         <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex-shrink-0">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex-shrink-0 border border-white/10">
             <GraduationCap className="w-4 h-4 text-white" />
           </div>
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-            <h2 className="text-sm font-bold text-foreground truncate leading-tight">
+            <h2 className="text-sm font-bold text-white truncate leading-tight">
               CampusHub
             </h2>
-            <p className="text-[10px] text-muted-foreground truncate leading-tight">
+            <p className="text-[10px] text-emerald-100 truncate leading-tight">
               {currentUser?.instituteName ?? "Management System"}
             </p>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarSeparator />
+      {/* Emerald accent line */}
+      <div className="h-[2px] bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 opacity-40" />
 
       {/* Navigation */}
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
+          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden text-muted-foreground/70">
             Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -75,12 +76,21 @@ export function AppSidebar() {
                       isActive={isActive}
                       tooltip={item.label}
                       onClick={() => setCurrentPage(item.id)}
+                      className={`relative transition-all duration-200 ${
+                        isActive
+                          ? "bg-emerald-50 dark:bg-emerald-950/40 border-l-[3px] border-l-emerald-500 rounded-none pl-[calc(0.75rem-3px)]"
+                          : "hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20"
+                      }`}
                     >
-                      <Icon className="w-4 h-4" />
-                      <span>{item.label}</span>
+                      <Icon className={`w-4 h-4 transition-colors duration-200 ${isActive ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400"}`} />
+                      <span className={`${isActive ? "text-emerald-700 dark:text-emerald-300 font-medium" : ""}`}>
+                        {item.label}
+                      </span>
                     </SidebarMenuButton>
                     {item.badge && item.badge > 0 && (
-                      <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                      <SidebarMenuBadge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 border-0 text-[10px]">
+                        {item.badge}
+                      </SidebarMenuBadge>
                     )}
                   </SidebarMenuItem>
                 );
@@ -92,10 +102,10 @@ export function AppSidebar() {
 
       <SidebarSeparator />
 
-      {/* Footer */}
-      <SidebarFooter className="px-2 py-2">
+      {/* Footer with subtle background */}
+      <SidebarFooter className="px-2 py-2 bg-muted/30">
         <div className="flex items-center gap-3 px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <Avatar className="h-8 w-8 flex-shrink-0">
+          <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-emerald-200 dark:ring-emerald-800">
             <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
             <AvatarFallback className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs font-medium">
               {initials}
@@ -113,7 +123,7 @@ export function AppSidebar() {
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start text-muted-foreground hover:text-destructive group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 mt-1"
+          className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 mt-1 transition-colors duration-200"
           onClick={logout}
         >
           <LogOut className="w-4 h-4" />
