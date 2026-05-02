@@ -28,8 +28,6 @@ import { StudentsPage } from "@/components/pages/students-page";
 import { CalendarPage } from "@/components/pages/calendar-page";
 import { SubscriptionPage } from "@/components/pages/subscription-page";
 
-
-// Page routing map
 const pageComponents: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
   courses: CoursesPage,
@@ -75,63 +73,29 @@ function AppShell() {
       <AppSidebar />
       <SidebarInset className="flex flex-col min-h-screen">
         <AppHeader />
-        <main className="flex-1 p-4 sm:p-6">
+        <main className="flex-1 p-6">
           {PageComponent ? (
-            <div key={currentPage}>
-              <PageComponent />
-            </div>
+            <PageComponent key={currentPage} />
           ) : (
             <div className="flex items-center justify-center min-h-[60vh]">
               <div className="text-center">
-                <h2 className="text-xl font-semibold text-muted-foreground">
-                  Page Not Found
+                <h2 className="text-lg font-medium text-muted-foreground">
+                  Page not found
                 </h2>
-                <p className="text-sm text-muted-foreground mt-2">
+                <p className="text-sm text-muted-foreground/70 mt-1">
                   The page &quot;{currentPage}&quot; is not available yet.
                 </p>
               </div>
             </div>
           )}
         </main>
-        <div className="mt-auto">
-          <div className="h-[2px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
-          <footer className="px-4 sm:px-6 py-3">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
-              <span className="text-muted-foreground/80">
-                &copy; 2025 CampusHub. All rights reserved.
+        <div className="mt-auto border-t">
+          <footer className="px-6 py-4">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>&copy; 2025 CampusHub</span>
+              <span className="hidden sm:inline text-muted-foreground/50">
+                Campus Management Platform
               </span>
-              <span className="hidden sm:inline-block text-muted-foreground/60 text-[11px]">
-                Made with{" "}
-                <span className="text-red-400 inline-block animate-pulse">
-                  ❤️
-                </span>{" "}
-                by{" "}
-                <span className="font-medium text-emerald-600/70 dark:text-emerald-400/60">
-                  CampusHub Team
-                </span>
-              </span>
-              <div className="flex items-center gap-3">
-                <a
-                  href="#"
-                  className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200 hover:underline underline-offset-2"
-                >
-                  Privacy
-                </a>
-                <span className="text-muted-foreground/30">&middot;</span>
-                <a
-                  href="#"
-                  className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200 hover:underline underline-offset-2"
-                >
-                  Terms
-                </a>
-                <span className="text-muted-foreground/30">&middot;</span>
-                <a
-                  href="#"
-                  className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200 hover:underline underline-offset-2"
-                >
-                  Contact
-                </a>
-              </div>
             </div>
           </footer>
         </div>

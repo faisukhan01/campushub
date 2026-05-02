@@ -4,406 +4,218 @@ import { useAppStore } from "@/store/app-store";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { motion } from "framer-motion";
 import {
-  BookOpen,
-  Users,
-  ClipboardList,
-  TrendingUp,
-  Clock,
-  CheckCircle2,
-  FileUp,
-  ChevronDown,
-  ChevronUp,
-  Award,
-  ClipboardCheck,
-  Upload,
-  GraduationCap,
-} from "lucide-react";
-import { useState } from "react";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 // ── Mock Data ────────────────────────────────────────────────────────────────
 
-const overviewStats = [
-  { label: "Today's Classes", value: "5", icon: BookOpen, color: "bg-emerald-500" },
-  { label: "Total Students", value: "142", icon: Users, color: "bg-teal-500" },
-  { label: "Pending Grading", value: "12", icon: ClipboardList, color: "bg-amber-500" },
-  { label: "Avg Attendance", value: "89%", icon: TrendingUp, color: "bg-emerald-600" },
+const stats = [
+  { label: "Today's Classes", value: "5" },
+  { label: "Total Students", value: "142" },
+  { label: "Pending Grading", value: "12" },
+  { label: "Avg Attendance", value: "89%" },
 ];
 
-interface ClassSection {
-  id: string;
+interface ClassRow {
   name: string;
   subject: string;
   students: number;
   nextClass: string;
   attendance: number;
-  borderColor: string;
-  accentBg: string;
-  accentText: string;
 }
 
-const classSections: ClassSection[] = [
-  {
-    id: "c10a",
-    name: "Class 10-A",
-    subject: "Mathematics",
-    students: 28,
-    nextClass: "Today, 10:00 AM",
-    attendance: 92,
-    borderColor: "border-l-emerald-500",
-    accentBg: "bg-emerald-100 dark:bg-emerald-900/40",
-    accentText: "text-emerald-700 dark:text-emerald-300",
-  },
-  {
-    id: "c10b",
-    name: "Class 10-B",
-    subject: "Mathematics",
-    students: 26,
-    nextClass: "Today, 11:30 AM",
-    attendance: 87,
-    borderColor: "border-l-teal-500",
-    accentBg: "bg-teal-100 dark:bg-teal-900/40",
-    accentText: "text-teal-700 dark:text-teal-300",
-  },
-  {
-    id: "c9a",
-    name: "Class 9-A",
-    subject: "Physics",
-    students: 24,
-    nextClass: "Today, 1:00 PM",
-    attendance: 91,
-    borderColor: "border-l-cyan-500",
-    accentBg: "bg-cyan-100 dark:bg-cyan-900/40",
-    accentText: "text-cyan-700 dark:text-cyan-300",
-  },
-  {
-    id: "c9b",
-    name: "Class 9-B",
-    subject: "Physics",
-    students: 22,
-    nextClass: "Tomorrow, 9:00 AM",
-    attendance: 84,
-    borderColor: "border-l-amber-500",
-    accentBg: "bg-amber-100 dark:bg-amber-900/40",
-    accentText: "text-amber-700 dark:text-amber-300",
-  },
-  {
-    id: "c11a",
-    name: "Class 11-A",
-    subject: "Advanced Mathematics",
-    students: 22,
-    nextClass: "Today, 2:30 PM",
-    attendance: 95,
-    borderColor: "border-l-emerald-600",
-    accentBg: "bg-emerald-100 dark:bg-emerald-900/40",
-    accentText: "text-emerald-700 dark:text-emerald-300",
-  },
-  {
-    id: "c11b",
-    name: "Class 11-B",
-    subject: "Advanced Mathematics",
-    students: 20,
-    nextClass: "Tomorrow, 11:00 AM",
-    attendance: 88,
-    borderColor: "border-l-teal-600",
-    accentBg: "bg-teal-100 dark:bg-teal-900/40",
-    accentText: "text-teal-700 dark:text-teal-300",
-  },
+const classes: ClassRow[] = [
+  { name: "Class 10-A", subject: "Mathematics", students: 28, nextClass: "Today, 10:00 AM", attendance: 92 },
+  { name: "Class 10-B", subject: "Mathematics", students: 26, nextClass: "Today, 11:30 AM", attendance: 87 },
+  { name: "Class 9-A", subject: "Physics", students: 24, nextClass: "Today, 1:00 PM", attendance: 91 },
+  { name: "Class 9-B", subject: "Physics", students: 22, nextClass: "Today, 2:00 PM", attendance: 84 },
+  { name: "Class 11-A", subject: "Advanced Math", students: 22, nextClass: "Tomorrow, 9:00 AM", attendance: 95 },
+  { name: "Class 11-B", subject: "Advanced Math", students: 20, nextClass: "Tomorrow, 11:00 AM", attendance: 88 },
 ];
 
-interface RecentActivity {
+interface PendingTask {
+  id: string;
+  status: "overdue" | "urgent";
+  description: string;
+  action: "Mark" | "Review";
+}
+
+const pendingTasks: PendingTask[] = [
+  { id: "t1", status: "overdue", description: "Mark attendance for Class 9-B — Today, 2:00 PM", action: "Mark" },
+  { id: "t2", status: "urgent", description: "Grade 23 assignments for Mathematics — Due today", action: "Review" },
+  { id: "t3", status: "urgent", description: "Review submitted lab reports for Class 11-A — 8 pending", action: "Review" },
+  { id: "t4", status: "overdue", description: "Submit mid-term marks for Class 10-A — Overdue by 1 day", action: "Mark" },
+  { id: "t5", status: "urgent", description: "Approve 5 leave requests from students — Due tomorrow", action: "Review" },
+];
+
+interface ActivityItem {
   id: string;
   text: string;
   time: string;
-  icon: React.ElementType;
-  iconColor: string;
 }
 
-const recentActivities: RecentActivity[] = [
-  {
-    id: "a1",
-    text: "Graded Assignment #3 for Class 10-A",
-    time: "2 hours ago",
-    icon: Award,
-    iconColor: "text-emerald-500",
-  },
-  {
-    id: "a2",
-    text: "Marked attendance for Class 9-B",
-    time: "3 hours ago",
-    icon: ClipboardCheck,
-    iconColor: "text-teal-500",
-  },
-  {
-    id: "a3",
-    text: "Uploaded notes for Class 11-A",
-    time: "5 hours ago",
-    icon: Upload,
-    iconColor: "text-cyan-500",
-  },
-  {
-    id: "a4",
-    text: "Graded Assignment #2 for Class 10-B",
-    time: "1 day ago",
-    icon: Award,
-    iconColor: "text-emerald-500",
-  },
-  {
-    id: "a5",
-    text: "Marked attendance for Class 9-A",
-    time: "1 day ago",
-    icon: ClipboardCheck,
-    iconColor: "text-teal-500",
-  },
+const recentActivity: ActivityItem[] = [
+  { id: "a1", text: "Graded Assignment #3 for Class 10-A", time: "2 hours ago" },
+  { id: "a2", text: "Marked attendance for Class 9-A", time: "3 hours ago" },
+  { id: "a3", text: "Uploaded notes for Chapter 7 — Advanced Math", time: "5 hours ago" },
+  { id: "a4", text: "Graded Assignment #2 for Class 10-B", time: "1 day ago" },
+  { id: "a5", text: "Marked attendance for Class 11-A", time: "1 day ago" },
 ];
 
-// ── Animation Variants ───────────────────────────────────────────────────────
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.06 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 16 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: "easeOut" },
-  },
-};
-
-// ── Attendance Color Helper ──────────────────────────────────────────────────
-
-function getAttendanceLabel(rate: number) {
-  if (rate >= 90) return { text: "Excellent", classes: "text-emerald-600 dark:text-emerald-400" };
-  if (rate >= 80) return { text: "Good", classes: "text-teal-600 dark:text-teal-400" };
-  return { text: "Needs Improvement", classes: "text-amber-600 dark:text-amber-400" };
-}
-
-// ── Stat Card ────────────────────────────────────────────────────────────────
-
-function OverviewStatCard({
-  label,
-  value,
-  icon: Icon,
-  color,
-  delay,
-}: {
-  label: string;
-  value: string;
-  icon: React.ElementType;
-  color: string;
-  delay: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay, ease: "easeOut" }}
-    >
-      <Card className="hover:shadow-md transition-shadow duration-200">
-        <CardContent className="p-4 sm:p-5">
-          <div className="flex items-center gap-3">
-            <div className={cn("flex items-center justify-center w-10 h-10 rounded-xl flex-shrink-0", color)}>
-              <Icon className="w-5 h-5 text-white" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl sm:text-2xl font-bold tracking-tight">{value}</p>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">{label}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-}
-
-// ── Class Section Card ───────────────────────────────────────────────────────
-
-function ClassSectionCard({ section, index }: { section: ClassSection; index: number }) {
-  const [expanded, setExpanded] = useState(false);
-  const attendanceInfo = getAttendanceLabel(section.attendance);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.15 + index * 0.07, ease: "easeOut" }}
-    >
-      <Card
-        className={cn(
-          "hover:shadow-md transition-all duration-200 cursor-pointer border-l-4 group",
-          section.borderColor
-        )}
-        onClick={() => setExpanded(!expanded)}
-      >
-        <CardContent className="p-4 sm:p-5">
-          {/* Header row */}
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h3 className="font-semibold text-base">{section.name}</h3>
-              <p className="text-sm text-muted-foreground mt-0.5">{section.subject}</p>
-            </div>
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <Badge variant="secondary" className="text-[10px] font-medium">
-                <Users className="w-3 h-3 mr-0.5" />
-                {section.students}
-              </Badge>
-              {expanded ? (
-                <ChevronUp className="w-4 h-4 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
-              )}
-            </div>
-          </div>
-
-          {/* Next class time */}
-          <div className="flex items-center gap-1.5 mt-3">
-            <Clock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-            <span className="text-xs text-muted-foreground">{section.nextClass}</span>
-          </div>
-
-          {/* Attendance progress */}
-          <div className="mt-3">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Attendance</span>
-              <span className={cn("text-xs font-semibold", attendanceInfo.classes)}>
-                {section.attendance}%
-              </span>
-            </div>
-            <Progress value={section.attendance} className="h-1.5" />
-          </div>
-
-          {/* Expanded section */}
-          {expanded && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.25 }}
-              className="mt-4 pt-4 border-t"
-            >
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className={cn("rounded-lg p-3", section.accentBg)}>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Students</p>
-                  <p className={cn("text-lg font-bold mt-0.5", section.accentText)}>{section.students}</p>
-                </div>
-                <div className={cn("rounded-lg p-3", section.accentBg)}>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Attendance</p>
-                  <p className={cn("text-lg font-bold mt-0.5", section.accentText)}>{section.attendance}%</p>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Mark Attendance
-                </Button>
-                <Button size="sm" variant="outline" className="flex-1">
-                  <FileUp className="w-3.5 h-3.5" />
-                  Upload Data
-                </Button>
-              </div>
-            </motion.div>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-}
-
-// ── Main Component ───────────────────────────────────────────────────────────
+// ── Component ────────────────────────────────────────────────────────────────
 
 export function TeacherDashboard() {
   const currentUser = useAppStore((s) => s.currentUser);
+  const firstName = currentUser?.name?.split(" ").slice(-1)[0] ?? "Emily";
 
   return (
     <div className="space-y-6">
-      {/* Welcome Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
-      >
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Welcome back, {currentUser?.name?.split(" ")[0] ?? "Teacher"}!
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Here&apos;s your teaching overview for today.
+          <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Welcome back, {firstName}
           </p>
         </div>
-        <Badge variant="outline" className="w-fit gap-1.5">
-          <GraduationCap className="w-3.5 h-3.5 text-emerald-500" />
-          Teacher Portal
+        <Badge
+          variant="outline"
+          className={cn("rounded-full text-xs font-normal")}
+        >
+          Teacher
         </Badge>
-      </motion.div>
+      </div>
 
-      {/* Today's Overview Bar */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {overviewStats.map((stat, i) => (
-          <OverviewStatCard key={stat.label} {...stat} delay={0.05 + i * 0.06} />
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((stat) => (
+          <Card key={stat.label} className={cn("shadow-none")}>
+            <CardContent className={cn("p-4")}>
+              <p className={cn("text-xs text-muted-foreground uppercase tracking-wider font-medium")}>
+                {stat.label}
+              </p>
+              <p className={cn("text-2xl font-bold text-foreground mt-1")}>
+                {stat.value}
+              </p>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* Class Section Cards Grid */}
-      <section>
-        <motion.h2
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className="text-lg font-semibold mb-4"
-        >
-          My Classes
-        </motion.h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-          {classSections.map((section, i) => (
-            <ClassSectionCard key={section.id} section={section} index={i} />
-          ))}
-        </div>
-      </section>
-
-      {/* Recent Activity */}
-      <motion.section
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.h2
-          variants={itemVariants}
-          className="text-lg font-semibold mb-4"
-        >
-          Recent Activity
-        </motion.h2>
-        <Card>
-          <CardContent className="p-4 sm:p-5">
-            <div className="divide-y">
-              {recentActivities.map((activity) => (
-                <motion.div
-                  key={activity.id}
-                  variants={itemVariants}
-                  className="flex items-start gap-3 py-3 first:pt-0 last:pb-0"
-                >
-                  <div className={cn("flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 bg-muted", activity.iconColor)}>
-                    <activity.icon className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{activity.text}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{activity.time}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+      {/* My Classes Table */}
+      <div className="space-y-3">
+        <h2 className={cn("text-sm font-medium")}>My Classes</h2>
+        <Card className={cn("shadow-none overflow-hidden")}>
+          <CardContent className={cn("p-0")}>
+            <Table>
+              <TableHeader>
+                <TableRow className={cn("hover:bg-transparent")}>
+                  <TableHead>Class</TableHead>
+                  <TableHead>Subject</TableHead>
+                  <TableHead>Students</TableHead>
+                  <TableHead>Next Class</TableHead>
+                  <TableHead>Attendance</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {classes.map((cls) => (
+                  <TableRow key={cls.name}>
+                    <TableCell className={cn("font-medium")}>{cls.name}</TableCell>
+                    <TableCell className={cn("text-muted-foreground")}>{cls.subject}</TableCell>
+                    <TableCell>{cls.students}</TableCell>
+                    <TableCell className={cn("text-muted-foreground")}>{cls.nextClass}</TableCell>
+                    <TableCell>
+                      <div className={cn("flex items-center gap-2")}>
+                        <div className={cn("h-1.5 w-16 rounded-full bg-muted overflow-hidden")}>
+                          <div
+                            className={cn(
+                              "h-full rounded-full transition-all",
+                              cls.attendance >= 90 ? "bg-emerald-500" : cls.attendance >= 80 ? "bg-amber-500" : "bg-red-500"
+                            )}
+                            style={{ width: `${cls.attendance}%` }}
+                          />
+                        </div>
+                        <span className={cn("text-xs text-muted-foreground tabular-nums")}>
+                          {cls.attendance}%
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
-      </motion.section>
+      </div>
+
+      {/* Bottom Grid: Pending Tasks + Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Pending Tasks */}
+        <div className="space-y-3">
+          <h2 className={cn("text-sm font-medium")}>Pending Tasks</h2>
+          <Card className={cn("shadow-none")}>
+            <CardContent className={cn("p-0")}>
+              <div className={cn("divide-y")}>
+                {pendingTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className={cn("flex items-center justify-between gap-3 px-4 py-3")}
+                  >
+                    <div className={cn("flex items-start gap-3 min-w-0")}>
+                      <span
+                        className={cn(
+                          "mt-1.5 h-2 w-2 rounded-full flex-shrink-0",
+                          task.status === "overdue" ? "bg-red-500" : "bg-amber-500"
+                        )}
+                      />
+                      <p className={cn("text-sm leading-snug")}>{task.description}</p>
+                    </div>
+                    <button
+                      type="button"
+                      className={cn(
+                        "text-xs text-primary hover:text-primary/80 font-medium flex-shrink-0 transition-colors"
+                      )}
+                    >
+                      {task.action}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="space-y-3">
+          <h2 className={cn("text-sm font-medium")}>Recent Activity</h2>
+          <Card className={cn("shadow-none")}>
+            <CardContent className={cn("p-0")}>
+              <div className={cn("divide-y")}>
+                {recentActivity.map((item) => (
+                  <div
+                    key={item.id}
+                    className={cn("flex items-center gap-3 px-4 py-3")}
+                  >
+                    <span className={cn("h-1.5 w-1.5 rounded-full bg-muted-foreground/40 flex-shrink-0")} />
+                    <div className={cn("flex items-center justify-between gap-3 min-w-0 flex-1")}>
+                      <p className={cn("text-sm truncate")}>{item.text}</p>
+                      <span className={cn("text-xs text-muted-foreground whitespace-nowrap flex-shrink-0")}>
+                        {item.time}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

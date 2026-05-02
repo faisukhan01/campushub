@@ -1754,3 +1754,78 @@ Stage Summary:
 3. Build Branch Admin dashboard (teacher/student management, course assignment)
 4. Clean up remaining unused page components
 5. Add real school subject data to courses/seed data
+---
+Task ID: visual-overhaul-v2
+Agent: main-coordinator
+Task: Complete visual overhaul to professional B2B SaaS standard
+
+Work Log:
+
+**1. globals.css — Complete Rewrite (1400+ lines → ~200 lines)**
+- Replaced emerald-tinted oklch color system with clean slate/zinc hex palette
+- Light: white backgrounds (#ffffff), slate-900 text (#0f172a), slate-200 borders (#e2e8f0)
+- Dark: slate-950 bg (#0a0f1a), slate-100 text (#f1f5f9), slate-800 borders (#1e293b)
+- Single emerald accent (#059669 light, #34d399 dark) — used ONLY for primary actions
+- Removed ALL utility classes: glass-card, gradient-border, card-premium, card-hover, neon, pulse, shimmer, breathe, card-glow, animated-underline, gradient-text, etc.
+- Kept only essential utilities: page-transition, scrollbar, data-table, status-dot, chip
+
+**2. Landing Page — Complete Rewrite**
+- Linear/Vercel-inspired design: clean white, generous whitespace, zero decoration
+- Sticky nav with "CampusHub" + green dot, text links, emerald CTA
+- Hero: large tracking-tight heading, subtitle, two rounded-full buttons, trust logos
+- Features: 3-col grid with gap-px borders (Linear-style seamless grid), bordered icon squares
+- Metrics: horizontal bar separated by vertical dividers (no cards)
+- Testimonials: slate-50 bg, border-only cards, initials avatars
+- CTA: dark slate-900 background, emerald + outline buttons
+- Footer: 4-column dark footer with uppercase tracking-wider headings
+
+**3. Login Page — Complete Rewrite**
+- Centered on gray-50 background, max-w-md container
+- "CampusHub" heading + "Sign in to your account" subheading
+- 5 role cards: border-only, bg-muted icon squares, hover:bg-accent
+- Minimal footer with Terms/Privacy links
+- Zero animations, zero gradients, zero decorative elements
+
+**4. Sidebar — Complete Rewrite**
+- Flat white header with border-b, "CampusHub" text, institute name
+- Active item: border-l-2 border-primary + bg-accent (subtle 2px left border)
+- Inactive: text-muted-foreground with hover:text-foreground
+- Clean section labels: uppercase tracking-wider text
+- Footer: border-t, plain avatar with initials, minimal logout
+- Removed all gradients, badges, pulsing dots, blur effects
+
+**5. Header — Complete Rewrite (480 lines → 95 lines)**
+- Clean h-14 header with border-b, bg-background
+- Left: SidebarTrigger + breadcrumb
+- Right: plain search Input, theme toggle Button, bell Button, Avatar
+- Removed: Popover search, notification panel, dropdown menu, gradient borders
+
+**6. Student Dashboard — Complete Rewrite**
+- Page header: "Dashboard" + welcome + academic year badge
+- 4 stat cards (border-only): Attendance 87%, GPA 3.72, Courses 10, Pending PKR 12K
+- Upcoming Exams: proper data Table with Subject/Type/Date/Days Left columns
+- Subjects: clean grid cards with dot indicator, teacher name, attendance bar
+- Recent Activity: simple list with dot + text + timestamp
+- NO framer-motion, NO charts, NO colored backgrounds
+
+**7. Teacher Dashboard — Complete Rewrite**
+- Page header: "Dashboard" + welcome + "Teacher" badge
+- 4 stat cards (border-only): Today's Classes, Students, Pending Grading, Avg Attendance
+- My Classes: proper data Table (6 rows) with Class/Subject/Students/Next Class/Attendance
+- Pending Tasks: list with status dots + action buttons
+- Recent Activity: clean list
+- NO expandable cards, NO animations, NO progress component
+
+**8. App Shell (page.tsx) — Cleaned Up**
+- Removed gradient dividers, animated hearts, emerald hover links
+- Clean border-t footer with minimal text
+- Removed unused imports
+
+Stage Summary:
+- Entire visual layer rebuilt from scratch to B2B SaaS standard
+- Color system: neutral slate/zinc with single emerald accent
+- All decorative effects removed: gradients, glassmorphism, particles, neon, animations
+- Design language: flat, border-only, generous whitespace, data-dense
+- Components follow Linear/Vercel/Notion aesthetic consistently
+- Zero lint errors, clean compilation
+- Dev server running successfully (HTTP 200)
