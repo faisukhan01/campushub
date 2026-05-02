@@ -1647,3 +1647,110 @@ Stage Summary:
 - ESLint passes with zero errors
 - Total page count: 30 pages across 6 roles
 
+---
+Task ID: restructure-v4
+Agent: main-coordinator
+Task: Fix build error, add landing page, restructure to 5 roles, redesign dashboards
+
+Work Log:
+
+**1. Fixed SWC Build Error in app-sidebar.tsx**
+- Root cause: Multi-line template literals in JSX className attributes caused SWC parser to fail at line 101
+- Error: `Expected '</', got 'className'` when using `className={\`...\n...\`}`
+- Fix: Replaced all multi-line template literals with `cn()` utility from `@/lib/utils`
+- Extracted `NavItem` sub-component to eliminate duplicated rendering code
+- Used `React.createElement(getIcon(item.icon))` for dynamic icon rendering
+- Result: Clean compilation, zero lint errors
+
+**2. Added Professional B2B SaaS Landing Page**
+- Created `src/components/landing-page.tsx` — Full marketing landing page with:
+  - Sticky navigation bar with logo, links, and CTA buttons
+  - Hero section with gradient headline, tagline, "Get Started" + "Book a Demo" CTAs
+  - Stats/social proof section (500+ Institutes, 50K+ Students, 99.9% Uptime, 4.8 Rating)
+  - 6 feature cards (Multi-Branch, Attendance, Fees, Grade Book, Communication, Analytics)
+  - How It Works (3 steps: Sign Up → Setup → Start Managing)
+  - Testimonials from 3 fictional administrators
+  - Final CTA section with emerald gradient
+  - Footer with branding, link columns, social icons
+  - Accepts `onEnterDemo` callback prop
+- Updated `src/app/page.tsx` to show Landing → Login → App flow
+
+**3. Restructured Portal Architecture (6 → 5 Roles)**
+- Removed "Parent" role entirely from:
+  - `src/types/index.ts`: Removed "Parent" from UserRole union
+  - `src/store/app-store.ts`: Removed Parent from DEMO_USERS and roleNav
+  - `src/components/login-view.tsx`: Removed Parent role card, updated grid to 5 cards
+- Simplified ALL role navigations to minimal, essential features only:
+  - SuperAdmin (8): dashboard, institutes, branches, users, subscription, reports, analytics, settings
+  - InstituteAdmin (10): dashboard, branches, departments, users, courses, fees, reports, announcements, calendar, settings
+  - BranchAdmin (10): dashboard, departments, batches, users, courses, timetable, attendance, fees, announcements, settings
+  - Teacher (8): dashboard, attendance, assignments, grades, students, timetable, messages, announcements
+  - Student (8): dashboard, courses, assignments, grades, attendance, timetable, fees, announcements
+
+**4. Redesigned Student Dashboard**
+- Completely rewrote `src/components/pages/dashboard-page.tsx` for Student role:
+  - Large SVG circular attendance percentage indicator (87%, color-coded)
+  - Semester performance summary (GPA 3.72, 10 courses, PKR 12K fees)
+  - Upcoming Exams & Quizzes: 4 cards with subject, type, date, days-left badges (color-coded urgency)
+  - Subject Cards Grid: 10 Pakistan education subjects (English, Math, Physics, Chemistry, Biology, Islamiat, Quran, Pakistan Studies, Computer Science, Urdu)
+    - Each card: icon, name, teacher, grade badge, attendance progress bar
+    - Clickable navigation to courses page
+  - Quick Actions: View Timetable, Submit Assignment, Check Fees, Messages
+  - framer-motion staggered entrance animations
+- For Teacher role: Renders new TeacherDashboard component
+- For Admin roles: Shows placeholder with role-specific stats
+
+**5. Redesigned Teacher Dashboard**
+- Created `src/components/pages/teacher-dashboard.tsx`:
+  - Welcome header with teacher name
+  - Today's Overview: 4 stat cards (Today's Classes: 5, Total Students: 142, Pending Grading: 12, Avg Attendance: 89%)
+  - Class Section Cards Grid: 6 classes (10-A, 10-B, 9-A, 9-B, 11-A, 11-B)
+    - Each card: class name, subject, student count, next class time, attendance progress bar
+    - Expandable detail panel with "Mark Attendance" and "Upload Data" action buttons
+    - Subtle left border color per class
+  - Recent Activity: 5 recent actions with icons and timestamps
+  - framer-motion staggered entrance animations
+
+**6. Updated App Page Router**
+- `src/app/page.tsx`: Landing → Login → AppShell flow
+- Simplified page component map to only essential pages (removed unused imports)
+- Fixed react-hooks/set-state-in-effect lint error (removed setState in useEffect)
+- Clean state management without refs during render
+
+**7. Infrastructure**
+- Created 15-minute automated cron job (webDevReview) for continuous development review
+- All changes pass ESLint with zero errors
+- Dev server compiles and serves successfully on port 3000
+
+Stage Summary:
+- Build error fully resolved (SWC parser issue with multi-line template literals)
+- Professional B2B SaaS landing page added as entry point
+- Portal restructured from 6 roles to 5 (Parent removed)
+- Navigation simplified to minimal essential features per role
+- Student dashboard redesigned with subject cards, attendance circle, exam countdowns
+- Teacher dashboard redesigned with class section cards and expandable details
+- Zero lint errors across all modified files
+- Dev server running successfully
+
+## Current Project Status
+
+**Architecture:**
+- 5-role portal system: SuperAdmin, InstituteAdmin, BranchAdmin, Teacher, Student
+- Single-page app with Zustand state-based routing
+- Landing Page → Role Login → Dashboard → Pages flow
+- Professional B2B SaaS aesthetic with emerald/teal theme
+
+**Pages:**
+- Landing page (new)
+- Login with 5 role cards
+- Student dashboard (redesigned with subjects/exams/attendance)
+- Teacher dashboard (redesigned with class sections)
+- Admin dashboards (placeholders for SuperAdmin, InstituteAdmin, BranchAdmin)
+- ~20 existing page components (attendance, assignments, grades, etc.)
+
+**Next Steps (Priority Order):**
+1. Build Super Admin dashboard (institute/branch tracking, portal usage analytics)
+2. Build Institute Admin dashboard (branch management, cross-branch analytics)
+3. Build Branch Admin dashboard (teacher/student management, course assignment)
+4. Clean up remaining unused page components
+5. Add real school subject data to courses/seed data

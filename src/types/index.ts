@@ -9,8 +9,7 @@ export type UserRole =
   | "InstituteAdmin"
   | "BranchAdmin"
   | "Teacher"
-  | "Student"
-  | "Parent";
+  | "Student";
 
 export type Gender = "Male" | "Female" | "Other";
 

@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { GraduationCap, Shield, UserCog, BookOpen, Users, Heart, Sparkles, Cloud, Brain, Lock, Zap } from "lucide-react";
+import { GraduationCap, Shield, UserCog, BookOpen, Users, Sparkles, Cloud, Brain, Lock, Zap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { UserRole } from "@/types";
@@ -63,15 +63,6 @@ const roles: RoleCard[] = [
     gradient: "from-teal-600 to-emerald-700",
     borderColor: "border-t-teal-600",
     iconBg: "from-teal-600 to-emerald-700",
-  },
-  {
-    role: "Parent",
-    title: "Parent",
-    description: "Monitor child progress, attendance, fees, and communicate",
-    icon: Heart,
-    gradient: "from-green-600 to-teal-700",
-    borderColor: "border-t-green-600",
-    iconBg: "from-green-600 to-teal-700",
   },
 ];
 
@@ -234,7 +225,7 @@ export function LoginView() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-4xl w-full relative z-10"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5 max-w-5xl w-full relative z-10"
       >
         {roles.map((r) => {
           const Icon = r.icon;
