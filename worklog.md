@@ -493,6 +493,77 @@ Stage Summary:
 - Total API routes: 15 (14 original + 1 new)
 
 ---
+Task ID: institutes-rewrite
+Agent: main
+Task: Complete rewrite of InstitutesPage as Super Admin institute management page
+
+Work Log:
+- Completely rewrote `src/components/pages/institutes-page.tsx` — Stunning Super Admin institute management page:
+
+**Page Header:**
+- "Institute Management" title with "Platform-wide institute tracking and management" subtitle
+- "Add Institute" primary button (emerald-600) and "Export" outline button
+
+**Filter Bar:**
+- Search input with icon (filters by name, code, city)
+- Plan filter Select (All/Starter/Professional/Enterprise)
+- Status filter Select (All/Active/Trial/Expired)
+
+**KPI Summary Row (4 animated cards with framer-motion stagger):**
+- Total Institutes: 12 (with "+2 this month" trend)
+- Active: 10 (with "83% of total" trend)
+- Trial: 2 (with "Convert soon" trend)
+- Total Students: 2,847 (with "+12.5% growth" trend)
+
+**Institute Table (shadcn Table):**
+- Columns: Institute Name (logo + location), Branches, Students, Teachers, Plan (badge), Status (dot indicator), Monthly Revenue, Joined Date, Actions (View/Edit)
+- 10 mock institutes with realistic data spanning all 3 plans and 3 statuses
+- Row hover effects via data-table-row class, clickable rows
+- Plan badges: Starter (gray bg), Professional (emerald bg), Enterprise (violet bg)
+- Status dots: Active (green), Trial (amber), Expired (red)
+- Table footer showing filtered count and platform MRR
+
+**Add Institute Dialog:**
+- Fields: Name, Code, Email, Phone, Website, Address, Plan selector, Max Users
+- Cancel/Create buttons with emerald primary action
+
+**View Institute Detail Sheet (right-side panel):**
+- Institute info section: email, phone, website, joined date, address
+- Stats grid: Branches, Students, Teachers, Courses (4 icon boxes)
+- Subscription status card: Plan badge, status indicator, monthly revenue, users progress bar (color-coded: green/amber/red based on usage %), slots remaining
+- Recent activity timeline: 5 mock items per institute with action, user, and timestamp
+- Action buttons: Edit Institute, Manage Subscription
+
+**Mock Data (10 institutes):**
+1. Greenfield Education Group — Professional — 5 branches — 1,240 students
+2. BrightPath Academy — Professional — 3 branches — 680 students
+3. Westfield International — Enterprise — 8 branches — 2,100 students
+4. Sunrise Learning Center — Starter — 1 branch — 120 students
+5. TechVista Institute — Professional — Trial — 2 branches — 340 students
+6. Pacific Coast University — Enterprise — 12 branches — 4,500 students
+7. Maple Leaf Academy — Professional — 4 branches — 890 students
+8. Horizon School System — Starter — Trial — 2 branches — 200 students
+9. Summit Collegiate — Professional — Expired — 3 branches — 520 students
+10. Heritage Academy of Arts — Starter — Expired — 1 branch — 85 students
+
+**Technical Details:**
+- All data self-contained with InstituteRecord interface (no external mock data dependency)
+- framer-motion stagger animations on KPI cards and page entrance
+- useMemo for filtered institutes (search + plan + status filters)
+- Sub-components: InfoItem, StatBox for clean code organization
+- Uses shadcn/ui: Table, Card, Dialog, Sheet, Input, Select, Badge, Button, Progress, Separator, Label
+- Uses lucide-react icons throughout
+- Responsive: table horizontal scroll on mobile, filter bar stacks vertically
+- Styling: rounded-xl cards, border-slate-200/60, shadow-sm, data-table-row class
+
+Stage Summary:
+- Complete rewrite of institutes-page.tsx as a production-quality Super Admin page
+- 10 mock institutes with 3 plan types and 3 statuses
+- Full CRUD UI: table listing, add dialog, view detail sheet
+- ESLint: zero errors
+- Dev server compiles successfully
+
+---
 Task ID: qa-style-3
 Agent: qa-and-style-round3
 Task: QA testing, micro-interaction polish, and 4 new feature pages
@@ -1863,3 +1934,171 @@ Stage Summary:
 - Page transitions use AnimatePresence for smooth view changes
 - ESLint: zero errors
 - Dev server compiles successfully
+---
+Task ID: sidebar-header-redesign
+Agent: main
+Task: Redesign app-sidebar.tsx and app-header.tsx with modern B2B SaaS styling (Linear/Vercel/Notion inspired)
+
+Work Log:
+- Rewrote `src/components/app-sidebar.tsx` — Complete redesign:
+  - Brand header with emerald-600 to teal-600 gradient background, white Sparkles icon in frosted glass container, white CampusHub title and emerald-100 subtitle
+  - Thin 2px emerald-to-teal gradient accent line below header
+  - Navigation items with left border-l-[3px] active indicator: emerald-500 border + emerald-50 bg (dark: emerald-950/40), emerald-600 icon color for active state
+  - Inactive items: slate-500 text with hover:bg-slate-50 transition
+  - Uppercase "Navigation" and "More" section labels with 10px tracking-wider text
+  - Role badge chip below menu items showing current role (e.g., "Super Admin") with emerald dot indicator
+  - SidebarMenuBadge for items with `.badge` property — rounded-full emerald count badges (or slate for inactive)
+  - Footer: Avatar with emerald-500/30 ring, name/role display, destructive hover logout button (red-600/red-50 on hover)
+  - SidebarRail for collapse trigger
+  - 280px width via `--sidebar-width: 17.5rem` CSS variable override
+  - Smooth transition-colors duration-200 on all interactive elements
+  - Collapsed mode: proper icon-only display with group-data-[collapsible=icon] utilities
+
+- Rewrote `src/components/app-header.tsx` — Complete redesign:
+  - Sticky header with h-14, bg-white/80 backdrop-blur-md glass effect, subtle slate-200/80 bottom border
+  - SidebarTrigger with rounded-md and emerald hover states
+  - Breadcrumb with bold current page, slate-400 link color with hover transition
+  - Mobile: current page name text fallback (sm:hidden)
+  - Search input (hidden md:flex) with Search icon prefix, rounded-lg, emerald focus ring (focus:border-emerald-300 focus:ring-emerald-500/20)
+  - ⌘K keyboard shortcut badge (kbd element with border/shadow styling) inside search input
+  - Mobile search icon button with Tooltip (md:hidden)
+  - Theme toggle (Moon/Sun icons) with Tooltip showing "Dark mode"/"Light mode"
+  - Notification bell with animated ping dot (emerald-400 ping + emerald-500 solid)
+  - User DropdownMenu: Avatar with emerald-100 fallback + ring, name shown on lg+ screens
+    - DropdownContent with user name/email, Profile, Settings, and destructive Log out items
+  - Full dark mode support with dark:bg-[#0a0f1a]/80 and dark: variants throughout
+
+Stage Summary:
+- Both sidebar and header redesigned with professional B2B SaaS aesthetic inspired by Linear/Vercel/Notion
+- Emerald-600 accent color consistently used for active states, focus rings, and brand identity
+- Smooth 200ms transitions on all interactive elements
+- Full dark mode support via dark: prefixes
+- Mobile responsive: collapsible sidebar, hidden breadcrumbs on mobile, responsive user avatar dropdown
+- All existing functionality preserved (navigation, page switching, logout, theme toggle, notifications)
+- ESLint passes with zero errors
+- Dev server compiles successfully
+
+---
+Task ID: dashboards-rewrite
+Agent: dashboards-rewrite-agent
+Task: Complete rewrite of dashboard-page.tsx with 5 stunning, animated role dashboards
+
+Work Log:
+- Completely rewrote `src/components/pages/dashboard-page.tsx` — 5 fully-featured, professional dashboards with framer-motion animations and recharts:
+
+**Shared Infrastructure:**
+- `stagger` and `fadeUp` framer-motion animation variants for staggered section reveals
+- `MiniSparkline` component — tiny area chart with gradient fill for KPI cards
+- `AttendanceRing` component — SVG circular progress indicator for attendance display
+- `TrendBadge` component — inline trend indicator with arrow icon and colored text
+- `KpiCard` component — reusable KPI card with icon, value, trend, sparkline, hover animation
+- `ChartCard` component — chart wrapper with consistent styling
+- `SectionTitle` and `QuickAction` shared components
+- All mock data defined inline with `useMemo` for performance
+
+**1. SuperAdmin Dashboard (Alex Morgan):**
+- "Platform Overview" header with violet "Owner" badge
+- 5 KPI cards: Total Institutes (12, +2), Total Students (2,847, +12.5%), Total Teachers (186, +8.3%), Monthly Revenue ($48.2K, +15.2%), Active Subscriptions (8, +1)
+- Each KPI card includes MiniSparkline chart showing trend data
+- AreaChart: "Enrollment Growth" with emerald gradient fill, 6-month data (Oct–Mar)
+- BarChart: "Institution-wise Student Distribution" — 6 institutes with individual color-coded bars
+- Table: "Recent Institute Registrations" — 5 rows with Institute Name, Branches, Students, Plan badge, Status badge (Active/Trial), Joined date
+- Quick Actions: Add Institute, View Analytics, Manage Subscriptions
+
+**2. InstituteAdmin Dashboard (Dr. Sarah Chen):**
+- "Greenfield Education Group" header with blue "Institute Admin" badge
+- 5 KPI cards: Total Branches (5), Total Students (1,240, +5.8%), Faculty (86, +3.6%), Active Courses (120, +12), Monthly Revenue ($12.4K, +8.1%)
+- Stacked BarChart: "Branch-wise Student Count" — 5 branches with Undergrad (emerald) + Postgrad (cyan) stacks
+- LineChart: "Attendance Trend This Month" — 4 weeks with violet line and styled dots
+- Fee Collection section: 3 color-coded progress bars (Collected $8.2K emerald, Pending $3.1K amber, Overdue $1.1K red)
+- Table: "Branch Overview" — 5 rows with Students, Faculty, Courses, Avg Attendance (color-coded)
+- Quick Actions: Add Branch, Create Announcement, Generate Report
+
+**3. BranchAdmin Dashboard (James Wilson):**
+- "Greenfield Main Campus" header with teal "Branch Admin" badge
+- 5 KPI cards: Students (480, +24), Faculty (28), Active Courses (45, +5), Batches (12), Avg Attendance (89%, +2%)
+- Horizontal BarChart: "Department-wise Enrollment" — 5 departments with multi-colored bars
+- PieChart: "Student Distribution by Program" — donut chart with 4 segments (CS, Business, Arts, Science) and legend
+- "Recent Activities" feed — 6 items with colored category dots (emerald, blue, amber, violet, rose, slate)
+- "Courses Need Attention" card — 3 courses with <75% attendance, red badges, progress bars, amber border
+- Quick Actions: Add Course, Assign Teacher, Create Batch
+
+**4. Teacher Dashboard (Prof. Emily Rodriguez):**
+- Time-of-day greeting ("Good Morning/Afternoon/Evening") with full date display
+- 5 KPI cards with MiniSparkline charts: My Courses (6), Total Students (142), Today's Classes (5), Pending Grading (12), Avg Attendance (89%, +2.1%)
+- "Today's Schedule" timeline — 4 classes with colored vertical bars, course/class/room/time info, "Upcoming" badges
+- "My Classes" table — 6 rows with Subject, Students, Next Class, attendance progress bars
+- "Pending Tasks" — 5 items with overdue (red dot) / urgent (amber dot) status, action buttons
+- "Recent Activity" — 5 timestamped items
+
+**5. Student Dashboard (Ryan Patel):**
+- "Welcome back, Ryan" header with full date and emerald "Student" badge
+- 4 KPI cards: Enrolled Courses (10) with MiniSparkline, Current GPA (3.72, +0.12), Attendance (87%) with SVG AttendanceRing, Pending Fees ($12K)
+- AreaChart: "Weekly Study Hours" — 7-day data with blue gradient fill
+- "Upcoming Exams" table — 4 rows with urgency badges (Today/red, 2d left/red, 5d left/amber, 15d left/slate)
+- "My Subjects" grid — 10 subject cards with teacher name, color-coded attendance progress bars, hover lift animation
+- "Recent Activity" feed — 5 timestamped items
+- Quick Actions: Assignments, Fee Ledger, Messages, Leave
+
+**Design System:**
+- Cards: `rounded-xl border border-slate-200/60 bg-white shadow-sm hover:shadow-md transition-shadow`
+- KPI icon containers: `w-10 h-10 rounded-lg bg-{color}-50` with matching text color
+- Responsive grids: `grid-cols-2 lg:grid-cols-5` for KPIs, `grid-cols-1 lg:grid-cols-2` for charts
+- Tables use shadcn Table components with uppercase tracking-wider headers
+- All colors via Tailwind (emerald, blue, violet, amber, red, teal, slate) with dark mode support
+- Framer Motion: `motion.div variants={stagger/fadeUp}` for staggered reveals, `whileHover={{ y: -3 }}` for card hover lift
+- Recharts: AreaChart (gradient fills), BarChart (colored bars), LineChart (styled dots), PieChart (donut with legend)
+
+**Technical Notes:**
+- Removed import of `./teacher-dashboard` — all 5 dashboards self-contained in single file
+- Removed `RolePlaceholder` component — all roles have full dashboards
+- Named export `DashboardPage` (compatible with existing page.tsx import)
+- All data defined inline with `useMemo` for SSR safety
+- All imports from allowed paths only
+
+Stage Summary:
+- All 5 roles (SuperAdmin, InstituteAdmin, BranchAdmin, Teacher, Student) have stunning, fully-featured dashboards
+- 4 recharts chart types used: AreaChart, BarChart, LineChart, PieChart
+- Framer Motion stagger animations on all sections with hover effects on cards
+- MiniSparkline charts embedded in KPI cards for visual trend indicators
+- SVG AttendanceRing progress indicator for student attendance display
+- ESLint passes with zero errors
+- Dev server compiles and renders successfully
+
+---
+Task ID: portal-redesign-v3
+Agent: main-coordinator + 3 parallel subagents
+Task: Complete portal UI overhaul — 5 role dashboards, sidebar, header, institutes page
+
+Work Log:
+
+**Parallel Execution (3 subagents)**:
+
+1. **Dashboard Agent**: Rewrote `src/components/pages/dashboard-page.tsx` (1,556 lines) with 5 complete dashboards:
+   - SuperAdmin: 5 KPI cards with sparklines, enrollment area chart, institution bar chart, registrations table, quick actions
+   - InstituteAdmin: 5 KPI cards, stacked branch bar chart, attendance line chart, fee collection progress bars, branch overview table
+   - BranchAdmin: 5 KPI cards, department horizontal bar chart, program donut pie chart, activity feed, courses needing attention alerts
+   - Teacher: Time-of-day greeting, 5 KPI cards with sparklines, today's schedule timeline, classes table, pending tasks, recent activity
+   - Student: 4 KPI cards (with SVG attendance ring), weekly study hours chart, upcoming exams table, 10-subject grid, activity feed, quick actions
+   - Shared components: MiniSparkline, AttendanceRing, TrendBadge, KpiCard, ChartCard, QuickAction
+   - Framer Motion stagger animations on all sections
+
+2. **Sidebar/Header Agent**: Rewrote both shell components:
+   - `app-sidebar.tsx` (235 lines): Gradient emerald header, accent line, active border-l-3px, role badge chip, emerald avatar ring, destructive logout hover
+   - `app-header.tsx` (242 lines): Glass backdrop-blur header, search with ⌘K hint, theme toggle with tooltips, notification bell with ping dot, user dropdown
+
+3. **Institutes Page Agent**: Rewrote `src/components/pages/institutes-page.tsx` (1,020 lines):
+   - 10 realistic mock institutes across all plans (Starter/Professional/Enterprise) and statuses (Active/Trial/Expired)
+   - KPI summary (Total: 12, Active: 10, Trial: 2, Students: 2,847)
+   - Full data table with plan/status badges, revenue, action buttons
+   - Add Institute dialog with form fields
+   - View Institute detail panel with stats grid, subscription progress bar, recent activity
+   - Filter by plan, status, and search
+
+Stage Summary:
+- All 5 role dashboards fully featured with recharts and framer-motion
+- Sidebar redesigned with gradient header, active states, role badge
+- Header redesigned with glass effect, search, notifications
+- Institutes page with full CRUD management for Super Admin
+- ESLint: zero errors
+- Dev server: compiles successfully, 200 responses
