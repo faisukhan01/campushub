@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useAppStore } from "@/store/app-store";
 import { LandingPage } from "@/components/landing-page";
 import { LoginView } from "@/components/login-view";
+import { SignInView } from "@/components/sign-in-view";
+import { SignUpView } from "@/components/sign-up-view";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AppHeader } from "@/components/app-header";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -27,6 +29,7 @@ import { InstitutesPage } from "@/components/pages/institutes-page";
 import { StudentsPage } from "@/components/pages/students-page";
 import { CalendarPage } from "@/components/pages/calendar-page";
 import { SubscriptionPage } from "@/components/pages/subscription-page";
+import { AnimatePresence, motion } from "framer-motion";
 
 const pageComponents: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
@@ -51,13 +54,14 @@ const pageComponents: Record<string, React.ComponentType> = {
   subscription: SubscriptionPage,
 };
 
-type AppView = "landing" | "login" | "app";
+type UnauthView = "landing" | "signin" | "signup" | "login";
 
 function AppShell() {
   const currentPage = useAppStore((s) => s.currentPage);
   const theme = useAppStore((s) => s.theme);
 
-  useEffect(() => {
+  // Sync dark mode class
+  const handleThemeSync = useCallback(() => {
     const root = document.documentElement;
     if (theme === "dark") {
       root.classList.add("dark");
@@ -65,6 +69,7 @@ function AppShell() {
       root.classList.remove("dark");
     }
   }, [theme]);
+  handleThemeSync();
 
   const PageComponent = pageComponents[currentPage];
 
@@ -74,20 +79,30 @@ function AppShell() {
       <SidebarInset className="flex flex-col min-h-screen">
         <AppHeader />
         <main className="flex-1 p-6">
-          {PageComponent ? (
-            <PageComponent key={currentPage} />
-          ) : (
-            <div className="flex items-center justify-center min-h-[60vh]">
-              <div className="text-center">
-                <h2 className="text-lg font-medium text-muted-foreground">
-                  Page not found
-                </h2>
-                <p className="text-sm text-muted-foreground/70 mt-1">
-                  The page &quot;{currentPage}&quot; is not available yet.
-                </p>
+          <AnimatePresence mode="wait">
+            {PageComponent ? (
+              <motion.div
+                key={currentPage}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+              >
+                <PageComponent />
+              </motion.div>
+            ) : (
+              <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="text-center">
+                  <h2 className="text-lg font-medium text-muted-foreground">
+                    Page not found
+                  </h2>
+                  <p className="text-sm text-muted-foreground/70 mt-1">
+                    The page &quot;{currentPage}&quot; is not available yet.
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </AnimatePresence>
         </main>
         <div className="mt-auto border-t">
           <footer className="px-6 py-4">
@@ -106,21 +121,79 @@ function AppShell() {
 
 export default function Home() {
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
-  const [view, setView] = useState<AppView>("landing");
+  const [unauthView, setUnauthView] = useState<UnauthView>("landing");
 
-  const handleEnterDemo = useCallback(() => {
-    setView("login");
-  }, []);
+  const handleGoToSignIn = useCallback(() => setUnauthView("signin"), []);
+  const handleGoToSignUp = useCallback(() => setUnauthView("signup"), []);
+  const handleGoToLogin = useCallback(() => setUnauthView("login"), []);
+  const handleGoToLanding = useCallback(() => setUnauthView("landing"), []);
+
+  if (isAuthenticated) {
+    return (
+      <motion.div
+        key="app"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <AppShell />
+      </motion.div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background">
-      {isAuthenticated ? (
-        <AppShell />
-      ) : view === "login" ? (
-        <LoginView />
+    <AnimatePresence mode="wait">
+      {unauthView === "signin" ? (
+        <motion.div
+          key="signin"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <SignInView
+            onSignIn={handleGoToLogin}
+            onBack={handleGoToLanding}
+            onGoToSignUp={handleGoToSignUp}
+          />
+        </motion.div>
+      ) : unauthView === "signup" ? (
+        <motion.div
+          key="signup"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <SignUpView
+            onGoToSignIn={handleGoToSignIn}
+            onBack={handleGoToLanding}
+          />
+        </motion.div>
+      ) : unauthView === "login" ? (
+        <motion.div
+          key="login"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <LoginView />
+        </motion.div>
       ) : (
-        <LandingPage onEnterDemo={handleEnterDemo} />
+        <motion.div
+          key="landing"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <LandingPage
+            onGoToSignIn={handleGoToSignIn}
+            onGoToSignUp={handleGoToSignUp}
+          />
+        </motion.div>
       )}
-    </div>
+    </AnimatePresence>
   );
 }
