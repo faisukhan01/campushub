@@ -1,249 +1,395 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useAppStore } from "@/store/app-store";
 import {
-  mockCourses,
-  mockEnrollments,
-  mockStudents,
-  mockAttendanceRecords,
-  mockGrades,
-} from "@/lib/mock-data";
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import {
-  BookOpen, Search, Users, Clock, ChevronDown, ChevronUp, Settings,
-  Download, Upload, GraduationCap, UserPlus, Award, Calendar,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  BookOpen, Search, Users, Plus, Loader2, RefreshCw,
+  AlertCircle, CheckCircle2, GraduationCap, Clock,
 } from "lucide-react";
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+
+interface CourseRecord {
+  id: string;
+  code: string;
+  title: string;
+  description?: string;
+  classLevel: string;
+  subjectType: string;
+  isActive: boolean;
+  createdAt: string;
+  branch?: { id: string; name: string; code: string };
+  teachers: { id: string; name: string; email: string; isPrimary: boolean }[];
+  enrolledStudentsCount: number;
+  assignmentsCount: number;
+}
+
+const SUBJECT_TYPES = ["Core", "Elective", "Lab", "Project", "Extra-Curricular"];
+const CLASSES = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
+
+const subjectTypeColors: Record<string, string> = {
+  Core: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+  Elective: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",
+  Lab: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  Project: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  "Extra-Curricular": "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400",
+};
+
+const emptyForm = { title: "", code: "", description: "", subjectType: "Core" };
 
 export function CoursesPage() {
-  const currentUser = useAppStore((s) => s.currentUser);
+  const { data: session } = useSession();
+  const callerRole = session?.user?.role as string | undefined;
+
+  const [selectedClass, setSelectedClass] = useState<string>("");
+  const [courses, setCourses] = useState<CourseRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
-  const [rosterSearch, setRosterSearch] = useState("");
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
 
-  const isTeacher = currentUser?.role === "Teacher";
-  const teacherCourses = isTeacher
-    ? mockCourses.filter((c) => c.teacherId === currentUser.id)
-    : mockCourses;
+  const [addOpen, setAddOpen] = useState(false);
+  const [formData, setFormData] = useState({ ...emptyForm });
+  const [isSaving, setIsSaving] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
 
-  const filtered = teacherCourses.filter(
+  const canManage = callerRole === "BranchAdmin" || callerRole === "InstituteAdmin" || callerRole === "SuperAdmin";
+
+  const fetchCourses = useCallback(async () => {
+    if (!selectedClass && canManage) return;
+    
+    setIsLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/courses");
+      if (!res.ok) throw new Error(await res.text());
+      const json = await res.json();
+      
+      let allCourses = json.data ?? [];
+      
+      // Filter by selected class for admins
+      if (selectedClass && canManage) {
+        allCourses = allCourses.filter(
+          (c: CourseRecord) => c.classLevel === selectedClass || c.classLevel === `Class ${selectedClass}`
+        );
+      }
+      
+      setCourses(allCourses);
+    } catch {
+      setError("Failed to load courses. Please refresh.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedClass, canManage]);
+
+  useEffect(() => {
+    if (!canManage || selectedClass) {
+      fetchCourses();
+    }
+  }, [fetchCourses, canManage, selectedClass]);
+
+  const filtered = courses.filter(
     (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.code.toLowerCase().includes(search.toLowerCase())
+      c.title.toLowerCase().includes(search.toLowerCase()) ||
+      c.code.toLowerCase().includes(search.toLowerCase()) ||
+      c.classLevel.toLowerCase().includes(search.toLowerCase())
   );
 
-  const getCourseStats = (courseId: string) => {
-    const enrollments = mockEnrollments.filter((e) => e.courseId === courseId);
-    const avgAttendance = enrollments.length > 0
-      ? Math.round(enrollments.reduce((s, e) => s + (e.attendancePercentage ?? 0), 0) / enrollments.length)
-      : 0;
-    const grades = mockGrades.filter((g) => g.courseId === courseId);
-    const avgGrade = grades.length > 0
-      ? (grades.reduce((s, g) => s + g.marksObtained, 0) / grades.reduce((s, g) => s + g.totalMarks, 0) * 100).toFixed(0)
-      : "—";
-    return { enrollments, avgAttendance, avgGrade, grades };
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError("");
+    setFormSuccess("");
+
+    if (!formData.title || !formData.code) {
+      setFormError("Title and code are required.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/courses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          classLevel: selectedClass || formData.classLevel,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) { setFormError(json.error ?? "Failed to create course."); return; }
+      setFormSuccess(`✓ Course "${formData.title}" created successfully.`);
+      setFormData({ ...emptyForm });
+      fetchCourses();
+      setTimeout(() => { setAddOpen(false); setFormSuccess(""); }, 1800);
+    } catch {
+      setFormError("Network error. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const course = selectedCourse ? mockCourses.find((c) => c.id === selectedCourse) : null;
+  const pageTitle =
+    callerRole === "Teacher" ? "My Classes" :
+    callerRole === "Student" ? "My Subjects" :
+    "Courses";
+
+  const pageDesc =
+    callerRole === "Teacher" ? "Classes you are assigned to teach" :
+    callerRole === "Student" ? "Subjects you are enrolled in" :
+    "Manage all courses for your branch";
 
   return (
     <div className="space-y-6 page-transition">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">My Courses</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{pageTitle}</h1>
           <p className="text-muted-foreground">
-            {isTeacher ? "Manage your courses, rosters, and course settings" : "Browse and manage all courses"}
+            {isLoading ? "Loading…" : selectedClass ? `${courses.length} course${courses.length !== 1 ? "s" : ""} for Class ${selectedClass}` : `${courses.length} course${courses.length !== 1 ? "s" : ""} · ${pageDesc}`}
           </p>
         </div>
+        {selectedClass && (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={fetchCourses} disabled={isLoading}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            {canManage && (
+              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => { setFormData({ ...emptyForm }); setFormError(""); setFormSuccess(""); setAddOpen(true); }}>
+                <Plus className="w-4 h-4 mr-2" />Add Course
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search courses..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
-      </div>
+      {/* Class Selection for Admins */}
+      {canManage && !selectedClass ? (
+        <div className="space-y-4">
+          <div className="text-center py-8">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center mx-auto mb-4">
+              <BookOpen className="w-8 h-8 text-emerald-500" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Select a Class</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Choose a class level to view and manage its courses
+            </p>
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((c) => {
-          const stats = getCourseStats(c.id);
-          const isExpanded = expandedCourse === c.id;
-          return (
-            <motion.div
-              key={c.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Card className="card-premium overflow-hidden">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0">
-                      <Badge variant="outline" className="text-xs mb-2">{c.code}</Badge>
-                      <CardTitle className="text-base leading-tight">{c.name}</CardTitle>
-                      <p className="text-xs text-muted-foreground mt-1">{c.departmentName} · {c.credits} credits</p>
-                    </div>
-                    <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center flex-shrink-0">
-                      <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                    </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 max-w-4xl mx-auto">
+            {CLASSES.map((classNum) => (
+              <Card
+                key={classNum}
+                className="cursor-pointer hover:shadow-lg hover:border-emerald-500 transition-all duration-200 group"
+                onClick={() => setSelectedClass(classNum)}
+              >
+                <CardContent className="p-6 text-center">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-3 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                    <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400 group-hover:text-white">
+                      {classNum}
+                    </span>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="p-2 rounded-lg bg-muted/50">
-                      <p className="text-lg font-bold">{c.enrolledCount}</p>
-                      <p className="text-[10px] text-muted-foreground">Students</p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-muted/50">
-                      <p className={`text-lg font-bold ${stats.avgAttendance < 75 ? "text-red-600" : ""}`}>{stats.avgAttendance}%</p>
-                      <p className="text-[10px] text-muted-foreground">Attendance</p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-muted/50">
-                      <p className="text-lg font-bold">{stats.avgGrade}</p>
-                      <p className="text-[10px] text-muted-foreground">Avg Grade</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{c.batchName ?? c.programName}</span>
-                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{c.totalHours}h</span>
-                  </div>
-
-                  <div className="flex gap-2 pt-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 text-xs"
-                      onClick={() => setExpandedCourse(isExpanded ? null : c.id)}
-                    >
-                      {isExpanded ? "Hide Roster" : "View Roster"}
-                      {isExpanded ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />}
-                    </Button>
-                    {isTeacher && (
-                      <Dialog open={settingsOpen && selectedCourse === c.id} onOpenChange={(open) => { setSettingsOpen(open); if (open) setSelectedCourse(c.id); }}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" className="text-xs" onClick={() => { setSelectedCourse(c.id); setSettingsOpen(true); }}>
-                            <Settings className="w-3 h-3 mr-1" />Settings
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>Course Settings — {c.code}</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4 py-2">
-                            <div className="space-y-2">
-                              <Label>Course Code</Label>
-                              <Input defaultValue={c.code} />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Course Title</Label>
-                              <Input defaultValue={c.name} />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Syllabus</Label>
-                              <Textarea defaultValue={c.description ?? ""} rows={3} />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Credit Hours</Label>
-                              <Input type="number" defaultValue={c.credits} />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Prerequisites</Label>
-                              <Input placeholder="Enter prerequisites" defaultValue="CS101 - Introduction to Programming" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Max Capacity</Label>
-                              <Input type="number" defaultValue={c.maxCapacity ?? 70} />
-                            </div>
-                          </div>
-                          <DialogFooter className="gap-2">
-                            <DialogClose asChild>
-                              <Button variant="outline">Cancel</Button>
-                            </DialogClose>
-                            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">Save Changes</Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    )}
-                  </div>
-
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="border-t pt-3 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs font-semibold">Roster ({stats.enrollments.length})</p>
-                            <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2"><Upload className="w-3 h-3 mr-1" />Import</Button>
-                              <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2"><Download className="w-3 h-3 mr-1" />Export</Button>
-                            </div>
-                          </div>
-                          <Input
-                            placeholder="Search students..."
-                            className="h-8 text-xs"
-                            value={rosterSearch}
-                            onChange={(e) => setRosterSearch(e.target.value)}
-                          />
-                          <div className="max-h-48 overflow-y-auto space-y-1">
-                            {stats.enrollments
-                              .filter((e) => e.studentName.toLowerCase().includes(rosterSearch.toLowerCase()))
-                              .map((enr) => {
-                                const studentGrades = mockGrades.filter((g) => g.studentId === enr.studentId && g.courseId === c.id);
-                                const studentAtt = mockAttendanceRecords.filter((a) => a.studentId === enr.studentId && a.courseId === c.id);
-                                const presentCount = studentAtt.filter((a) => a.status === "Present").length;
-                                const attPct = studentAtt.length > 0 ? Math.round((presentCount / studentAtt.length) * 100) : 0;
-                                return (
-                                  <div key={enr.id} className="flex items-center justify-between py-2 px-2 rounded hover:bg-muted/50 text-xs">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                      <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center flex-shrink-0">
-                                        <GraduationCap className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                                      </div>
-                                      <span className="truncate font-medium">{enr.studentName}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3 flex-shrink-0">
-                                      <Badge variant={attPct >= 75 ? "outline" : "destructive"} className="text-[10px] px-1.5 py-0">
-                                        {enr.attendancePercentage ?? attPct}%
-                                      </Badge>
-                                      {studentGrades.length > 0 && (
-                                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                          {studentGrades[studentGrades.length - 1].letterGrade}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                          </div>
-                          <div className="flex gap-2 pt-1">
-                            <Button variant="outline" size="sm" className="flex-1 text-[10px] h-7">
-                              <UserPlus className="w-3 h-3 mr-1" />Add Co-teacher
-                            </Button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  <p className="text-sm font-medium">Class {classNum}</p>
                 </CardContent>
               </Card>
-            </motion.div>
-          );
-        })}
-      </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Selected Class Header for Admins */}
+          {canManage && selectedClass && (
+            <Card className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border-emerald-200 dark:border-emerald-800">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center">
+                      <span className="text-xl font-bold text-white">{selectedClass}</span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold">Class {selectedClass}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {courses.length} course(s)
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedClass("");
+                      setCourses([]);
+                    }}
+                  >
+                    Change Class
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+      {/* Search */}
+      {(selectedClass || !canManage) && (
+        <div className="relative max-w-sm">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by title, code or class…"
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg px-4 py-3">
+          <AlertCircle className="w-4 h-4" />{error}
+        </div>
+      )}
+
+      {/* Loading */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="w-6 h-6 animate-spin text-emerald-500 mr-2" />
+          <span className="text-sm text-muted-foreground">Loading courses…</span>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {(selectedClass || !canManage) && !isLoading && courses.length === 0 && !error && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4">
+            <BookOpen className="w-8 h-8 text-emerald-500" />
+          </div>
+          <h3 className="text-lg font-semibold mb-1">No courses yet</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            {canManage
+              ? `Add your first course for Class ${selectedClass} to get started`
+              : "No courses have been added to your branch yet"}
+          </p>
+          {canManage && (
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setAddOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />Add First Course
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Course grid */}
+      {(selectedClass || !canManage) && !isLoading && filtered.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((course) => (
+            <Card key={course.id} className="card-premium hover:shadow-md transition-shadow">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center flex-shrink-0">
+                    <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <Badge variant="outline" className="text-[10px] font-mono">{course.code}</Badge>
+                    <Badge className={`text-[10px] border-0 ${subjectTypeColors[course.subjectType] ?? "bg-muted text-muted-foreground"}`}>
+                      {course.subjectType}
+                    </Badge>
+                  </div>
+                </div>
+
+                <h3 className="font-semibold text-sm mb-0.5 line-clamp-1">{course.title}</h3>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Class / Grade: <span className="font-medium text-foreground">{course.classLevel}</span>
+                  {course.branch && <span> · {course.branch.name}</span>}
+                </p>
+
+                {course.description && (
+                  <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{course.description}</p>
+                )}
+
+                <div className="flex items-center gap-4 text-xs text-muted-foreground border-t pt-3">
+                  <span className="flex items-center gap-1">
+                    <Users className="w-3.5 h-3.5" />
+                    {course.enrolledStudentsCount} students
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <GraduationCap className="w-3.5 h-3.5" />
+                    {course.teachers.length > 0 ? course.teachers[0].name : "No teacher"}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Add Course Dialog */}
+      <Dialog open={addOpen} onOpenChange={(o) => { setAddOpen(o); if (!o) { setFormData({ ...emptyForm }); setFormError(""); setFormSuccess(""); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                <BookOpen className="w-4 h-4 text-emerald-600" />
+              </div>
+              Add Course for Class {selectedClass}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreate} className="space-y-4 py-1">
+            <div className="space-y-1.5">
+              <Label>Course Title <span className="text-destructive">*</span></Label>
+              <Input value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="e.g. Mathematics" disabled={isSaving} />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Code <span className="text-destructive">*</span></Label>
+              <Input value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })} placeholder="e.g. MATH-101" disabled={isSaving} />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Subject Type</Label>
+              <Select value={formData.subjectType} onValueChange={(v) => setFormData({ ...formData, subjectType: v })} disabled={isSaving}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {SUBJECT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Description</Label>
+              <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="Brief description of the course…" rows={3} disabled={isSaving} />
+            </div>
+
+            {formError && (
+              <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />{formError}
+              </div>
+            )}
+            {formSuccess && (
+              <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0" />{formSuccess}
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setAddOpen(false)} disabled={isSaving}>Cancel</Button>
+              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white" disabled={isSaving}>
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {isSaving ? "Creating…" : "Create Course"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+        </>
+      )}
     </div>
   );
 }

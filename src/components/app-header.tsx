@@ -27,6 +27,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Bell, Moon, Search, Sun, User, LogOut, Settings } from "lucide-react";
+import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -229,7 +230,14 @@ export function AppHeader() {
             <DropdownMenuItem
               variant="destructive"
               className="cursor-pointer"
-              onClick={logout}
+              onClick={async () => {
+                // Clear Zustand store
+                logout();
+                // Sign out from NextAuth
+                await signOut({ redirect: false });
+                // Reload to show login page
+                window.location.href = '/';
+              }}
             >
               <LogOut className="mr-2 h-4 w-4" />
               <span>Log out</span>

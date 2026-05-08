@@ -1,22 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 import { db } from '@/lib/db'
 
 export async function GET(request: NextRequest) {
   try {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
     const { searchParams } = request.nextUrl
     const branchId = searchParams.get('branchId')
     const teacherId = searchParams.get('teacherId')
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const whereClause: any = { isActive: true }
 
-    if (branchId) {
-      whereClause.branchId = branchId
+    // Scope by role
+    if (token.role === "BranchAdmin" && token.branchId) {
+      whereClause.branchId = token.branchId
+    } else if (token.role === "InstituteAdmin" && token.instituteId) {
+      whereClause.branch = { instituteId: token.instituteId }
     }
 
+    if (branchId) whereClause.branchId = branchId
+
     if (teacherId) {
-      whereClause.teachers = {
-        some: { teacherId },
-      }
+      whereClause.teachers = { some: { teacherId } }
     }
 
     const courses = await db.course.findMany({
@@ -71,8 +79,10 @@ export async function GET(request: NextRequest) {
       code: course.code,
       title: course.title,
       description: course.description,
-      creditHours: course.creditHours,
+      classLevel: course.classLevel,
       section: course.section,
+      subjectType: course.subjectType,
+      isActive: course.isActive,
       branch: course.branch,
       program: course.program,
       batch: course.batch,
@@ -109,5 +119,80 @@ export async function GET(request: NextRequest) {
       { success: false, error: 'Failed to fetch courses' },
       { status: 500 }
     )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+    if (!["SuperAdmin", "InstituteAdmin", "BranchAdmin"].includes(token.role as string)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const { title, code, description, classLevel, subjectType, branchId } = body
+
+    if (!title || !code || !classLevel) {
+      return NextResponse.json({ error: "title, code and classLevel are required" }, { status: 400 })
+    }
+
+    let resolvedBranchId: string
+    if (token.role === "BranchAdmin") {
+      if (!token.branchId) return NextResponse.json({ error: "Branch not assigned to your account" }, { status: 400 })
+      resolvedBranchId = token.branchId as string
+    } else {
+      if (!branchId) return NextResponse.json({ error: "branchId is required" }, { status: 400 })
+      resolvedBranchId = branchId
+    }
+
+    const course = await db.course.create({
+      data: {
+        title,
+        code,
+        description: description || null,
+        classLevel,
+        subjectType: subjectType || "Core",
+        branchId: resolvedBranchId,
+      },
+    })
+
+    return NextResponse.json({ success: true, data: course }, { status: 201 })
+  } catch (error) {
+    console.error('POST /api/courses error:', error)
+    return NextResponse.json({ success: false, error: 'Failed to create course' }, { status: 500 })
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+    if (!["SuperAdmin", "InstituteAdmin", "BranchAdmin"].includes(token.role as string)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const { id, title, code, description, classLevel, subjectType, isActive } = body
+    if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 })
+
+    const updated = await db.course.update({
+      where: { id },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(code !== undefined && { code }),
+        ...(description !== undefined && { description }),
+        ...(classLevel !== undefined && { classLevel }),
+        ...(subjectType !== undefined && { subjectType }),
+        ...(isActive !== undefined && { isActive }),
+      },
+    })
+
+    return NextResponse.json({ success: true, data: updated })
+  } catch (error) {
+    console.error('PATCH /api/courses error:', error)
+    return NextResponse.json({ success: false, error: 'Failed to update course' }, { status: 500 })
   }
 }

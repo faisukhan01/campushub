@@ -1,25 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 import { db } from '@/lib/db'
 
 export async function GET(request: NextRequest) {
   try {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
     const { searchParams } = request.nextUrl
     const studentId = searchParams.get('studentId')
     const courseId = searchParams.get('courseId')
 
     const whereClause: any = {}
-    if (studentId) whereClause.studentId = studentId
-    if (courseId) whereClause.courseId = courseId
+
+    // Role-based scoping
+    if (token.role === "Student") {
+      // Students can only see their own grades
+      whereClause.studentId = token.userId
+    } else if (token.role === "Teacher") {
+      // Teachers can only see grades for courses they teach
+      whereClause.course = {
+        teachers: {
+          some: { teacherId: token.userId }
+        }
+      }
+    } else if (token.role === "BranchAdmin") {
+      // BranchAdmin can see grades for courses in their branch
+      whereClause.course = {
+        branchId: token.branchId
+      }
+    } else if (token.role === "InstituteAdmin") {
+      // InstituteAdmin can see grades for courses in their institute
+      whereClause.course = {
+        branch: {
+          instituteId: token.instituteId
+        }
+      }
+    }
+    // SuperAdmin has no filter (can see all grades)
+
+    // Apply query params (SuperAdmin can use arbitrary IDs)
+    if (studentId && token.role === "SuperAdmin") whereClause.studentId = studentId
+    if (courseId && token.role === "SuperAdmin") whereClause.courseId = courseId
 
     const grades = await db.grade.findMany({
       where: whereClause,
-      include: {
-        course: {
-          select: { id: true, code: true, title: true, creditHours: true },
-        },
-        student: {
-          select: { id: true, name: true, email: true },
-        },
+      select: {
+        id: true, courseId: true, studentId: true, category: true,
+        marks: true, maxMarks: true, weight: true, gradeLetter: true,
+        comments: true, createdAt: true, updatedAt: true,
       },
       orderBy: { createdAt: 'desc' },
     })
@@ -53,8 +82,6 @@ export async function GET(request: NextRequest) {
         percentage: Math.round(percentage * 10) / 10,
         gradeLetter: computedLetter,
         comments: grade.comments,
-        course: grade.course,
-        student: grade.student,
         createdAt: grade.createdAt,
         updatedAt: grade.updatedAt,
       }

@@ -1,7 +1,27 @@
+/**
+ * Database Seed Script - FOR DEMO/DEVELOPMENT ONLY
+ * 
+ * ⚠️  WARNING: This script creates dummy data for testing and demonstration.
+ * ⚠️  DO NOT run this on a production database with real user data!
+ * 
+ * To clear dummy data and start fresh, run:
+ *   node scripts/clear-dummy-data.mjs
+ * 
+ * This seed creates:
+ * - 1 Institute (Greenfield University)
+ * - 2 Branches (Main Campus, City Campus)
+ * - 3 Departments (CS, BA, EE)
+ * - 3 Programs with 12 Batches
+ * - 15 Users (1 Institute Admin, 2 Branch Admins, 5 Teachers, 10 Students, 2 Parents)
+ * - 8 Courses with enrollments
+ * - Sample attendance, assignments, and other academic data
+ */
+
 import { db } from "../src/lib/db";
 
 async function main() {
-  console.log("🌱 Seeding database...\n");
+  console.log("🌱 Seeding database with DUMMY DATA...\n");
+  console.log("⚠️  This is for DEMO/DEVELOPMENT purposes only!\n");
 
   // Clean up existing data (in reverse dependency order)
   console.log("🗑️  Cleaning existing data...");

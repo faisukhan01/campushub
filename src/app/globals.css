@@ -228,4 +228,61 @@
     color: #94a3b8;
     border-color: #334155;
   }
+
+  /* Glow text effect for formulas */
+  .glow-text {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+    font-weight: 600;
+  }
+
+  /* Elegant subtle glow - professional look */
+  .elegant-glow {
+    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.1));
+    transition: all 0.3s ease;
+  }
+
+  /* Gentle float animation - smooth and subtle */
+  @keyframes gentleFloat {
+    0%, 100% { 
+      transform: translateY(0px) translateX(0px);
+      opacity: 0.6;
+    }
+    50% { 
+      transform: translateY(-15px) translateX(5px);
+      opacity: 1;
+    }
+  }
+
+  /* Gentle spin - very slow and smooth */
+  @keyframes gentleSpin {
+    from { 
+      transform: rotate(0deg);
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    to { 
+      transform: rotate(360deg);
+      opacity: 0.5;
+    }
+  }
+
+  /* Float animation */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* Spin animation */
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Fade in animation */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
 }

@@ -16,7 +16,8 @@ import {
 } from "@/components/ui/table";
 import {
   Globe, Palette, Bell, Shield, GraduationCap, Calendar,
-  CreditCard, Save, Upload, Plus, Trash2,
+  CreditCard, Save, Upload, Plus, Trash2, Lock, Eye, EyeOff,
+  Loader2, CheckCircle2,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -80,11 +81,59 @@ export function SettingsPage() {
   });
 
   const [holidays, setHolidays] = useState([
-    { id: "1", name: "Independence Day", date: "2025-07-04", type: "Holiday" },
-    { id: "2", name: "Thanksgiving Break", date: "2025-11-27", type: "Holiday" },
-    { id: "3", name: "Winter Break", date: "2025-12-22", type: "Holiday" },
-    { id: "4", name: "Spring Break", date: "2025-03-15", type: "Holiday" },
+    { id: "1", name: "Independence Day", date: "2025-08-14", type: "Holiday" },
+    { id: "2", name: "Eid ul Fitr", date: "2025-03-31", type: "Holiday" },
+    { id: "3", name: "Eid ul Adha", date: "2025-06-07", type: "Holiday" },
+    { id: "4", name: "Pakistan Day", date: "2025-03-23", type: "Holiday" },
   ]);
+
+  // Change password state
+  const [pwForm, setPwForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [isPwSaving, setIsPwSaving] = useState(false);
+  const [pwError, setPwError] = useState("");
+  const [pwSuccess, setPwSuccess] = useState("");
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwError("");
+    setPwSuccess("");
+
+    if (!pwForm.currentPassword || !pwForm.newPassword || !pwForm.confirmPassword) {
+      setPwError("All password fields are required.");
+      return;
+    }
+    if (pwForm.newPassword.length < 8) {
+      setPwError("New password must be at least 8 characters.");
+      return;
+    }
+    if (pwForm.newPassword !== pwForm.confirmPassword) {
+      setPwError("New passwords do not match.");
+      return;
+    }
+    if (pwForm.currentPassword === pwForm.newPassword) {
+      setPwError("New password must be different from your current password.");
+      return;
+    }
+
+    setIsPwSaving(true);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword }),
+      });
+      const json = await res.json();
+      if (!res.ok) { setPwError(json.error ?? "Failed to change password."); return; }
+      setPwSuccess("Password changed successfully. Use your new password next time you log in.");
+      setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch {
+      setPwError("Network error. Please try again.");
+    } finally {
+      setIsPwSaving(false);
+    }
+  };
 
   return (
     <div className="space-y-6 page-transition">
@@ -93,16 +142,94 @@ export function SettingsPage() {
         <p className="text-muted-foreground">Manage your institution configuration and preferences</p>
       </div>
 
-      <Tabs defaultValue="general" className="space-y-4">
+      <Tabs defaultValue="security" className="space-y-4">
         <TabsList className="flex-wrap h-auto tabs-smooth">
+          <TabsTrigger value="security" className="gap-1"><Lock className="w-3 h-3" />Security</TabsTrigger>
           <TabsTrigger value="general" className="gap-1"><Globe className="w-3 h-3" />General</TabsTrigger>
           <TabsTrigger value="branding" className="gap-1"><Palette className="w-3 h-3" />Branding</TabsTrigger>
           <TabsTrigger value="grading" className="gap-1"><GraduationCap className="w-3 h-3" />Grading</TabsTrigger>
           <TabsTrigger value="attendance" className="gap-1"><Calendar className="w-3 h-3" />Attendance</TabsTrigger>
           <TabsTrigger value="notifications" className="gap-1"><Bell className="w-3 h-3" />Notifications</TabsTrigger>
           <TabsTrigger value="calendar" className="gap-1"><Calendar className="w-3 h-3" />Calendar</TabsTrigger>
-          <TabsTrigger value="subscription" className="gap-1"><CreditCard className="w-3 h-3" />Subscription</TabsTrigger>
         </TabsList>
+
+        {/* Security */}
+        <TabsContent value="security">
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Lock className="w-4 h-4" />Change Password</CardTitle></CardHeader>
+            <CardContent>
+              <form onSubmit={handleChangePassword} className="max-w-md space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Update your password. After changing, use the new password on your next login.
+                </p>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="cur-pw">Current Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="cur-pw"
+                      type={showCurrent ? "text" : "password"}
+                      value={pwForm.currentPassword}
+                      onChange={(e) => setPwForm({ ...pwForm, currentPassword: e.target.value })}
+                      placeholder="Your current password"
+                      className="pr-10"
+                      disabled={isPwSaving}
+                    />
+                    <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="new-pw">New Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="new-pw"
+                      type={showNew ? "text" : "password"}
+                      value={pwForm.newPassword}
+                      onChange={(e) => setPwForm({ ...pwForm, newPassword: e.target.value })}
+                      placeholder="Min. 8 characters"
+                      className="pr-10"
+                      disabled={isPwSaving}
+                    />
+                    <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="confirm-pw">Confirm New Password</Label>
+                  <Input
+                    id="confirm-pw"
+                    type="password"
+                    value={pwForm.confirmPassword}
+                    onChange={(e) => setPwForm({ ...pwForm, confirmPassword: e.target.value })}
+                    placeholder="Re-enter new password"
+                    disabled={isPwSaving}
+                  />
+                </div>
+
+                {pwError && (
+                  <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">
+                    <Shield className="w-4 h-4 flex-shrink-0" />{pwError}
+                  </div>
+                )}
+                {pwSuccess && (
+                  <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">
+                    <CheckCircle2 className="w-4 h-4 flex-shrink-0" />{pwSuccess}
+                  </div>
+                )}
+
+                <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white" disabled={isPwSaving}>
+                  {isPwSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
+                  {isPwSaving ? "Changing Password…" : "Change Password"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* General */}
         <TabsContent value="general">
@@ -337,59 +464,6 @@ export function SettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* Subscription */}
-        <TabsContent value="subscription">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader><CardTitle className="text-base">Current Plan</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-bold text-emerald-700 dark:text-emerald-400">Enterprise Plan</h3>
-                    <Badge className="bg-emerald-600 text-white">Active</Badge>
-                  </div>
-                  <p className="text-2xl font-bold">$499<span className="text-sm font-normal text-muted-foreground">/month</span></p>
-                  <p className="text-xs text-muted-foreground mt-1">Renews on August 15, 2025</p>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Features Included:</p>
-                  {["Unlimited Branches", "Unlimited Users", "Priority Support", "Custom Integrations", "Advanced Analytics", "API Access"].map((f) => (
-                    <div key={f} className="flex items-center gap-2 text-sm">
-                      <div className="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
-                        <span className="text-[10px] text-emerald-600">✓</span>
-                      </div>
-                      {f}
-                    </div>
-                  ))}
-                </div>
-                <Button variant="outline" className="w-full">Upgrade Plan</Button>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader><CardTitle className="text-base">Branch Overrides</CardTitle></CardHeader>
-              <CardContent>
-                <p className="text-xs text-muted-foreground mb-3">Override subscription features per branch</p>
-                <Table className="text-xs">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Branch</TableHead>
-                      <TableHead className="text-center">Custom</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {["Main Campus", "South Campus", "East Campus"].map((b) => (
-                      <TableRow key={b}>
-                        <TableCell>{b}</TableCell>
-                        <TableCell className="text-center"><Switch /></TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <SectionSave label="Save Overrides" />
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
       </Tabs>
     </div>
   );

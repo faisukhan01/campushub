@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { UserRole, NavigationItem } from "@/types";
+import { getTabUser, setTabUser, clearTabUser } from "@/lib/tab-session";
 
 // -------------------- Demo Users --------------------
 
@@ -18,54 +19,54 @@ interface DemoUser {
 const DEMO_USERS: Record<UserRole, DemoUser> = {
   SuperAdmin: {
     id: "u-super-001",
-    name: "Alex Morgan",
-    email: "alex.morgan@campus.edu",
+    name: "Faisal Mahmood",
+    email: "faisal@campushub.pk",
     role: "SuperAdmin",
     avatar: "",
-    instituteId: "inst-001",
-    instituteName: "Greenfield Education Group",
+    instituteId: "platform",
+    instituteName: "CampusHub Platform",
   },
   InstituteAdmin: {
     id: "u-inst-001",
-    name: "Dr. Sarah Chen",
-    email: "sarah.chen@campus.edu",
+    name: "Dr. Tariq Bashir",
+    email: "tariq.bashir@beaconhouse.edu.pk",
     role: "InstituteAdmin",
     avatar: "",
     instituteId: "inst-001",
-    instituteName: "Greenfield Education Group",
+    instituteName: "Beacon House School System",
   },
   BranchAdmin: {
     id: "u-branch-001",
-    name: "James Wilson",
-    email: "james.wilson@campus.edu",
+    name: "Zara Qureshi",
+    email: "zara.qureshi@beaconhouse.edu.pk",
     role: "BranchAdmin",
     avatar: "",
     instituteId: "inst-001",
-    instituteName: "Greenfield Education Group",
+    instituteName: "Beacon House School System",
     branchId: "branch-001",
-    branchName: "Greenfield Main Campus",
+    branchName: "Main Campus — Lahore",
   },
   Teacher: {
     id: "u-teacher-001",
-    name: "Prof. Emily Rodriguez",
-    email: "emily.rodriguez@campus.edu",
+    name: "Mr. Ahmed Khan",
+    email: "ahmed.khan@beaconhouse.edu.pk",
     role: "Teacher",
     avatar: "",
     instituteId: "inst-001",
-    instituteName: "Greenfield Education Group",
+    instituteName: "Beacon House School System",
     branchId: "branch-001",
-    branchName: "Greenfield Main Campus",
+    branchName: "Main Campus — Lahore",
   },
   Student: {
     id: "u-student-001",
-    name: "Ryan Patel",
-    email: "ryan.patel@student.campus.edu",
+    name: "Ali Hassan",
+    email: "ali.hassan@student.beaconhouse.edu.pk",
     role: "Student",
     avatar: "",
     instituteId: "inst-001",
-    instituteName: "Greenfield Education Group",
+    instituteName: "Beacon House School System",
     branchId: "branch-001",
-    branchName: "Greenfield Main Campus",
+    branchName: "Main Campus — Lahore",
   },
 };
 
@@ -80,61 +81,57 @@ function getNavigationForRole(role: UserRole): NavigationItem[] {
     SuperAdmin: [
       ...baseNav,
       { id: "institutes", label: "Institutes", icon: "Building2", href: "institutes" },
-      { id: "branches", label: "Branches", icon: "MapPin", href: "branches" },
-      { id: "users", label: "User Management", icon: "Users", href: "users" },
-      { id: "subscription", label: "Subscription", icon: "CreditCard", href: "subscription" },
-      { id: "reports", label: "Reports", icon: "FileText", href: "reports" },
+      { id: "branches", label: "All Branches", icon: "MapPin", href: "branches" },
+      { id: "users", label: "All Users", icon: "Users", href: "users" },
+      { id: "subscription", label: "Subscriptions", icon: "CreditCard", href: "subscription" },
       { id: "analytics", label: "Analytics", icon: "BarChart3", href: "analytics" },
-      { id: "announcements", label: "Announcements", icon: "Megaphone", href: "announcements" },
+      { id: "reports", label: "Reports", icon: "FileText", href: "reports" },
       { id: "settings", label: "Settings", icon: "Settings", href: "settings" },
     ],
     InstituteAdmin: [
       ...baseNav,
       { id: "branches", label: "Branches", icon: "MapPin", href: "branches" },
-      { id: "departments", label: "Departments", icon: "FolderTree", href: "departments" },
       { id: "users", label: "User Management", icon: "Users", href: "users" },
       { id: "courses", label: "Courses", icon: "BookOpen", href: "courses" },
       { id: "fees", label: "Fee Management", icon: "CreditCard", href: "fees" },
       { id: "reports", label: "Reports", icon: "FileText", href: "reports" },
       { id: "announcements", label: "Announcements", icon: "Megaphone", href: "announcements" },
-      { id: "calendar", label: "Calendar", icon: "Calendar", href: "calendar" },
-      { id: "notifications", label: "Notifications", icon: "Bell", href: "notifications", badge: 2 },
       { id: "settings", label: "Settings", icon: "Settings", href: "settings" },
     ],
     BranchAdmin: [
       ...baseNav,
-      { id: "departments", label: "Departments", icon: "FolderTree", href: "departments" },
-      { id: "batches", label: "Batches", icon: "Layers", href: "batches" },
-      { id: "users", label: "User Management", icon: "Users", href: "users" },
+      { id: "students", label: "Students", icon: "GraduationCap", href: "students" },
+      { id: "users", label: "Teachers", icon: "Users", href: "users" },
       { id: "courses", label: "Courses", icon: "BookOpen", href: "courses" },
-      { id: "timetable", label: "Timetable", icon: "Calendar", href: "timetable" },
+      { id: "course-management", label: "Course Management", icon: "Settings2", href: "course-management" },
       { id: "attendance", label: "Attendance", icon: "ClipboardCheck", href: "attendance" },
       { id: "fees", label: "Fee Management", icon: "CreditCard", href: "fees" },
+      { id: "timetable", label: "Timetable", icon: "Calendar", href: "timetable" },
       { id: "announcements", label: "Announcements", icon: "Megaphone", href: "announcements" },
       { id: "reports", label: "Reports", icon: "FileText", href: "reports" },
       { id: "settings", label: "Settings", icon: "Settings", href: "settings" },
     ],
     Teacher: [
       ...baseNav,
-      { id: "attendance", label: "Attendance", icon: "ClipboardCheck", href: "attendance" },
+      { id: "courses", label: "My Classes", icon: "BookOpen", href: "courses" },
+      { id: "attendance", label: "Mark Attendance", icon: "ClipboardCheck", href: "attendance" },
       { id: "assignments", label: "Assignments", icon: "FileEdit", href: "assignments" },
-      { id: "grades", label: "Grading", icon: "Award", href: "grades" },
-      { id: "students", label: "Students", icon: "GraduationCap", href: "students" },
-      { id: "timetable", label: "My Timetable", icon: "Calendar", href: "timetable" },
-      { id: "messages", label: "Messages", icon: "MessageSquare", href: "messages", badge: 3 },
+      { id: "grades", label: "Enter Marks", icon: "Award", href: "grades" },
+      { id: "students", label: "My Students", icon: "GraduationCap", href: "students" },
+      { id: "timetable", label: "My Schedule", icon: "Calendar", href: "timetable" },
       { id: "announcements", label: "Announcements", icon: "Megaphone", href: "announcements" },
-      { id: "notifications", label: "Notifications", icon: "Bell", href: "notifications", badge: 3 },
+      { id: "messages", label: "Messages", icon: "MessageSquare", href: "messages", badge: 3 },
     ],
     Student: [
       ...baseNav,
-      { id: "courses", label: "My Courses", icon: "BookOpen", href: "courses" },
+      { id: "courses", label: "My Subjects", icon: "BookOpen", href: "courses" },
       { id: "assignments", label: "Assignments", icon: "FileEdit", href: "assignments" },
-      { id: "grades", label: "Grades & Results", icon: "Award", href: "grades" },
-      { id: "attendance", label: "Attendance", icon: "ClipboardCheck", href: "attendance" },
-      { id: "timetable", label: "Timetable", icon: "Calendar", href: "timetable" },
-      { id: "fees", label: "Fees", icon: "CreditCard", href: "fees", badge: 2 },
+      { id: "grades", label: "My Marks", icon: "Award", href: "grades" },
+      { id: "attendance", label: "My Attendance", icon: "ClipboardCheck", href: "attendance" },
+      { id: "timetable", label: "My Schedule", icon: "Calendar", href: "timetable" },
+      { id: "fees", label: "Fee Ledger", icon: "CreditCard", href: "fees", badge: 1 },
       { id: "announcements", label: "Announcements", icon: "Megaphone", href: "announcements" },
-      { id: "notifications", label: "Notifications", icon: "Bell", href: "notifications", badge: 7 },
+      { id: "messages", label: "Messages", icon: "MessageSquare", href: "messages" },
     ],
   };
 
@@ -168,7 +165,7 @@ interface AppState {
   globalError: string | null;
 
   // Actions
-  login: (role: UserRole) => void;
+  login: (user: { id: string; name: string; email: string; role: UserRole; instituteId?: string | null; branchId?: string | null }) => void;
   logout: () => void;
   setCurrentPage: (page: string) => void;
   toggleSidebar: () => void;
@@ -185,45 +182,67 @@ interface AppState {
 
 // -------------------- Store --------------------
 
-export const useAppStore = create<AppState>((set, get) => ({
-  // Initial state
-  isAuthenticated: false,
-  currentUser: null,
-  currentPage: "dashboard",
-  sidebarExpanded: true,
-  navigationItems: [],
-  theme: "light",
-  unreadNotificationCount: 0,
-  activeInstituteId: null,
-  activeBranchId: null,
-  isLoading: false,
-  globalError: null,
+export const useAppStore = create<AppState>((set, get) => {
+  // Initialize from tab-specific session storage
+  const tabUser = getTabUser();
+  const initialAuth = tabUser !== null;
+  const initialUser = tabUser;
+  const initialNav = tabUser ? getNavigationForRole(tabUser.role) : [];
 
-  // Actions
-  login: (role: UserRole) => {
-    const demoUser = DEMO_USERS[role];
-    if (!demoUser) return;
+  return {
+    // Initial state
+    isAuthenticated: initialAuth,
+    currentUser: initialUser,
+    currentPage: "dashboard",
+    sidebarExpanded: true,
+    navigationItems: initialNav,
+    theme: "light",
+    unreadNotificationCount: 0,
+    activeInstituteId: tabUser?.instituteId ?? null,
+    activeBranchId: tabUser?.branchId ?? null,
+    isLoading: false,
+    globalError: null,
 
-    set({
-      isAuthenticated: true,
-      currentUser: demoUser,
-      activeInstituteId: demoUser.instituteId,
-      activeBranchId: demoUser.branchId ?? null,
-      navigationItems: getNavigationForRole(role),
-      unreadNotificationCount: role === "Student" ? 7 : role === "Teacher" ? 3 : 2,
-    });
-  },
+    // Actions
+    login: (user) => {
+      const userData = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: "",
+        instituteId: user.instituteId ?? "platform",
+        instituteName: "",
+        branchId: user.branchId ?? undefined,
+        branchName: undefined,
+      };
+      
+      // Store in tab-specific session
+      setTabUser(userData);
+      
+      set({
+        isAuthenticated: true,
+        currentUser: userData,
+        activeInstituteId: user.instituteId ?? null,
+        activeBranchId: user.branchId ?? null,
+        navigationItems: getNavigationForRole(user.role),
+        unreadNotificationCount: 0,
+      });
+    },
 
-  logout: () => {
-    set({
-      isAuthenticated: false,
-      currentUser: null,
-      currentPage: "dashboard",
-      navigationItems: [],
-      unreadNotificationCount: 0,
-      activeBranchId: null,
-    });
-  },
+    logout: () => {
+      // Clear tab-specific session
+      clearTabUser();
+      
+      set({
+        isAuthenticated: false,
+        currentUser: null,
+        currentPage: "dashboard",
+        navigationItems: [],
+        unreadNotificationCount: 0,
+        activeBranchId: null,
+      });
+    },
 
   setCurrentPage: (page: string) => {
     set({ currentPage: page });
@@ -266,6 +285,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   clearAll: () => {
+    // Clear tab-specific session
+    clearTabUser();
+    
     set({
       isAuthenticated: false,
       currentUser: null,
@@ -279,7 +301,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       globalError: null,
     });
   },
-}));
+}});
 
 // -------------------- Selectors --------------------
 

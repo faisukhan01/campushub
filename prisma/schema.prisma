@@ -138,8 +138,12 @@ model User {
   avatar        String?
   phone         String?
   role          String    @default("Student")
-  instituteId   String
+  instituteId   String?
   branchId      String?
+  employeeId    String?
+  rollNumber    String?
+  section       String?
+  classLevel    String?
   isActive      Boolean   @default(true)
   lastLogin     DateTime?
   createdAt     DateTime  @default(now())
@@ -163,19 +167,22 @@ model User {
   feeInvoices       FeeInvoice[]
 }
 
-// ============ COURSES ============
+// ============ COURSES (SUBJECTS) ============
 model Course {
   id           String   @id @default(cuid())
   code         String
   title        String
   description  String?
-  creditHours  Int      @default(3)
+  subjectType  String   @default("Core")
+  classLevel   String
+  section      String?
   syllabus     String?
   branchId     String
   programId    String?
   batchId      String?
   termId       String?
-  section      String?
+  icon         String?
+  color        String?
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

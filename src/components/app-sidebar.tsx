@@ -5,6 +5,7 @@ import { useAppStore } from "@/store/app-store";
 import { getIcon } from "@/lib/icon-map";
 import { cn } from "@/lib/utils";
 import { LogOut, Sparkles } from "lucide-react";
+import { signOut } from "next-auth/react";
 import {
   Sidebar,
   SidebarContent,
@@ -124,14 +125,11 @@ export function AppSidebar() {
   const secondaryItems = navigationItems.slice(6);
 
   return (
-    <Sidebar
-      collapsible="icon"
-      style={{ "--sidebar-width": "17.5rem" } as React.CSSProperties}
-    >
+    <Sidebar collapsible="icon">
       {/* ── Brand Header ── */}
-      <SidebarHeader className="border-0 p-0">
-        <div className="bg-gradient-to-br from-emerald-600 to-teal-600 px-4 py-5">
-          <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
+      <SidebarHeader className="border-0 p-0 gap-0">
+        <div className="bg-gradient-to-br from-emerald-600 to-teal-600 px-4 h-14 flex items-center border-b-2 border-emerald-500/40">
+          <div className="flex items-center gap-3 w-full group-data-[collapsible=icon]:justify-center">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/15 backdrop-blur-sm">
               <Sparkles className="h-4.5 w-4.5 text-white" />
             </div>
@@ -145,8 +143,6 @@ export function AppSidebar() {
             </div>
           </div>
         </div>
-        {/* Thin emerald accent line */}
-        <div className="h-[2px] bg-gradient-to-r from-emerald-500 via-teal-500 to-transparent" />
       </SidebarHeader>
 
       {/* ── Navigation ── */}
@@ -222,7 +218,14 @@ export function AppSidebar() {
           variant="ghost"
           size="sm"
           className="w-full justify-start text-slate-400 hover:text-red-600 hover:bg-red-50 dark:text-slate-500 dark:hover:text-red-400 dark:hover:bg-red-950/30 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 mt-0.5 rounded-lg transition-colors duration-200"
-          onClick={logout}
+          onClick={async () => {
+            // Clear Zustand store
+            logout();
+            // Sign out from NextAuth
+            await signOut({ redirect: false });
+            // Reload to show login page
+            window.location.href = '/';
+          }}
         >
           <LogOut className="w-4 h-4" />
           <span className="group-data-[collapsible=icon]:hidden">Log out</span>
