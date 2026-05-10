@@ -10,26 +10,28 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        name: { label: "Name", type: "text" },
       },
       async authorize(credentials) {
         try {
           if (!credentials?.email || !credentials?.password) return null
 
           const identifier = credentials.email.trim()
+          const providedName = credentials.name?.trim()
           
-          // Try to find user by email first
+          // Try to find user by email first (for Admins)
           let user = await db.user.findUnique({
             where: { email: identifier },
           })
 
-          // If not found, try rollNumber
+          // If not found, try rollNumber (for Students)
           if (!user) {
             user = await db.user.findFirst({
               where: { rollNumber: identifier, isActive: true },
             })
           }
 
-          // If still not found, try employeeId
+          // If still not found, try employeeId (for Teachers)
           if (!user) {
             user = await db.user.findFirst({
               where: { employeeId: identifier, isActive: true },
@@ -37,6 +39,19 @@ export const authOptions: NextAuthOptions = {
           }
 
           if (!user || !user.passwordHash || !user.isActive) return null
+
+          // For Teachers and Students, verify the name matches
+          // This adds an extra layer of security for non-email based logins
+          if ((user.role === 'Teacher' || user.role === 'Student') && providedName) {
+            // Case-insensitive name comparison
+            const userNameLower = user.name.toLowerCase().trim()
+            const providedNameLower = providedName.toLowerCase()
+            
+            if (userNameLower !== providedNameLower) {
+              console.log(`Name mismatch for ${user.role} ${identifier}: expected "${user.name}", got "${providedName}"`)
+              return null
+            }
+          }
 
           const valid = await bcrypt.compare(credentials.password, user.passwordHash)
           if (!valid) return null
@@ -86,6 +101,7 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
+    updateAge: 0, // Disable session update on every request
   },
 
   pages: {
@@ -95,4 +111,14 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   
   debug: false,
+
+  // Disable cross-tab session synchronization
+  events: {
+    async signIn() {
+      // Prevent broadcasting sign-in event to other tabs
+    },
+    async signOut() {
+      // Prevent broadcasting sign-out event to other tabs
+    },
+  },
 }

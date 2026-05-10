@@ -17,8 +17,15 @@ import {
 import {
   MapPin, Users, GraduationCap, Building2, Phone, Mail, Plus,
   Loader2, RefreshCw, AlertCircle, CheckCircle2, BookOpen,
-  Eye, EyeOff, UserCog,
+  Eye, EyeOff, UserCog, Pencil, Trash2, MoreVertical,
 } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface BranchRecord {
   id: string;
@@ -49,6 +56,17 @@ const emptyForm = {
   adminName: "", adminEmail: "", adminPassword: "",
 };
 
+interface EditFormData {
+  id: string;
+  name: string;
+  code: string;
+  phone: string;
+  email: string;
+  address: string;
+  adminEmail: string;
+  adminPassword: string;
+}
+
 export function BranchesPage() {
   const { data: session } = useSession();
   const callerRole = session?.user?.role as string | undefined;
@@ -59,9 +77,14 @@ export function BranchesPage() {
   const [error, setError] = useState("");
 
   const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState<BranchRecord | null>(null);
+  const [editFormData, setEditFormData] = useState<EditFormData | null>(null);
   const [formData, setFormData] = useState({ ...emptyForm });
   const [showPassword, setShowPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
 
@@ -136,6 +159,91 @@ export function BranchesPage() {
       setFormError("Network error. Please try again.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleEdit = (branch: BranchRecord) => {
+    setSelectedBranch(branch);
+    setEditFormData({
+      id: branch.id,
+      name: branch.name,
+      code: branch.code,
+      phone: branch.phone || "",
+      email: branch.email || "",
+      address: branch.address || "",
+      adminEmail: branch.admin?.email || "",
+      adminPassword: "",
+    });
+    setFormError("");
+    setFormSuccess("");
+    setEditOpen(true);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editFormData) return;
+
+    setFormError("");
+    setFormSuccess("");
+
+    if (!editFormData.name || !editFormData.code) {
+      setFormError("Name and code are required.");
+      return;
+    }
+
+    if (editFormData.adminPassword && editFormData.adminPassword.length < 8) {
+      setFormError("Password must be at least 8 characters.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/branches", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editFormData),
+      });
+      const json = await res.json();
+      if (!res.ok) { setFormError(json.error ?? "Failed to update."); return; }
+      setFormSuccess(`✓ Branch updated successfully`);
+      fetchBranches();
+      setTimeout(() => { setEditOpen(false); setFormSuccess(""); setEditFormData(null); }, 2000);
+    } catch {
+      setFormError("Network error. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteClick = (branch: BranchRecord) => {
+    setSelectedBranch(branch);
+    setDeleteOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedBranch) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch("/api/branches", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: selectedBranch.id }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error ?? "Failed to delete branch.");
+        setDeleteOpen(false);
+        return;
+      }
+      fetchBranches();
+      setDeleteOpen(false);
+      setSelectedBranch(null);
+    } catch {
+      setError("Network error. Please try again.");
+      setDeleteOpen(false);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -222,7 +330,7 @@ export function BranchesPage() {
                   <Card key={branch.id} className="card-premium">
                     <CardContent className="p-5">
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <Badge variant="outline" className="text-xs">{branch.code}</Badge>
                             <Badge variant={branch.isActive ? "default" : "secondary"} className={`text-xs ${branch.isActive ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0" : ""}`}>
@@ -236,7 +344,32 @@ export function BranchesPage() {
                             </p>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground flex-shrink-0">{formatDate(branch.createdAt)}</p>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <p className="text-xs text-muted-foreground">{formatDate(branch.createdAt)}</p>
+                          {canAddBranch && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEdit(branch)}>
+                                  <Pencil className="w-4 h-4 mr-2" />
+                                  Edit Branch
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  onClick={() => handleDeleteClick(branch)}
+                                  className="text-destructive focus:text-destructive"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete Branch
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
                       </div>
 
                       {/* Stats */}
@@ -397,6 +530,161 @@ export function BranchesPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Branch Dialog */}
+      <Dialog open={editOpen} onOpenChange={(o) => { setEditOpen(o); if (!o) { setEditFormData(null); setFormError(""); setFormSuccess(""); } }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                <Pencil className="w-4 h-4 text-blue-600" />
+              </div>
+              Edit Branch
+            </DialogTitle>
+          </DialogHeader>
+          {editFormData && (
+            <form onSubmit={handleUpdate} className="space-y-4 py-1">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Branch Details</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Branch Name <span className="text-destructive">*</span></Label>
+                    <Input 
+                      value={editFormData.name} 
+                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} 
+                      placeholder="e.g. Main Campus" 
+                      disabled={isSaving} 
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Code <span className="text-destructive">*</span></Label>
+                    <Input 
+                      value={editFormData.code} 
+                      onChange={(e) => setEditFormData({ ...editFormData, code: e.target.value.toUpperCase() })} 
+                      placeholder="e.g. MC" 
+                      maxLength={10} 
+                      disabled={isSaving} 
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div className="space-y-1.5">
+                    <Label>Email</Label>
+                    <Input 
+                      type="email" 
+                      value={editFormData.email} 
+                      onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })} 
+                      placeholder="branch@institute.edu" 
+                      disabled={isSaving} 
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Phone</Label>
+                    <Input 
+                      value={editFormData.phone} 
+                      onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })} 
+                      placeholder="+92-300-0000000" 
+                      disabled={isSaving} 
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5 mt-3">
+                  <Label>Address</Label>
+                  <Input 
+                    value={editFormData.address} 
+                    onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })} 
+                    placeholder="Street, City" 
+                    disabled={isSaving} 
+                  />
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Branch Admin Credentials</p>
+                <p className="text-xs text-muted-foreground mb-3">Update admin email or reset password</p>
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label>Admin Email</Label>
+                    <Input 
+                      type="email" 
+                      value={editFormData.adminEmail} 
+                      onChange={(e) => setEditFormData({ ...editFormData, adminEmail: e.target.value })} 
+                      placeholder="admin@branch.edu" 
+                      disabled={isSaving} 
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>New Password (leave empty to keep current)</Label>
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        value={editFormData.adminPassword}
+                        onChange={(e) => setEditFormData({ ...editFormData, adminPassword: e.target.value })}
+                        placeholder="Min. 8 characters"
+                        className="pr-10"
+                        disabled={isSaving}
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => setShowPassword(!showPassword)} 
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Only fill this if you want to change the admin password</p>
+                  </div>
+                </div>
+              </div>
+
+              {formError && (
+                <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />{formError}
+                </div>
+              )}
+              {formSuccess && (
+                <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" />{formSuccess}
+                </div>
+              )}
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditOpen(false)} disabled={isSaving}>Cancel</Button>
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={isSaving}>
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  {isSaving ? "Updating…" : "Update Branch"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Branch?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{selectedBranch?.name}</strong>? This action cannot be undone.
+              All associated data including students, teachers, and courses will be affected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {isDeleting ? "Deleting…" : "Delete Branch"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

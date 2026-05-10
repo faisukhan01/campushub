@@ -246,7 +246,7 @@ export async function PATCH(request: NextRequest) {
     if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const body = await request.json()
-    const { id, isActive, name, phone } = body
+    const { id, isActive, name, email, phone, password, employeeId, rollNumber, classLevel } = body
 
     if (!id) return NextResponse.json({ error: "User id is required" }, { status: 400 })
 
@@ -261,19 +261,97 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
+    // Validate password if provided
+    if (password !== undefined && password !== "") {
+      if (password.length < 8) {
+        return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 })
+      }
+    }
+
+    // Check email uniqueness if changing email
+    if (email && email !== user.email) {
+      const existingEmail = await db.user.findUnique({ where: { email } })
+      if (existingEmail) {
+        return NextResponse.json({ error: "Email already in use" }, { status: 409 })
+      }
+    }
+
+    // Hash password if provided
+    const passwordHash = (password && password !== "") ? await bcrypt.hash(password, 12) : undefined
+
+    const updateData: any = {}
+    if (name !== undefined) updateData.name = name
+    if (email !== undefined) updateData.email = email
+    if (phone !== undefined) updateData.phone = phone
+    if (isActive !== undefined) updateData.isActive = isActive
+    if (passwordHash !== undefined) updateData.passwordHash = passwordHash
+    if (employeeId !== undefined) updateData.employeeId = employeeId
+    if (rollNumber !== undefined) updateData.rollNumber = rollNumber
+    if (classLevel !== undefined) updateData.classLevel = classLevel
+
     const updated = await db.user.update({
       where: { id },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(phone !== undefined && { phone }),
-        ...(isActive !== undefined && { isActive }),
-      },
-      select: { id: true, name: true, email: true, role: true, isActive: true },
+      data: updateData,
+      select: { id: true, name: true, email: true, role: true, isActive: true, employeeId: true, rollNumber: true, classLevel: true },
     })
 
     return NextResponse.json({ success: true, data: updated })
   } catch (error) {
     console.error("PATCH /api/users error:", error)
     return NextResponse.json({ error: "Failed to update user" }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+    const body = await request.json()
+    const { id } = body
+
+    if (!id) return NextResponse.json({ error: "User id is required" }, { status: 400 })
+
+    const user = await db.user.findUnique({ 
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            enrollments: true,
+            taughtCourses: true,
+          }
+        }
+      }
+    })
+    
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 })
+
+    // Prevent deleting SuperAdmin
+    if (user.role === "SuperAdmin") {
+      return NextResponse.json({ error: "Cannot delete SuperAdmin accounts" }, { status: 403 })
+    }
+
+    // Scope check — caller can only delete users within their scope
+    if (token.role === "BranchAdmin" && user.branchId !== token.branchId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+    if (token.role === "InstituteAdmin" && user.instituteId !== token.instituteId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    // Check if user has associated data
+    if (user._count.enrollments > 0 || user._count.taughtCourses > 0) {
+      return NextResponse.json({ 
+        error: `Cannot delete user with ${user._count.enrollments} enrollments and ${user._count.taughtCourses} taught courses. Please remove them first or deactivate the user instead.` 
+      }, { status: 400 })
+    }
+
+    // Delete the user
+    await db.user.delete({ where: { id } })
+
+    return NextResponse.json({ success: true, message: "User deleted successfully" })
+  } catch (error) {
+    console.error("DELETE /api/users error:", error)
+    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 })
   }
 }

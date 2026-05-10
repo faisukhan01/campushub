@@ -4,8 +4,8 @@ import { useState, useCallback, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useAppStore } from "@/store/app-store";
 import type { UserRole } from "@/types";
-import { LandingPage } from "@/components/landing-page";
 import SignInPage from "@/components/SignInPage";
+import SuperAdminSignIn from "@/components/SuperAdminSignIn";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AppHeader } from "@/components/app-header";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -31,8 +31,9 @@ import { StudentsPage } from "@/components/pages/students-page";
 import { CalendarPage } from "@/components/pages/calendar-page";
 import { SubscriptionPage } from "@/components/pages/subscription-page";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { Loader2, Shield, AlertTriangle } from "lucide-react";
 import { TabIndicator } from "@/components/tab-indicator";
+import { useRouter } from "next/navigation";
 
 const pageComponents: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
@@ -77,6 +78,12 @@ function AppShell() {
       <SidebarInset className="flex flex-col min-h-svh">
         <AppHeader />
         <div className="flex-1 p-6">
+          {/* Super Admin Badge */}
+          <div className="mb-4 p-3 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg flex items-center gap-2">
+            <Shield className="w-5 h-5 text-red-600" />
+            <span className="text-sm font-semibold text-red-800">Super Admin Access</span>
+          </div>
+          
           <AnimatePresence mode="wait">
             {PageComponent ? (
               <motion.div
@@ -103,7 +110,7 @@ function AppShell() {
         <div className="mt-auto border-t">
           <footer className="px-6 py-4">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>&copy; 2025 CampusHub</span>
+              <span>&copy; 2025 CampusHub - Super Admin Portal</span>
               <span className="hidden sm:inline text-muted-foreground/50">Campus Management Platform</span>
             </div>
           </footer>
@@ -114,17 +121,18 @@ function AppShell() {
   );
 }
 
-type UnauthView = "landing" | "signin";
-
-export default function Home() {
-  const { data: session, status } = useSession();
+export default function SuperAdminPage() {
+  const router = useRouter();
+  const { data: session, status } = useSession({
+    refetchOnWindowFocus: false,
+  });
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
   const login = useAppStore((s) => s.login);
   const logout = useAppStore((s) => s.logout);
-  const [unauthView, setUnauthView] = useState<UnauthView>("landing");
+  const [sessionError, setSessionError] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
 
-  // Sync NextAuth session → Zustand store ONLY on initial load, not on storage events
+  // Sync NextAuth session → Zustand store ONLY on initial load
   useEffect(() => {
     // Only run once when component first mounts
     if (hasInitialized) return;
@@ -134,15 +142,14 @@ export default function Home() {
     setHasInitialized(true);
 
     if (status === "authenticated" && session?.user) {
-      // For SuperAdmin: Don't auto-login on main page, let them access /superadmin manually
-      // This prevents automatic redirect when they just open the site
-      if (session.user.role === "SuperAdmin") {
-        // Just show the landing page, don't redirect
-        // They need to manually go to /superadmin
+      // If user is not SuperAdmin, don't log them in to Zustand
+      if (session.user.role !== "SuperAdmin") {
+        // Clear any existing auth state
+        logout();
         return;
       }
       
-      // For other roles, login to Zustand store when they successfully authenticate
+      // Only login if not already authenticated or if user changed
       if (!isAuthenticated || useAppStore.getState().currentUser?.id !== session.user.id) {
         login({
           id: session.user.id,
@@ -154,27 +161,45 @@ export default function Home() {
         });
       }
     } else if (status === "unauthenticated") {
-      // Clear Zustand if session is gone
+      // Clear Zustand auth if NextAuth session is gone
       if (isAuthenticated) {
         logout();
       }
     }
   }, [status, hasInitialized]); // Removed session, isAuthenticated, login, logout from deps
 
+  // Timeout to detect stuck loading state
+  useEffect(() => {
+    if (status === "loading") {
+      const timeout = setTimeout(() => {
+        // If still loading after 5 seconds, show error
+        if (status === "loading") {
+          setSessionError(true);
+        }
+      }, 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [status]);
+
+  // If session error detected, show sign-in page
+  if (sessionError) {
+    return <SuperAdminSignIn />;
+  }
+
   // Loading state while NextAuth checks session
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-red-900 to-slate-900">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-red-500" />
+          <p className="text-sm text-red-200">Verifying Super Admin Access...</p>
         </div>
       </div>
     );
   }
 
-  // Authenticated — show the main app
-  if (isAuthenticated) {
+  // If authenticated as SuperAdmin — show the main app
+  if (status === "authenticated" && session?.user?.role === "SuperAdmin" && isAuthenticated) {
     return (
       <motion.div
         key="app"
@@ -187,33 +212,35 @@ export default function Home() {
     );
   }
 
-  // Unauthenticated — show landing or sign-in
-  return (
-    <AnimatePresence mode="wait">
-      {unauthView === "signin" ? (
+  // If authenticated but NOT SuperAdmin — show access denied
+  if (status === "authenticated" && session?.user?.role !== "SuperAdmin") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
         <motion.div
-          key="signin"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full mx-4"
         >
-          <SignInPage onBack={() => setUnauthView("landing")} />
+          <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8 text-red-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+            <p className="text-gray-600 mb-6">
+              You do not have permission to access the Super Admin portal. This area is restricted to Super Administrators only.
+            </p>
+            <button
+              onClick={() => router.push("/")}
+              className="w-full py-3 px-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-semibold rounded-lg transition-all"
+            >
+              Return to Home
+            </button>
+          </div>
         </motion.div>
-      ) : (
-        <motion.div
-          key="landing"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <LandingPage
-            onGoToSignIn={() => setUnauthView("signin")}
-            onGoToSignUp={() => setUnauthView("signin")}
-          />
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+      </div>
+    );
+  }
+
+  // Unauthenticated — show Super Admin sign-in
+  return <SuperAdminSignIn />;
 }

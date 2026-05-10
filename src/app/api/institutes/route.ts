@@ -9,37 +9,63 @@ export async function GET(request: NextRequest) {
     if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     if (token.role !== "SuperAdmin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
+    // Fetch institutes with branch count
     const institutes = await db.institute.findMany({
-      include: {
-        _count: { select: { branches: true } },
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        email: true,
+        phone: true,
+        website: true,
+        address: true,
+        createdAt: true,
+        _count: { 
+          select: { 
+            branches: true,
+          } 
+        },
       },
       orderBy: { createdAt: "desc" },
     })
 
-    const userCounts = await db.user.groupBy({
-      by: ["instituteId", "role"],
-      where: { instituteId: { not: null }, isActive: true },
-      _count: { id: true },
-    })
-
-    const admins = await db.user.findMany({
+    // Fetch all users for these institutes in one query
+    const instituteIds = institutes.map(i => i.id)
+    const users = await db.user.findMany({
       where: {
-        role: "InstituteAdmin",
-        instituteId: { in: institutes.map((i) => i.id) },
+        instituteId: { in: instituteIds },
         isActive: true,
+        role: { in: ["InstituteAdmin", "Student", "Teacher"] },
       },
-      select: { id: true, name: true, email: true, instituteId: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        instituteId: true,
+      },
     })
 
+    // Process data efficiently
     const data = institutes.map((inst) => {
-      const instUsers = userCounts.filter((u) => u.instituteId === inst.id)
-      const admin = admins.find((a) => a.instituteId === inst.id) ?? null
+      const instUsers = users.filter(u => u.instituteId === inst.id)
+      const admin = instUsers.find((u) => u.role === "InstituteAdmin") ?? null
+      const studentCount = instUsers.filter((u) => u.role === "Student").length
+      const teacherCount = instUsers.filter((u) => u.role === "Teacher").length
+
       return {
-        ...inst,
+        id: inst.id,
+        name: inst.name,
+        code: inst.code,
+        email: inst.email,
+        phone: inst.phone,
+        website: inst.website,
+        address: inst.address,
+        createdAt: inst.createdAt,
         branchCount: inst._count.branches,
-        studentCount: instUsers.find((u) => u.role === "Student")?._count.id ?? 0,
-        teacherCount: instUsers.find((u) => u.role === "Teacher")?._count.id ?? 0,
-        admin,
+        studentCount,
+        teacherCount,
+        admin: admin ? { id: admin.id, name: admin.name, email: admin.email } : null,
       }
     })
 
@@ -147,5 +173,70 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     console.error("PATCH /api/institutes error:", error)
     return NextResponse.json({ error: "Failed to update institute" }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    if (token.role !== "SuperAdmin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+
+    const body = await request.json()
+    const { id } = body
+    if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 })
+
+    // Check if institute exists
+    const institute = await db.institute.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            branches: true,
+            users: true,
+          },
+        },
+      },
+    })
+
+    if (!institute) {
+      return NextResponse.json({ error: "Institute not found" }, { status: 404 })
+    }
+
+    // Delete all related data in transaction
+    await db.$transaction(async (tx) => {
+      // Delete all users associated with this institute
+      await tx.user.deleteMany({
+        where: { instituteId: id },
+      })
+
+      // Delete all branches and their related data
+      const branches = await tx.branch.findMany({
+        where: { instituteId: id },
+        select: { id: true },
+      })
+
+      for (const branch of branches) {
+        // Delete branch-related data
+        await tx.user.deleteMany({
+          where: { branchId: branch.id },
+        })
+      }
+
+      // Delete all branches
+      await tx.branch.deleteMany({
+        where: { instituteId: id },
+      })
+
+      // Finally delete the institute
+      await tx.institute.delete({
+        where: { id },
+      })
+    })
+
+    return NextResponse.json({ success: true, message: "Institute deleted successfully" })
+  } catch (error) {
+    console.error("DELETE /api/institutes error:", error)
+    return NextResponse.json({ error: "Failed to delete institute" }, { status: 500 })
   }
 }

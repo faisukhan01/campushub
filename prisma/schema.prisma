@@ -5,6 +5,8 @@ generator client {
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
+  // For Turso deployment, use the TURSO_DATABASE_URL
+  // url      = env("TURSO_DATABASE_URL")
 }
 
 // ============ INSTITUTE / TENANT ============

@@ -19,8 +19,15 @@ import {
 } from "@/components/ui/table";
 import {
   Users, Search, UserPlus, Shield, CheckCircle2, XCircle,
-  Loader2, RefreshCw, Eye, EyeOff, AlertCircle,
+  Loader2, RefreshCw, Eye, EyeOff, AlertCircle, Pencil, Trash2, MoreVertical, Key,
 } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { UserRole } from "@/types";
 
 // Role colours
@@ -60,6 +67,20 @@ interface ApiUser {
   isActive: boolean;
   lastLogin?: string;
   createdAt: string;
+  employeeId?: string;
+  rollNumber?: string;
+  classLevel?: string;
+}
+
+interface EditUserForm {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  employeeId?: string;
+  rollNumber?: string;
+  classLevel?: string;
 }
 
 const emptyForm = { name: "", email: "", password: "", role: "", phone: "", instituteId: "", branchId: "", employeeId: "", rollNumber: "", classLevel: "" };
@@ -78,9 +99,15 @@ export function UsersPage() {
   const [showRBAC, setShowRBAC] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [credentialsOpen, setCredentialsOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<ApiUser | null>(null);
+  const [editFormData, setEditFormData] = useState<EditUserForm | null>(null);
   const [formData, setFormData] = useState({ ...emptyForm });
   const [showPassword, setShowPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
 
@@ -212,6 +239,96 @@ export function UsersPage() {
     } catch {
       /* silent */
     }
+  };
+
+  const handleEditClick = (user: ApiUser) => {
+    setSelectedUser(user);
+    setEditFormData({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone || "",
+      password: "",
+      employeeId: user.employeeId,
+      rollNumber: user.rollNumber,
+      classLevel: user.classLevel,
+    });
+    setFormError("");
+    setFormSuccess("");
+    setEditOpen(true);
+  };
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editFormData) return;
+
+    setFormError("");
+    setFormSuccess("");
+
+    if (!editFormData.name) {
+      setFormError("Name is required.");
+      return;
+    }
+
+    if (editFormData.password && editFormData.password.length < 8) {
+      setFormError("Password must be at least 8 characters.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editFormData),
+      });
+      const json = await res.json();
+      if (!res.ok) { setFormError(json.error ?? "Failed to update."); return; }
+      setFormSuccess(`✓ User updated successfully`);
+      fetchUsers();
+      setTimeout(() => { setEditOpen(false); setFormSuccess(""); setEditFormData(null); }, 2000);
+    } catch {
+      setFormError("Network error. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteClick = (user: ApiUser) => {
+    setSelectedUser(user);
+    setDeleteOpen(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch("/api/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: selectedUser.id }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error ?? "Failed to delete user.");
+        setDeleteOpen(false);
+        return;
+      }
+      fetchUsers();
+      setDeleteOpen(false);
+      setSelectedUser(null);
+    } catch {
+      setError("Network error. Please try again.");
+      setDeleteOpen(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleViewCredentials = (user: ApiUser) => {
+    setSelectedUser(user);
+    setCredentialsOpen(true);
   };
 
   const formatTime = (iso?: string) => {
@@ -557,16 +674,46 @@ export function UsersPage() {
                             {formatTime(user.createdAt)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {/* Don't show deactivate button for SuperAdmin or the current user */}
+                            {/* Don't show actions for SuperAdmin */}
                             {user.role !== "SuperAdmin" && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className={user.isActive ? "text-red-500 hover:text-red-700 hover:bg-red-50" : "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"}
-                                onClick={() => handleToggleActive(user)}
-                              >
-                                {user.isActive ? "Deactivate" : "Activate"}
-                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleViewCredentials(user)}>
+                                    <Key className="w-4 h-4 mr-2" />
+                                    View Credentials
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleEditClick(user)}>
+                                    <Pencil className="w-4 h-4 mr-2" />
+                                    Edit User
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleToggleActive(user)}>
+                                    {user.isActive ? (
+                                      <>
+                                        <XCircle className="w-4 h-4 mr-2" />
+                                        Deactivate
+                                      </>
+                                    ) : (
+                                      <>
+                                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                                        Activate
+                                      </>
+                                    )}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    onClick={() => handleDeleteClick(user)}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete User
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             )}
                           </TableCell>
                         </TableRow>
@@ -587,6 +734,228 @@ export function UsersPage() {
           </TabsContent>
         </Tabs>
       )}
+
+      {/* Edit User Dialog */}
+      <Dialog open={editOpen} onOpenChange={(o) => { setEditOpen(o); if (!o) { setEditFormData(null); setFormError(""); setFormSuccess(""); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                <Pencil className="w-4 h-4 text-blue-600" />
+              </div>
+              Edit User
+            </DialogTitle>
+          </DialogHeader>
+          {editFormData && selectedUser && (
+            <form onSubmit={handleUpdateUser} className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label>Full Name <span className="text-destructive">*</span></Label>
+                <Input
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  placeholder="Full name"
+                  disabled={isSaving}
+                />
+              </div>
+
+              {selectedUser.role === "Teacher" && (
+                <div className="space-y-2">
+                  <Label>Employee ID</Label>
+                  <Input
+                    value={editFormData.employeeId || ""}
+                    onChange={(e) => setEditFormData({ ...editFormData, employeeId: e.target.value })}
+                    placeholder="e.g., EMP-2024-001"
+                    disabled={isSaving}
+                  />
+                </div>
+              )}
+
+              {selectedUser.role === "Student" && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Roll Number</Label>
+                    <Input
+                      value={editFormData.rollNumber || ""}
+                      onChange={(e) => setEditFormData({ ...editFormData, rollNumber: e.target.value })}
+                      placeholder="e.g., 2021-CS-001"
+                      disabled={isSaving}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Class Level</Label>
+                    <Input
+                      value={editFormData.classLevel || ""}
+                      onChange={(e) => setEditFormData({ ...editFormData, classLevel: e.target.value })}
+                      placeholder="e.g., Year 1, Class 10A"
+                      disabled={isSaving}
+                    />
+                  </div>
+                </>
+              )}
+
+              {(selectedUser.role === "InstituteAdmin" || selectedUser.role === "BranchAdmin") && (
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    value={editFormData.email}
+                    onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                    placeholder="user@example.com"
+                    disabled={isSaving}
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>Phone</Label>
+                <Input
+                  value={editFormData.phone}
+                  onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                  placeholder="+92-300-0000000"
+                  disabled={isSaving}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>New Password (leave empty to keep current)</Label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={editFormData.password}
+                    onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}
+                    placeholder="Min. 8 characters"
+                    className="pr-10"
+                    disabled={isSaving}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">Only fill this if you want to change the password</p>
+              </div>
+
+              {formError && (
+                <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  {formError}
+                </div>
+              )}
+              {formSuccess && (
+                <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                  {formSuccess}
+                </div>
+              )}
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditOpen(false)} disabled={isSaving}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={isSaving}>
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  {isSaving ? "Updating…" : "Update User"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View Credentials Dialog */}
+      <Dialog open={credentialsOpen} onOpenChange={setCredentialsOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                <Key className="w-4 h-4 text-amber-600" />
+              </div>
+              User Credentials
+            </DialogTitle>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Full Name</Label>
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-sm font-medium">{selectedUser.name}</p>
+                </div>
+              </div>
+
+              {selectedUser.role === "Teacher" && selectedUser.employeeId && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Employee ID (Login)</Label>
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-sm font-medium font-mono">{selectedUser.employeeId}</p>
+                  </div>
+                </div>
+              )}
+
+              {selectedUser.role === "Student" && selectedUser.rollNumber && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Roll Number (Login)</Label>
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-sm font-medium font-mono">{selectedUser.rollNumber}</p>
+                  </div>
+                </div>
+              )}
+
+              {(selectedUser.role === "InstituteAdmin" || selectedUser.role === "BranchAdmin") && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Email (Login)</Label>
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-sm font-medium">{selectedUser.email}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Role</Label>
+                <div className="p-3 bg-muted rounded-lg">
+                  {getRoleBadge(selectedUser.role)}
+                </div>
+              </div>
+
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                <p className="text-xs text-amber-800 dark:text-amber-200">
+                  <strong>Note:</strong> Passwords are encrypted and cannot be viewed. Use the Edit option to reset the password if needed.
+                </p>
+              </div>
+
+              <DialogFooter>
+                <Button onClick={() => setCredentialsOpen(false)}>Close</Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{selectedUser?.name}</strong> ({selectedUser?.role})? 
+              This action cannot be undone and will remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={isDeleting}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {isDeleting ? "Deleting…" : "Delete User"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

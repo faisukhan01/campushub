@@ -331,6 +331,14 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
 
             {/* Desktop actions */}
             <div className="hidden md:flex items-center gap-3">
+              <a
+                href="/superadmin"
+                className="text-[11px] font-medium text-slate-400 hover:text-red-600 transition-colors px-2 py-1 flex items-center gap-1"
+                title="Super Admin Portal"
+              >
+                <Shield className="w-3 h-3" />
+                Admin
+              </a>
               <button
                 onClick={onGoToSignIn}
                 className="text-[13px] font-medium text-slate-500 hover:text-slate-900 transition-colors px-3 py-1.5"
@@ -385,6 +393,13 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
                   </button>
                 ))}
                 <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
+                  <a
+                    href="/superadmin"
+                    className="w-full text-xs font-medium text-slate-400 hover:text-red-600 py-1.5 text-center flex items-center justify-center gap-1"
+                  >
+                    <Shield className="w-3 h-3" />
+                    Super Admin Portal
+                  </a>
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false);

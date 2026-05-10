@@ -223,8 +223,14 @@ export function AppSidebar() {
             logout();
             // Sign out from NextAuth
             await signOut({ redirect: false });
-            // Reload to show login page
-            window.location.href = '/';
+            // Check if we're on super admin page
+            const isSuperAdmin = window.location.pathname.startsWith('/superadmin');
+            // Reload to show login page (stay on superadmin if that's where we are)
+            if (isSuperAdmin) {
+              window.location.reload();
+            } else {
+              window.location.href = '/';
+            }
           }}
         >
           <LogOut className="w-4 h-4" />

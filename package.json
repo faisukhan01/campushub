@@ -13,7 +13,10 @@
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
     "db:clear": "node scripts/clear-dummy-data.mjs",
-    "db:seed": "bun run prisma/seed.ts"
+    "db:seed": "bun run prisma/seed.ts",
+    "create:superadmin": "node scripts/create-superadmin.mjs",
+    "create:testusers": "node scripts/create-test-users.mjs",
+    "setup:auth": "node scripts/create-superadmin.mjs && node scripts/create-test-users.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

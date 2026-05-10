@@ -134,3 +134,143 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to create branch" }, { status: 500 })
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+    if (!["SuperAdmin", "InstituteAdmin"].includes(token.role as string)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const { id, name, code, phone, email, address, adminEmail, adminPassword } = body
+
+    if (!id) {
+      return NextResponse.json({ error: "Branch ID is required" }, { status: 400 })
+    }
+
+    if (!name || !code) {
+      return NextResponse.json({ error: "Branch name and code are required" }, { status: 400 })
+    }
+
+    if (adminPassword && adminPassword.length < 8) {
+      return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 })
+    }
+
+    // Check if branch exists and user has permission
+    const existingBranch = await db.branch.findUnique({ where: { id } })
+    if (!existingBranch) {
+      return NextResponse.json({ error: "Branch not found" }, { status: 404 })
+    }
+
+    // Permission check
+    if (token.role === "InstituteAdmin" && existingBranch.instituteId !== token.instituteId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    // Update branch details
+    const updatedBranch = await db.branch.update({
+      where: { id },
+      data: {
+        name,
+        code: code.toUpperCase(),
+        email: email || null,
+        phone: phone || null,
+        address: address || null,
+      },
+    })
+
+    // Update admin credentials if provided
+    if (adminEmail || adminPassword) {
+      const admin = await db.user.findFirst({
+        where: { role: "BranchAdmin", branchId: id, isActive: true },
+      })
+
+      if (admin) {
+        const updateData: any = {}
+        
+        if (adminEmail && adminEmail !== admin.email) {
+          // Check if new email is already taken
+          const existingUser = await db.user.findUnique({ where: { email: adminEmail } })
+          if (existingUser && existingUser.id !== admin.id) {
+            return NextResponse.json({ error: "Email already in use" }, { status: 409 })
+          }
+          updateData.email = adminEmail
+        }
+
+        if (adminPassword) {
+          updateData.passwordHash = await bcrypt.hash(adminPassword, 12)
+        }
+
+        if (Object.keys(updateData).length > 0) {
+          await db.user.update({
+            where: { id: admin.id },
+            data: updateData,
+          })
+        }
+      }
+    }
+
+    return NextResponse.json({ success: true, data: updatedBranch })
+  } catch (error) {
+    console.error("PATCH /api/branches error:", error)
+    return NextResponse.json({ error: "Failed to update branch" }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+    if (!["SuperAdmin", "InstituteAdmin"].includes(token.role as string)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const { id } = body
+
+    if (!id) {
+      return NextResponse.json({ error: "Branch ID is required" }, { status: 400 })
+    }
+
+    // Check if branch exists and user has permission
+    const existingBranch = await db.branch.findUnique({ 
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            courses: true,
+          }
+        }
+      }
+    })
+    
+    if (!existingBranch) {
+      return NextResponse.json({ error: "Branch not found" }, { status: 404 })
+    }
+
+    // Permission check
+    if (token.role === "InstituteAdmin" && existingBranch.instituteId !== token.instituteId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    // Check if branch has users or courses
+    const userCount = await db.user.count({ where: { branchId: id } })
+    if (userCount > 0 || existingBranch._count.courses > 0) {
+      return NextResponse.json({ 
+        error: `Cannot delete branch with ${userCount} users and ${existingBranch._count.courses} courses. Please remove them first.` 
+      }, { status: 400 })
+    }
+
+    // Delete the branch
+    await db.branch.delete({ where: { id } })
+
+    return NextResponse.json({ success: true, message: "Branch deleted successfully" })
+  } catch (error) {
+    console.error("DELETE /api/branches error:", error)
+    return NextResponse.json({ error: "Failed to delete branch" }, { status: 500 })
+  }
+}
