@@ -14,21 +14,32 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         try {
-          if (!credentials?.email || !credentials?.password) return null
+          console.log('[AUTH] Starting authorization...');
+          console.log('[AUTH] Email:', credentials?.email);
+          
+          if (!credentials?.email || !credentials?.password) {
+            console.log('[AUTH] Missing credentials');
+            return null;
+          }
 
           const identifier = credentials.email.trim()
           const providedName = credentials.name?.trim()
+          
+          console.log('[AUTH] Looking up user:', identifier);
           
           // Try to find user by email first (for Admins)
           let user = await db.user.findUnique({
             where: { email: identifier },
           })
 
+          console.log('[AUTH] User found by email:', !!user);
+
           // If not found, try rollNumber (for Students)
           if (!user) {
             user = await db.user.findFirst({
               where: { rollNumber: identifier, isActive: true },
             })
+            console.log('[AUTH] User found by rollNumber:', !!user);
           }
 
           // If still not found, try employeeId (for Teachers)
@@ -36,9 +47,18 @@ export const authOptions: NextAuthOptions = {
             user = await db.user.findFirst({
               where: { employeeId: identifier, isActive: true },
             })
+            console.log('[AUTH] User found by employeeId:', !!user);
           }
 
-          if (!user || !user.passwordHash || !user.isActive) return null
+          if (!user || !user.passwordHash || !user.isActive) {
+            console.log('[AUTH] User not found or inactive');
+            console.log('[AUTH] User exists:', !!user);
+            console.log('[AUTH] Has password:', !!user?.passwordHash);
+            console.log('[AUTH] Is active:', user?.isActive);
+            return null;
+          }
+
+          console.log('[AUTH] User found:', user.email, 'Role:', user.role);
 
           // For Teachers and Students, verify the name matches
           // This adds an extra layer of security for non-email based logins
@@ -48,18 +68,27 @@ export const authOptions: NextAuthOptions = {
             const providedNameLower = providedName.toLowerCase()
             
             if (userNameLower !== providedNameLower) {
-              console.log(`Name mismatch for ${user.role} ${identifier}: expected "${user.name}", got "${providedName}"`)
+              console.log(`[AUTH] Name mismatch for ${user.role} ${identifier}: expected "${user.name}", got "${providedName}"`)
               return null
             }
           }
 
+          console.log('[AUTH] Verifying password...');
           const valid = await bcrypt.compare(credentials.password, user.passwordHash)
-          if (!valid) return null
+          
+          if (!valid) {
+            console.log('[AUTH] Password invalid');
+            return null;
+          }
+
+          console.log('[AUTH] Password valid, updating last login...');
 
           await db.user.update({
             where: { id: user.id },
             data: { lastLogin: new Date() },
           })
+
+          console.log('[AUTH] Authorization successful for:', user.email);
 
           return {
             id: user.id,
@@ -70,7 +99,7 @@ export const authOptions: NextAuthOptions = {
             branchId: user.branchId,
           }
         } catch (error) {
-          console.error("Auth error:", error)
+          console.error("[AUTH] Auth error:", error)
           return null
         }
       },
@@ -110,7 +139,7 @@ export const authOptions: NextAuthOptions = {
 
   secret: process.env.NEXTAUTH_SECRET,
   
-  debug: false,
+  debug: true, // Enable debug mode to see auth errors in Vercel logs
 
   // Disable cross-tab session synchronization
   events: {

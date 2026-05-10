@@ -11,6 +11,7 @@ function createPrismaClient() {
   const useTurso = process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN
 
   if (useTurso) {
+    console.log('[DB] Using Turso database:', process.env.TURSO_DATABASE_URL);
     const libsql = createClient({
       url: process.env.TURSO_DATABASE_URL!,
       authToken: process.env.TURSO_AUTH_TOKEN!,
@@ -19,6 +20,7 @@ function createPrismaClient() {
     return new PrismaClient({ adapter })
   } else {
     // Use local SQLite for development
+    console.log('[DB] Using local SQLite database');
     return new PrismaClient()
   }
 }
