@@ -2,6 +2,13 @@ import { getToken } from "next-auth/jwt"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
+export const config = {
+  matcher: [
+    "/api/:path*",
+    "/superadmin/:path*",
+  ],
+}
+
 // These routes require SuperAdmin role
 const SUPERADMIN_ONLY = ["/api/institutes", "/api/subscriptions"]
 
@@ -113,11 +120,4 @@ export async function middleware(request: NextRequest) {
   }
 
   return NextResponse.next()
-}
-
-export const config = {
-  matcher: [
-    "/api/:path*",
-    "/superadmin/:path*",
-  ],
 }
