@@ -1,0 +1,22 @@
+# Local database files
+*.db
+*.db-journal
+prisma/dev.db
+db/custom.db
+
+# Development files
+.env.local
+.env.development
+
+# Build artifacts
+.next/cache
+
+# Node modules (Vercel installs these)
+node_modules
+
+# Scripts (not needed for production)
+scripts/
+
+# Logs
+*.log
+server.log

@@ -22,7 +22,9 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Always let NextAuth handle its own routes
-  if (pathname.startsWith("/api/auth")) return NextResponse.next()
+  if (pathname.startsWith("/api/auth")) {
+    return NextResponse.next()
+  }
 
   // Super Admin page route protection
   if (pathname.startsWith("/superadmin")) {
@@ -52,6 +54,7 @@ export async function middleware(request: NextRequest) {
 
       // Successful SuperAdmin access
       console.log(`[SUPER ADMIN ACCESS] GRANTED - Authorized access by SuperAdmin ${token.userId} from ${clientIP}`);
+      return NextResponse.next();
     } catch (error) {
       console.error("[SUPER ADMIN ACCESS] Error in route protection:", error);
       return NextResponse.next();
@@ -60,63 +63,71 @@ export async function middleware(request: NextRequest) {
 
   // Every other /api route requires a valid session
   if (pathname.startsWith("/api/")) {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    try {
+      const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
 
-    if (!token) {
+      if (!token) {
+        return NextResponse.json(
+          { error: "Unauthorized — please sign in" },
+          { status: 401 }
+        )
+      }
+
+      const role = token.role as string
+      const userId = token.userId as string
+
+      // Block non-SuperAdmins from Super Admin routes
+      if (SUPERADMIN_ONLY.some((r) => pathname.startsWith(r))) {
+        if (role !== "SuperAdmin") {
+          console.log(`[API ACCESS] BLOCKED - User ${userId} (${role}) attempted to access SuperAdmin API: ${pathname}`);
+          return NextResponse.json(
+            { error: "Forbidden — Super Admin access required" },
+            { status: 403 }
+          )
+        }
+      }
+
+      // Block Students/Teachers from institute-level management routes
+      if (INSTITUTE_LEVEL.some((r) => pathname.startsWith(r))) {
+        if (!["SuperAdmin", "InstituteAdmin", "BranchAdmin"].includes(role)) {
+          console.log(`[API ACCESS] BLOCKED - User ${userId} (${role}) attempted to access Institute-level API: ${pathname}`);
+          return NextResponse.json(
+            { error: "Forbidden — insufficient permissions" },
+            { status: 403 }
+          )
+        }
+      }
+
+      // Block Students/Teachers from branch-level management routes
+      if (BRANCH_LEVEL.some((r) => pathname.startsWith(r))) {
+        if (!["SuperAdmin", "InstituteAdmin", "BranchAdmin"].includes(role)) {
+          console.log(`[API ACCESS] BLOCKED - User ${userId} (${role}) attempted to access Branch-level API: ${pathname}`);
+          return NextResponse.json(
+            { error: "Forbidden — insufficient permissions" },
+            { status: 403 }
+          )
+        }
+      }
+
+      // Data isolation: Add headers with user context for API routes to use
+      const requestHeaders = new Headers(request.headers)
+      requestHeaders.set('x-user-id', userId)
+      requestHeaders.set('x-user-role', role)
+      requestHeaders.set('x-user-institute-id', token.instituteId as string || '')
+      requestHeaders.set('x-user-branch-id', token.branchId as string || '')
+
+      return NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      })
+    } catch (error) {
+      console.error("[API ACCESS] Error in middleware:", error);
       return NextResponse.json(
-        { error: "Unauthorized — please sign in" },
-        { status: 401 }
+        { error: "Internal server error" },
+        { status: 500 }
       )
     }
-
-    const role = token.role as string
-    const userId = token.userId as string
-
-    // Block non-SuperAdmins from Super Admin routes
-    if (SUPERADMIN_ONLY.some((r) => pathname.startsWith(r))) {
-      if (role !== "SuperAdmin") {
-        console.log(`[API ACCESS] BLOCKED - User ${userId} (${role}) attempted to access SuperAdmin API: ${pathname}`);
-        return NextResponse.json(
-          { error: "Forbidden — Super Admin access required" },
-          { status: 403 }
-        )
-      }
-    }
-
-    // Block Students/Teachers from institute-level management routes
-    if (INSTITUTE_LEVEL.some((r) => pathname.startsWith(r))) {
-      if (!["SuperAdmin", "InstituteAdmin", "BranchAdmin"].includes(role)) {
-        console.log(`[API ACCESS] BLOCKED - User ${userId} (${role}) attempted to access Institute-level API: ${pathname}`);
-        return NextResponse.json(
-          { error: "Forbidden — insufficient permissions" },
-          { status: 403 }
-        )
-      }
-    }
-
-    // Block Students/Teachers from branch-level management routes
-    if (BRANCH_LEVEL.some((r) => pathname.startsWith(r))) {
-      if (!["SuperAdmin", "InstituteAdmin", "BranchAdmin"].includes(role)) {
-        console.log(`[API ACCESS] BLOCKED - User ${userId} (${role}) attempted to access Branch-level API: ${pathname}`);
-        return NextResponse.json(
-          { error: "Forbidden — insufficient permissions" },
-          { status: 403 }
-        )
-      }
-    }
-
-    // Data isolation: Add headers with user context for API routes to use
-    const requestHeaders = new Headers(request.headers)
-    requestHeaders.set('x-user-id', userId)
-    requestHeaders.set('x-user-role', role)
-    requestHeaders.set('x-user-institute-id', token.instituteId as string || '')
-    requestHeaders.set('x-user-branch-id', token.branchId as string || '')
-
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    })
   }
 
   return NextResponse.next()
