@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaLibSql } from '@prisma/adapter-libsql'
-import { createClient } from '@libsql/client'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -15,8 +14,6 @@ function createPrismaClient(): PrismaClient {
   const tursoUrl = process.env.TURSO_DATABASE_URL
   const tursoToken = process.env.TURSO_AUTH_TOKEN
 
-  // Only use Turso in production — local dev always uses SQLite to avoid
-  // libsql adapter URL resolution issues during Turbopack compilation.
   const useTurso =
     process.env.NODE_ENV === 'production' &&
     !!tursoUrl &&
@@ -25,8 +22,8 @@ function createPrismaClient(): PrismaClient {
 
   if (useTurso) {
     console.log('[DB] Using Turso database')
-    const libsql = createClient({ url: tursoUrl!, authToken: tursoToken! })
-    const adapter = new PrismaLibSql(libsql)
+    // PrismaLibSql is a factory — pass config directly, not a pre-created client
+    const adapter = new PrismaLibSql({ url: tursoUrl, authToken: tursoToken })
     return new PrismaClient({ adapter })
   }
 
