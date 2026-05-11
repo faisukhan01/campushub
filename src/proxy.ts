@@ -26,6 +26,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Temporary diagnostic endpoint — no auth required
+  if (pathname.startsWith("/api/debug-auth")) {
+    return NextResponse.next()
+  }
+
   // Super Admin page route protection
   if (pathname.startsWith("/superadmin")) {
     try {
