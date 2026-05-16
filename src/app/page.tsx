@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useAppStore } from "@/store/app-store";
+import { getTabUser } from "@/lib/tab-session";
 import type { UserRole } from "@/types";
 import { LandingPage } from "@/components/landing-page";
 import SignInPage from "@/components/SignInPage";
@@ -123,8 +124,15 @@ export default function Home() {
   const logout = useAppStore((s) => s.logout);
   const [unauthView, setUnauthView] = useState<UnauthView>("landing");
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [tabId] = useState(() => {
+    // Generate unique tab ID on mount
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('tab_session_id') || `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+    return '';
+  });
 
-  // Sync NextAuth session → Zustand store ONLY on initial load, not on storage events
+  // Sync NextAuth session → Zustand store ONLY for THIS TAB
   useEffect(() => {
     // Only run once when component first mounts
     if (hasInitialized) return;
@@ -133,12 +141,30 @@ export default function Home() {
     
     setHasInitialized(true);
 
+    // Check if this tab already has a session
+    const tabUser = typeof window !== 'undefined' ? getTabUser() : null;
+    
+    // If tab has a user, use that instead of NextAuth session
+    if (tabUser) {
+      if (!isAuthenticated || useAppStore.getState().currentUser?.id !== tabUser.id) {
+        login({
+          id: tabUser.id,
+          name: tabUser.name,
+          email: tabUser.email,
+          role: tabUser.role as UserRole,
+          instituteId: tabUser.instituteId,
+          branchId: tabUser.branchId,
+          classLevel: tabUser.classLevel,
+          section: tabUser.section,
+        });
+      }
+      return;
+    }
+
+    // No tab-specific session, check NextAuth
     if (status === "authenticated" && session?.user) {
       // For SuperAdmin: Don't auto-login on main page, let them access /superadmin manually
-      // This prevents automatic redirect when they just open the site
       if (session.user.role === "SuperAdmin") {
-        // Just show the landing page, don't redirect
-        // They need to manually go to /superadmin
         return;
       }
       
@@ -151,15 +177,17 @@ export default function Home() {
           role: session.user.role as UserRole,
           instituteId: session.user.instituteId,
           branchId: session.user.branchId,
+          classLevel: session.user.classLevel,
+          section: session.user.section,
         });
       }
     } else if (status === "unauthenticated") {
-      // Clear Zustand if session is gone
-      if (isAuthenticated) {
+      // Only clear if this tab doesn't have a session
+      if (!tabUser && isAuthenticated) {
         logout();
       }
     }
-  }, [status, hasInitialized]); // Removed session, isAuthenticated, login, logout from deps
+  }, [status, hasInitialized, tabId]); // Added tabId to ensure tab-specific behavior
 
   // Loading state while NextAuth checks session
   if (status === "loading") {

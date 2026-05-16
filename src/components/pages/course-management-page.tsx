@@ -67,8 +67,18 @@ const CLASSES = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
 const SUBJECT_TYPES = ["Core", "Elective", "Lab", "Project", "Extra-Curricular"];
 
 export function CourseManagementPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const callerRole = session?.user?.role as string | undefined;
+
+  // Show loading while session is being fetched
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mr-2" />
+        <span className="text-sm text-muted-foreground">Loading...</span>
+      </div>
+    );
+  }
 
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [courses, setCourses] = useState<Course[]>([]);
@@ -123,6 +133,11 @@ export function CourseManagementPage() {
   const [timetableSuccess, setTimetableSuccess] = useState("");
 
   const canManage = callerRole === "BranchAdmin" || callerRole === "InstituteAdmin" || callerRole === "SuperAdmin";
+
+  // Debug logging
+  useEffect(() => {
+    console.log('[CourseManagement] Session:', { role: callerRole, canManage, status });
+  }, [callerRole, canManage, status]);
 
   const fetchData = useCallback(async () => {
     if (!selectedClass) return;
@@ -375,6 +390,14 @@ export function CourseManagementPage() {
         <AlertCircle className="w-12 h-12 text-destructive mb-4" />
         <h3 className="text-lg font-semibold">Access Denied</h3>
         <p className="text-sm text-muted-foreground">You don't have permission to access this page.</p>
+        {callerRole && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Current role: <span className="font-mono font-semibold">{callerRole}</span>
+          </p>
+        )}
+        <p className="text-xs text-muted-foreground mt-1">
+          Required roles: BranchAdmin, InstituteAdmin, or SuperAdmin
+        </p>
       </div>
     );
   }
@@ -659,9 +682,23 @@ export function CourseManagementPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search students…" className="pl-9" />
+            <div className="flex items-center justify-between gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Search students…" className="pl-9" />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const allStudentIds = students.map(s => s.id);
+                  setSelectedStudents(allStudentIds);
+                }}
+                disabled={enrolling}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Select All ({students.length})
+              </Button>
             </div>
 
             <div className="border rounded-lg max-h-96 overflow-y-auto">

@@ -14,6 +14,8 @@ interface DemoUser {
   instituteName: string;
   branchId?: string;
   branchName?: string;
+  classLevel?: string;
+  section?: string;
 }
 
 const DEMO_USERS: Record<UserRole, DemoUser> = {
@@ -165,7 +167,16 @@ interface AppState {
   globalError: string | null;
 
   // Actions
-  login: (user: { id: string; name: string; email: string; role: UserRole; instituteId?: string | null; branchId?: string | null }) => void;
+  login: (user: { 
+    id: string; 
+    name: string; 
+    email: string; 
+    role: UserRole; 
+    instituteId?: string | null; 
+    branchId?: string | null;
+    classLevel?: string | null;
+    section?: string | null;
+  }) => void;
   logout: () => void;
   setCurrentPage: (page: string) => void;
   toggleSidebar: () => void;
@@ -188,6 +199,25 @@ export const useAppStore = create<AppState>((set, get) => {
   const initialAuth = tabUser !== null;
   const initialUser = tabUser;
   const initialNav = tabUser ? getNavigationForRole(tabUser.role) : [];
+
+  // Prevent cross-tab state synchronization
+  // Each tab maintains its own independent state
+  if (typeof window !== 'undefined') {
+    // Block any storage events that might trigger state changes
+    const blockCrossTabUpdates = (e: StorageEvent) => {
+      // Prevent any external storage changes from affecting this tab's Zustand store
+      if (e.key && e.key.includes('tab_user_data')) {
+        const currentTabId = sessionStorage.getItem('tab_session_id');
+        if (e.key !== `tab_user_data_${currentTabId}`) {
+          // This is from another tab, ignore it
+          e.stopImmediatePropagation();
+          e.stopPropagation();
+        }
+      }
+    };
+    
+    window.addEventListener('storage', blockCrossTabUpdates, { capture: true });
+  }
 
   return {
     // Initial state
@@ -215,6 +245,8 @@ export const useAppStore = create<AppState>((set, get) => {
         instituteName: "",
         branchId: user.branchId ?? undefined,
         branchName: undefined,
+        classLevel: user.classLevel ?? undefined,
+        section: user.section ?? undefined,
       };
       
       // Store in tab-specific session

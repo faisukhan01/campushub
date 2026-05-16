@@ -97,6 +97,8 @@ export const authOptions: NextAuthOptions = {
             role: user.role,
             instituteId: user.instituteId,
             branchId: user.branchId,
+            classLevel: user.classLevel,
+            section: user.section,
           }
         } catch (error) {
           console.error("[AUTH] Auth error:", error)
@@ -113,6 +115,8 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role
         token.instituteId = user.instituteId
         token.branchId = user.branchId
+        token.classLevel = user.classLevel
+        token.section = user.section
       }
       return token
     },
@@ -122,6 +126,8 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role
         session.user.instituteId = token.instituteId
         session.user.branchId = token.branchId
+        session.user.classLevel = token.classLevel
+        session.user.section = token.section
       }
       return session
     },
@@ -130,7 +136,7 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
-    updateAge: 0, // Disable session update on every request
+    updateAge: 24 * 60 * 60, // Update session every 24 hours instead of every request
   },
 
   pages: {
@@ -139,15 +145,8 @@ export const authOptions: NextAuthOptions = {
 
   secret: process.env.NEXTAUTH_SECRET,
   
-  debug: true, // Enable debug mode to see auth errors in Vercel logs
+  debug: false, // Disable debug mode in production
 
-  // Disable cross-tab session synchronization
-  events: {
-    async signIn() {
-      // Prevent broadcasting sign-in event to other tabs
-    },
-    async signOut() {
-      // Prevent broadcasting sign-out event to other tabs
-    },
-  },
+  // Disable cross-tab session synchronization to prevent session mixing
+  events: {},
 }

@@ -27,7 +27,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Temporary diagnostic endpoint — no auth required
-  if (pathname.startsWith("/api/debug-auth")) {
+  if (pathname.startsWith("/api/debug-auth") || pathname.startsWith("/api/diagnose")) {
     return NextResponse.next()
   }
 

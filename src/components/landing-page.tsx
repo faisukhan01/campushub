@@ -229,8 +229,8 @@ const pricingPlans = [
   {
     name: "Professional",
     description: "For growing campuses",
-    price: "$4",
-    period: "/student/month",
+    price: "$90",
+    period: "/month",
     features: [
       "Unlimited students",
       "Up to 5 branches",
@@ -331,14 +331,6 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
 
             {/* Desktop actions */}
             <div className="hidden md:flex items-center gap-3">
-              <a
-                href="/superadmin"
-                className="text-[11px] font-medium text-slate-400 hover:text-red-600 transition-colors px-2 py-1 flex items-center gap-1"
-                title="Super Admin Portal"
-              >
-                <Shield className="w-3 h-3" />
-                Admin
-              </a>
               <button
                 onClick={onGoToSignIn}
                 className="text-[13px] font-medium text-slate-500 hover:text-slate-900 transition-colors px-3 py-1.5"
@@ -393,13 +385,6 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
                   </button>
                 ))}
                 <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
-                  <a
-                    href="/superadmin"
-                    className="w-full text-xs font-medium text-slate-400 hover:text-red-600 py-1.5 text-center flex items-center justify-center gap-1"
-                  >
-                    <Shield className="w-3 h-3" />
-                    Super Admin Portal
-                  </a>
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false);
@@ -471,7 +456,7 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
           >
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-xs font-medium text-emerald-700">
-              Now available &mdash; Free 14-day trial
+              Now available &mdash; 1 month free trial
             </span>
           </motion.div>
 
@@ -900,7 +885,7 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
             </button>
           </div>
           <p className="mt-8 text-xs text-slate-500">
-            No credit card required &middot; 14-day free trial &middot; Cancel
+            No credit card required &middot; 1 month free trial &middot; Cancel
             anytime
           </p>
         </FadeIn>

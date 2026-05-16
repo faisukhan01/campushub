@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
         branchId: true,
         employeeId: true,
         rollNumber: true,
+        classLevel: true,
         isActive: true,
         lastLogin: true,
         createdAt: true,

@@ -6,29 +6,22 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 function createPrismaClient(): PrismaClient {
-  if (process.env.NEXT_PHASE === 'phase-production-build') {
-    console.log('[DB] Build phase — using local SQLite')
-    return new PrismaClient()
-  }
-
+  // ALWAYS use Turso database for all environments (development, production, build)
   const tursoUrl = process.env.TURSO_DATABASE_URL
   const tursoToken = process.env.TURSO_AUTH_TOKEN
 
-  const useTurso =
-    process.env.NODE_ENV === 'production' &&
-    !!tursoUrl &&
-    !!tursoToken &&
-    tursoUrl.startsWith('libsql://')
-
-  if (useTurso) {
-    console.log('[DB] Using Turso database')
-    // PrismaLibSql is a factory — pass config directly, not a pre-created client
+  // Check if Turso credentials are available
+  if (tursoUrl && tursoToken && tursoUrl.startsWith('libsql://')) {
+    console.log('[DB] ✅ Using Turso database (Production)')
+    console.log('[DB] URL:', tursoUrl)
     const adapter = new PrismaLibSql({ url: tursoUrl, authToken: tursoToken })
     return new PrismaClient({ adapter })
   }
 
-  console.log('[DB] Using local SQLite database')
-  return new PrismaClient()
+  // Fallback error if Turso credentials are missing
+  console.error('[DB] ❌ ERROR: Turso credentials not found!')
+  console.error('[DB] Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN in .env')
+  throw new Error('Turso database credentials are required. Please check your .env file.')
 }
 
 export const db = globalForPrisma.prisma ?? createPrismaClient()

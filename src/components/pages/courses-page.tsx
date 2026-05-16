@@ -93,7 +93,11 @@ export function CoursesPage() {
   }, [selectedClass, canManage]);
 
   useEffect(() => {
-    if (!canManage || selectedClass) {
+    // For non-admins (students/teachers), fetch courses immediately
+    // For admins, only fetch after a class is selected
+    if (!canManage) {
+      fetchCourses();
+    } else if (selectedClass) {
       fetchCourses();
     }
   }, [fetchCourses, canManage, selectedClass]);

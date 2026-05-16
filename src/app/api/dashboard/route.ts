@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 import { db } from '@/lib/db'
 
 export async function GET(request: NextRequest) {
   try {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    
     const { searchParams } = request.nextUrl
-    const role = searchParams.get('role') || 'Student'
-    const userId = searchParams.get('userId')
+    const role = searchParams.get('role') || token?.role || 'Student'
+    const userId = searchParams.get('userId') || token?.sub
 
     // Common stats
     const totalStudents = await db.user.count({ where: { role: 'Student' } })
@@ -58,7 +61,8 @@ export async function GET(request: NextRequest) {
       }
 
       case 'BranchAdmin': {
-        const branchId = searchParams.get('branchId')
+        // Use branchId from token if available, otherwise from query params
+        const branchId = token?.branchId || searchParams.get('branchId')
         const branchFilter: any = {}
         if (branchId) branchFilter.branchId = branchId
 
@@ -74,10 +78,10 @@ export async function GET(request: NextRequest) {
         let branchTeachers = totalTeachers
         if (branchId) {
           branchStudents = await db.user.count({
-            where: { role: 'Student', branchId },
+            where: { role: 'Student', branchId, isActive: true },
           })
           branchTeachers = await db.user.count({
-            where: { role: 'Teacher', branchId },
+            where: { role: 'Teacher', branchId, isActive: true },
           })
         }
 
@@ -89,6 +93,7 @@ export async function GET(request: NextRequest) {
             totalCourses: branchCourses,
             totalEnrollments: branchEnrollments,
             totalBranches,
+            avgAttendance: 0, // TODO: Calculate actual attendance
           },
         })
       }

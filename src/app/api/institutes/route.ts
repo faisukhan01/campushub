@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getToken } from "next-auth/jwt"
 import bcrypt from "bcryptjs"
+import { getToken } from "next-auth/jwt"
 import { db } from "@/lib/db"
+import { verifySuperAdminAccess, logSecurityEvent } from "@/lib/security"
 
 export async function GET(request: NextRequest) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    if (token.role !== "SuperAdmin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    // Enhanced security check
+    const securityCheck = await verifySuperAdminAccess(request);
+    if (!securityCheck.authorized) {
+      logSecurityEvent({
+        type: 'access_denied',
+        email: securityCheck.email,
+        ip: request.headers.get('x-forwarded-for') || 'unknown',
+        details: `Attempted to access GET /api/institutes - ${securityCheck.error}`,
+      });
+      return NextResponse.json({ error: securityCheck.error }, { status: 403 });
+    }
 
     // Fetch institutes with branch count
     const institutes = await db.institute.findMany({
@@ -31,7 +40,8 @@ export async function GET(request: NextRequest) {
 
     // Fetch all users for these institutes in one query
     const instituteIds = institutes.map(i => i.id)
-    const users = await db.user.findMany({
+    // Guard against empty `in` which causes a LibSQL/SQLite error
+    const users = instituteIds.length === 0 ? [] : await db.user.findMany({
       where: {
         instituteId: { in: instituteIds },
         isActive: true,
@@ -78,9 +88,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    if (token.role !== "SuperAdmin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    // Enhanced security check
+    const securityCheck = await verifySuperAdminAccess(request);
+    if (!securityCheck.authorized) {
+      logSecurityEvent({
+        type: 'access_denied',
+        email: securityCheck.email,
+        ip: request.headers.get('x-forwarded-for') || 'unknown',
+        details: `Attempted to access POST /api/institutes - ${securityCheck.error}`,
+      });
+      return NextResponse.json({ error: securityCheck.error }, { status: 403 });
+    }
 
     const body = await request.json()
     const { name, code, email, phone, address, website, adminName, adminEmail, adminPassword } = body

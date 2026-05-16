@@ -11,11 +11,18 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  GraduationCap, Search, Loader2, RefreshCw, AlertCircle, Users, UserPlus, Eye, EyeOff, CheckCircle2, Plus,
+  GraduationCap, Search, Loader2, RefreshCw, AlertCircle, Users, UserPlus, Eye, EyeOff, CheckCircle2, Plus, MoreVertical, Pencil,
 } from "lucide-react";
+import { onDataChange, notifyStudentChange } from "@/lib/data-sync";
 
 const CLASSES = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
 
@@ -55,28 +62,61 @@ export function StudentsPage() {
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
 
+  // Edit Student Dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<StudentUser | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    rollNumber: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [editShowPassword, setEditShowPassword] = useState(false);
+  const [editShowConfirmPassword, setEditShowConfirmPassword] = useState(false);
+
   const fetchStudents = useCallback(async () => {
     if (!selectedClass && callerRole === "BranchAdmin") return;
     
     setIsLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/users?role=Student");
-      if (!res.ok) throw new Error(await res.text());
+      console.log('[STUDENTS] Fetching students for class:', selectedClass);
+      // Add cache-busting parameter
+      const timestamp = Date.now();
+      const res = await fetch(`/api/users?role=Student&_t=${timestamp}`);
+      console.log('[STUDENTS] API response status:', res.status);
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('[STUDENTS] API error:', errorText);
+        throw new Error(errorText);
+      }
+      
       const json = await res.json();
+      console.log('[STUDENTS] API response:', json);
       
       let allStudents = json.data?.users ?? [];
+      console.log('[STUDENTS] Total students from API:', allStudents.length);
       
       // Filter by selected class for branch admin
       if (selectedClass && callerRole === "BranchAdmin") {
+        console.log('[STUDENTS] Filtering for class:', selectedClass);
         allStudents = allStudents.filter(
-          (s: StudentUser) => s.classLevel === selectedClass || s.classLevel === `Class ${selectedClass}`
+          (s: StudentUser) => {
+            const matches = s.classLevel === selectedClass || s.classLevel === `Class ${selectedClass}`;
+            console.log(`[STUDENTS] Student ${s.name} (class: ${s.classLevel}) matches: ${matches}`);
+            return matches;
+          }
         );
+        console.log('[STUDENTS] Filtered students:', allStudents.length);
       }
       
       setStudents(allStudents);
-    } catch {
-      setError("Failed to load students. Please refresh.");
+      console.log('[STUDENTS] Students state updated with', allStudents.length, 'students');
+    } catch (err) {
+      console.error('[STUDENTS] Error fetching students:', err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to load students. Please refresh.";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -87,6 +127,18 @@ export function StudentsPage() {
       fetchStudents();
     }
   }, [fetchStudents, callerRole, selectedClass]);
+
+  // Listen for data changes from other tabs
+  useEffect(() => {
+    const cleanup = onDataChange((event) => {
+      if (event.type === 'student_added' || event.type === 'student_updated' || event.type === 'student_deleted' || event.type === 'data_refresh') {
+        console.log('[STUDENTS] Data change detected from another tab, refreshing...', event.type);
+        fetchStudents();
+      }
+    });
+
+    return cleanup;
+  }, [fetchStudents]);
 
   const filtered = students.filter(
     (s) =>
@@ -145,10 +197,96 @@ export function StudentsPage() {
 
       setFormSuccess(`✓ Student account created for ${formData.name}`);
       setFormData({ name: "", rollNumber: "", password: "", confirmPassword: "" });
+      
+      // Notify other tabs about the new student
+      notifyStudentChange('added', json.data);
+      
       fetchStudents();
       setTimeout(() => {
         setDialogOpen(false);
         setFormSuccess("");
+      }, 1800);
+    } catch {
+      setFormError("Network error. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleEditStudent = (student: StudentUser) => {
+    setEditingStudent(student);
+    setEditFormData({
+      name: student.name,
+      rollNumber: student.rollNumber || "",
+      password: "",
+      confirmPassword: "",
+    });
+    setFormError("");
+    setFormSuccess("");
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStudent) return;
+
+    setFormError("");
+    setFormSuccess("");
+
+    // Validation
+    if (!editFormData.name || !editFormData.rollNumber) {
+      setFormError("Name and Roll Number are required.");
+      return;
+    }
+    
+    // Only validate password if it's being changed
+    if (editFormData.password) {
+      if (editFormData.password.length < 8) {
+        setFormError("Password must be at least 8 characters.");
+        return;
+      }
+      if (editFormData.password !== editFormData.confirmPassword) {
+        setFormError("Passwords do not match.");
+        return;
+      }
+    }
+
+    setIsSaving(true);
+    try {
+      const updateData: any = {
+        id: editingStudent.id,
+        name: editFormData.name,
+        rollNumber: editFormData.rollNumber,
+      };
+
+      // Only include password if it's being changed
+      if (editFormData.password) {
+        updateData.password = editFormData.password;
+      }
+
+      const res = await fetch("/api/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateData),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        setFormError(json.error ?? "Failed to update student.");
+        return;
+      }
+
+      setFormSuccess(`✓ Student updated successfully`);
+      
+      // Notify other tabs about the update
+      notifyStudentChange('updated', json.data);
+      
+      fetchStudents();
+      setTimeout(() => {
+        setEditDialogOpen(false);
+        setFormSuccess("");
+        setEditingStudent(null);
       }, 1800);
     } catch {
       setFormError("Network error. Please try again.");
@@ -411,6 +549,7 @@ export function StudentsPage() {
                     <TableHead className="hidden lg:table-cell">Class</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="hidden md:table-cell">Last Login</TableHead>
+                    {callerRole === "BranchAdmin" && <TableHead className="w-[50px]"></TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -438,6 +577,23 @@ export function StudentsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{formatDate(student.lastLogin)}</TableCell>
+                      {callerRole === "BranchAdmin" && (
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditStudent(student)}>
+                                <Pencil className="h-4 w-4 mr-2" />
+                                Edit Student
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -448,6 +604,111 @@ export function StudentsPage() {
       )}
         </>
       )}
+
+      {/* Edit Student Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={(o) => {
+        setEditDialogOpen(o);
+        if (!o) {
+          setEditingStudent(null);
+          setEditFormData({ name: "", rollNumber: "", password: "", confirmPassword: "" });
+          setFormError("");
+          setFormSuccess("");
+        }
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Student</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpdateStudent} className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Full Name <span className="text-destructive">*</span></Label>
+              <Input
+                value={editFormData.name}
+                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                placeholder="Student full name"
+                disabled={isSaving}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Roll Number / College ID <span className="text-destructive">*</span></Label>
+              <Input
+                value={editFormData.rollNumber}
+                onChange={(e) => setEditFormData({ ...editFormData, rollNumber: e.target.value })}
+                placeholder="e.g., 2021-CS-001"
+                disabled={isSaving}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>New Password <span className="text-muted-foreground text-xs">(leave blank to keep current)</span></Label>
+              <div className="relative">
+                <Input
+                  type={editShowPassword ? "text" : "password"}
+                  value={editFormData.password}
+                  onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}
+                  placeholder="Min. 8 characters"
+                  className="pr-10"
+                  disabled={isSaving}
+                />
+                <button
+                  type="button"
+                  onClick={() => setEditShowPassword(!editShowPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {editShowPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {editFormData.password && (
+              <div className="space-y-2">
+                <Label>Confirm New Password <span className="text-destructive">*</span></Label>
+                <div className="relative">
+                  <Input
+                    type={editShowConfirmPassword ? "text" : "password"}
+                    value={editFormData.confirmPassword}
+                    onChange={(e) => setEditFormData({ ...editFormData, confirmPassword: e.target.value })}
+                    placeholder="Re-enter password"
+                    className="pr-10"
+                    disabled={isSaving}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setEditShowConfirmPassword(!editShowConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {editShowConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {formError && (
+              <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                {formError}
+              </div>
+            )}
+            {formSuccess && (
+              <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                {formSuccess}
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)} disabled={isSaving}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-sky-600 hover:bg-sky-700 text-white" disabled={isSaving}>
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {isSaving ? "Updating…" : "Update Student"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

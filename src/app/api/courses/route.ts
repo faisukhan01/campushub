@@ -15,7 +15,20 @@ export async function GET(request: NextRequest) {
     const whereClause: any = { isActive: true }
 
     // Scope by role
-    if (token.role === "BranchAdmin" && token.branchId) {
+    if (token.role === "Student") {
+      // Students only see courses they're enrolled in
+      whereClause.enrollments = {
+        some: {
+          studentId: token.sub,
+          status: 'Active'
+        }
+      }
+    } else if (token.role === "Teacher") {
+      // Teachers only see courses they're assigned to
+      whereClause.teachers = {
+        some: { teacherId: token.sub }
+      }
+    } else if (token.role === "BranchAdmin" && token.branchId) {
       whereClause.branchId = token.branchId
     } else if (token.role === "InstituteAdmin" && token.instituteId) {
       whereClause.branch = { instituteId: token.instituteId }
@@ -125,26 +138,68 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    if (!token) {
+      console.error('[COURSES POST] No token found')
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
-    if (!["SuperAdmin", "InstituteAdmin", "BranchAdmin"].includes(token.role as string)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    console.log('[COURSES POST] Token data:', { 
+      role: token.role, 
+      branchId: token.branchId,
+      userId: token.userId || token.sub 
+    })
+    
+    let userRole = token.role as string
+    let userBranchId = token.branchId as string | undefined
+    
+    // If role or branchId is missing from token, fetch from database
+    if (!userRole || (userRole === "BranchAdmin" && !userBranchId)) {
+      console.log('[COURSES POST] Missing data in token, fetching from database')
+      const userId = (token.userId || token.sub) as string
+      const user = await db.user.findUnique({
+        where: { id: userId },
+        select: { role: true, branchId: true }
+      })
+      
+      if (!user) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 })
+      }
+      
+      userRole = user.role
+      userBranchId = user.branchId || undefined
+      console.log('[COURSES POST] Fetched from DB - Role:', userRole, 'BranchId:', userBranchId)
+    }
+    
+    if (!["SuperAdmin", "InstituteAdmin", "BranchAdmin"].includes(userRole)) {
+      console.error('[COURSES POST] Forbidden - Role not allowed:', userRole)
+      return NextResponse.json({ 
+        error: `Access denied. Your role (${userRole}) does not have permission to create courses. Please log out and log back in if you recently changed roles.` 
+      }, { status: 403 })
     }
 
     const body = await request.json()
     const { title, code, description, classLevel, subjectType, branchId } = body
+
+    console.log('[COURSES POST] Request body:', { title, code, classLevel, subjectType })
 
     if (!title || !code || !classLevel) {
       return NextResponse.json({ error: "title, code and classLevel are required" }, { status: 400 })
     }
 
     let resolvedBranchId: string
-    if (token.role === "BranchAdmin") {
-      if (!token.branchId) return NextResponse.json({ error: "Branch not assigned to your account" }, { status: 400 })
-      resolvedBranchId = token.branchId as string
+    if (userRole === "BranchAdmin") {
+      if (!userBranchId) {
+        console.error('[COURSES POST] BranchAdmin has no branchId')
+        return NextResponse.json({ 
+          error: "Branch not assigned to your account. Please contact your administrator or try logging out and back in." 
+        }, { status: 400 })
+      }
+      resolvedBranchId = userBranchId
+      console.log('[COURSES POST] Using branchId from user:', resolvedBranchId)
     } else {
       if (!branchId) return NextResponse.json({ error: "branchId is required" }, { status: 400 })
       resolvedBranchId = branchId
+      console.log('[COURSES POST] Using branchId from request:', resolvedBranchId)
     }
 
     const course = await db.course.create({
@@ -158,6 +213,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    console.log('[COURSES POST] Course created successfully:', course.id)
     return NextResponse.json({ success: true, data: course }, { status: 201 })
   } catch (error) {
     console.error('POST /api/courses error:', error)

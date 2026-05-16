@@ -277,11 +277,11 @@ export function StudentDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-amber-600 dark:text-amber-400">GPA</p>
+                <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Average Grade</p>
                 <p className="text-3xl font-bold text-amber-900 dark:text-amber-100 mt-2">—</p>
               </div>
               <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center">
-                <Award className="w-6 h-6 text-white" />
+                <BarChart3 className="w-6 h-6 text-white" />
               </div>
             </div>
           </CardContent>
