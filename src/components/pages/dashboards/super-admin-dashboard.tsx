@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { useAppStore } from "@/store/app-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,13 +23,20 @@ interface InstituteRow {
 }
 
 export function SuperAdminDashboard() {
+  const { data: session } = useSession();
   const currentUser = useAppStore((s) => s.currentUser);
   const setPage = useAppStore((s) => s.setCurrentPage);
 
   const [institutes, setInstitutes] = useState<InstituteRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const callerRole = session?.user?.role;
+
   const fetchData = useCallback(async () => {
+    if (callerRole && callerRole !== "SuperAdmin") {
+      setIsLoading(false);
+      return;
+    }
     try {
       const res = await fetch("/api/institutes");
       if (res.ok) {
@@ -37,7 +45,7 @@ export function SuperAdminDashboard() {
       }
     } catch { /* silent */ }
     finally { setIsLoading(false); }
-  }, []);
+  }, [callerRole]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 

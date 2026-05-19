@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useAppStore } from "@/store/app-store";
-import { getTabUser } from "@/lib/tab-session";
+import { getTabUser, clearTabUser } from "@/lib/tab-session";
 import type { UserRole } from "@/types";
 import { LandingPage } from "@/components/landing-page";
 import SignInPage from "@/components/SignInPage";
@@ -145,31 +145,37 @@ export default function Home() {
 
     // Check if this tab already has a session
     const tabUser = typeof window !== 'undefined' ? getTabUser() : null;
-    
-    // If tab has a user, use that instead of NextAuth session
+
+    // If tab has a user, validate it against the current NextAuth session
     if (tabUser) {
-      if (!isAuthenticated || useAppStore.getState().currentUser?.id !== tabUser.id) {
-        login({
-          id: tabUser.id,
-          name: tabUser.name,
-          email: tabUser.email,
-          role: tabUser.role as UserRole,
-          instituteId: tabUser.instituteId,
-          branchId: tabUser.branchId,
-          classLevel: tabUser.classLevel,
-          section: tabUser.section,
-        });
+      // If NextAuth has a different authenticated user, the JWT is authoritative — clear stale tab data
+      if (status === "authenticated" && session?.user && tabUser.email !== session.user.email) {
+        clearTabUser();
+        // Fall through to NextAuth session handling below
+      } else {
+        if (!isAuthenticated || useAppStore.getState().currentUser?.id !== tabUser.id) {
+          login({
+            id: tabUser.id,
+            name: tabUser.name,
+            email: tabUser.email,
+            role: tabUser.role as UserRole,
+            instituteId: tabUser.instituteId,
+            branchId: tabUser.branchId,
+            classLevel: tabUser.classLevel,
+            section: tabUser.section,
+          });
+        }
+        return;
       }
-      return;
     }
 
-    // No tab-specific session, check NextAuth
+    // No (valid) tab-specific session — use NextAuth
     if (status === "authenticated" && session?.user) {
-      // For SuperAdmin: Don't auto-login on main page, let them access /superadmin manually
+      // SuperAdmin uses the /superadmin portal, not the main app
       if (session.user.role === "SuperAdmin") {
         return;
       }
-      
+
       // For other roles, login to Zustand store when they successfully authenticate
       if (!isAuthenticated || useAppStore.getState().currentUser?.id !== session.user.id) {
         login({
@@ -184,8 +190,7 @@ export default function Home() {
         });
       }
     } else if (status === "unauthenticated") {
-      // Only clear if this tab doesn't have a session
-      if (!tabUser && isAuthenticated) {
+      if (isAuthenticated) {
         logout();
       }
     }
