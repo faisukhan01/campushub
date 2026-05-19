@@ -10,14 +10,12 @@ export async function GET(request: NextRequest) {
     const role = searchParams.get('role') || token?.role || 'Student'
     const userId = searchParams.get('userId') || token?.sub
 
-    // Common stats
-    const totalStudents = await db.user.count({ where: { role: 'Student' } })
-    const totalTeachers = await db.user.count({ where: { role: 'Teacher' } })
-    const totalCourses = await db.course.count()
-    const totalBranches = await db.branch.count()
-
     switch (role) {
       case 'SuperAdmin': {
+        const totalStudents = await db.user.count({ where: { role: 'Student', isActive: true } })
+        const totalTeachers = await db.user.count({ where: { role: 'Teacher', isActive: true } })
+        const totalCourses = await db.course.count()
+        const totalBranches = await db.branch.count()
         const totalInstitutes = await db.institute.count()
         const totalEnrollments = await db.enrollment.count()
         const totalFeeCollected = await db.feePayment.aggregate({
@@ -93,29 +91,27 @@ export async function GET(request: NextRequest) {
       }
 
       case 'BranchAdmin': {
-        // Use branchId from token if available, otherwise from query params
-        const branchId = token?.branchId || searchParams.get('branchId')
-        const branchFilter: any = {}
-        if (branchId) branchFilter.branchId = branchId
+        // branchId from JWT token is authoritative
+        const branchId = (token?.branchId as string | undefined) || searchParams.get('branchId')
+        if (!branchId) {
+          return NextResponse.json(
+            { success: false, error: 'branchId is required for BranchAdmin role' },
+            { status: 400 }
+          )
+        }
 
+        const branchStudents = await db.user.count({
+          where: { role: 'Student', branchId, isActive: true },
+        })
+        const branchTeachers = await db.user.count({
+          where: { role: 'Teacher', branchId, isActive: true },
+        })
         const branchCourses = await db.course.count({
-          where: branchFilter,
+          where: { branchId },
         })
         const branchEnrollments = await db.enrollment.count({
-          where: branchFilter.course ? { course: branchFilter } : undefined,
+          where: { course: { branchId } },
         })
-
-        // If branchId provided, count users in that branch
-        let branchStudents = totalStudents
-        let branchTeachers = totalTeachers
-        if (branchId) {
-          branchStudents = await db.user.count({
-            where: { role: 'Student', branchId, isActive: true },
-          })
-          branchTeachers = await db.user.count({
-            where: { role: 'Teacher', branchId, isActive: true },
-          })
-        }
 
         return NextResponse.json({
           success: true,
@@ -124,8 +120,7 @@ export async function GET(request: NextRequest) {
             totalTeachers: branchTeachers,
             totalCourses: branchCourses,
             totalEnrollments: branchEnrollments,
-            totalBranches,
-            avgAttendance: 0, // TODO: Calculate actual attendance
+            avgAttendance: 0,
           },
         })
       }
@@ -155,24 +150,17 @@ export async function GET(request: NextRequest) {
         )
 
         const myCourseIds = taughtCourses.map((ct) => ct.courseId)
-        const totalAssignments = await db.assignment.count({
-          where: myCourseIds.length > 0 ? { courseId: { in: myCourseIds } } : undefined,
+
+        const totalAssignments = myCourseIds.length === 0 ? 0 : await db.assignment.count({
+          where: { courseId: { in: myCourseIds } },
         })
 
-        const pendingSubmissions = await db.submission.count({
-          where: {
-            assignment: {
-              courseId: { in: myCourseIds },
-            },
-            status: 'Submitted',
-          },
+        const pendingSubmissions = myCourseIds.length === 0 ? 0 : await db.submission.count({
+          where: { assignment: { courseId: { in: myCourseIds } }, status: 'Submitted' },
         })
 
-        const upcomingSessions = await db.attendanceSession.count({
-          where: {
-            courseId: { in: myCourseIds },
-            date: { gte: new Date() },
-          },
+        const upcomingSessions = myCourseIds.length === 0 ? 0 : await db.attendanceSession.count({
+          where: { courseId: { in: myCourseIds }, date: { gte: new Date() } },
         })
 
         return NextResponse.json({

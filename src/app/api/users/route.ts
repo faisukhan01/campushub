@@ -10,32 +10,53 @@ const CREATION_PERMISSIONS: Record<string, string[]> = {
   BranchAdmin: ["Teacher", "Student"],
 }
 
+// Which roles each caller is permitted to view
+const VIEWABLE_ROLES: Record<string, string[]> = {
+  BranchAdmin: ["Teacher", "Student"],
+  InstituteAdmin: ["BranchAdmin", "Teacher", "Student"],
+}
+
 export async function GET(request: NextRequest) {
   try {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
     if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
+    const callerRole = token.role as string
     const { searchParams } = request.nextUrl
-    const role = searchParams.get("role")
+    const roleFilter = searchParams.get("role")
     const branchId = searchParams.get("branchId")
     const instituteId = searchParams.get("instituteId")
 
-    const where: Record<string, unknown> = { isActive: true }
+    const allowedRoles = VIEWABLE_ROLES[callerRole] ?? null
 
-    // Scope results based on caller's role
-    if (token.role === "InstituteAdmin" && token.instituteId) {
-      where.instituteId = token.instituteId
-    } else if (token.role === "BranchAdmin" && token.branchId) {
-      where.branchId = token.branchId
-    } else if (token.role === "SuperAdmin") {
-      if (instituteId) where.instituteId = instituteId
+    // --- Build scoped base where (no query-param role filter yet) ---
+    const scopeWhere: Record<string, unknown> = { isActive: true }
+
+    if (callerRole === "SuperAdmin") {
+      if (instituteId) scopeWhere.instituteId = instituteId
+      if (branchId) scopeWhere.branchId = branchId
+    } else if (callerRole === "InstituteAdmin" && token.instituteId) {
+      scopeWhere.instituteId = token.instituteId
+      if (branchId) scopeWhere.branchId = branchId
+      scopeWhere.role = { in: allowedRoles! }
+    } else if (callerRole === "BranchAdmin" && token.branchId) {
+      scopeWhere.branchId = token.branchId
+      scopeWhere.role = { in: allowedRoles! }
+    } else {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    if (role) where.role = role
-    if (branchId) where.branchId = branchId
+    // --- Users where = scope + optional role query param ---
+    const usersWhere: Record<string, unknown> = { ...scopeWhere }
+    if (roleFilter) {
+      if (!allowedRoles || allowedRoles.includes(roleFilter)) {
+        usersWhere.role = roleFilter
+      }
+      // silently ignore invalid role filters for non-SuperAdmin callers
+    }
 
     const users = await db.user.findMany({
-      where,
+      where: usersWhere,
       select: {
         id: true,
         email: true,
@@ -62,9 +83,11 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     })
 
+    // Role counts use scopeWhere (no role query-param filter) so every
+    // allowed role gets its own count regardless of the active tab.
     const roleCounts = await db.user.groupBy({
       by: ["role"],
-      where: { isActive: true },
+      where: scopeWhere,
       _count: { id: true },
     })
 
