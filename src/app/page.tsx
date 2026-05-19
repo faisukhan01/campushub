@@ -31,6 +31,7 @@ import { InstitutesPage } from "@/components/pages/institutes-page";
 import { StudentsPage } from "@/components/pages/students-page";
 import { CalendarPage } from "@/components/pages/calendar-page";
 import { SubscriptionPage } from "@/components/pages/subscription-page";
+import { UserSettingsPage } from "@/components/pages/user-settings-page";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { TabIndicator } from "@/components/tab-indicator";
@@ -57,6 +58,7 @@ const pageComponents: Record<string, React.ComponentType> = {
   students: StudentsPage,
   calendar: CalendarPage,
   subscription: SubscriptionPage,
+  "user-settings": UserSettingsPage,
 };
 
 function AppShell() {

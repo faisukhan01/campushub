@@ -40,22 +40,54 @@ export async function GET(request: NextRequest) {
       }
 
       case 'InstituteAdmin': {
-        const totalEnrollments = await db.enrollment.count()
-        const totalAssignments = await db.assignment.count()
-        const totalAnnouncements = await db.announcement.count()
-        const openTickets = await db.supportTicket.count({ where: { status: 'Open' } })
+        // instituteId from JWT token is authoritative; query param is a fallback
+        const instituteId = (token?.instituteId as string | undefined) || searchParams.get('instituteId')
+
+        if (!instituteId) {
+          return NextResponse.json(
+            { success: false, error: 'instituteId is required for InstituteAdmin role' },
+            { status: 400 }
+          )
+        }
+
+        // All counts scoped to this institute only
+        const instStudents = await db.user.count({
+          where: { role: 'Student', instituteId, isActive: true },
+        })
+        const instTeachers = await db.user.count({
+          where: { role: 'Teacher', instituteId, isActive: true },
+        })
+        const instBranches = await db.branch.count({
+          where: { instituteId },
+        })
+        const instCourses = await db.course.count({
+          where: { branch: { instituteId } },
+        })
+        const totalEnrollments = await db.enrollment.count({
+          where: { course: { branch: { instituteId } } },
+        })
+        const totalAssignments = await db.assignment.count({
+          where: { course: { branch: { instituteId } } },
+        })
+        const totalAnnouncements = await db.announcement.count({
+          where: { instituteId },
+        })
+        const openTickets = await db.supportTicket.count({
+          where: { status: 'Open', user: { instituteId } },
+        })
 
         return NextResponse.json({
           success: true,
           data: {
-            totalStudents,
-            totalTeachers,
-            totalCourses,
-            totalBranches,
+            totalStudents: instStudents,
+            totalTeachers: instTeachers,
+            totalCourses: instCourses,
+            totalBranches: instBranches,
             totalEnrollments,
             totalAssignments,
             totalAnnouncements,
             openTickets,
+            avgAttendance: 0,
           },
         })
       }

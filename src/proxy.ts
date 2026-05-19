@@ -39,8 +39,8 @@ export async function proxy(request: NextRequest) {
         secret: process.env.NEXTAUTH_SECRET,
       });
 
-      const clientIP = request.headers.get("x-forwarded-for") || 
-                       request.headers.get("x-real-ip") || 
+      const clientIP = request.headers.get("x-forwarded-for") ||
+                       request.headers.get("x-real-ip") ||
                        "unknown";
 
       // If not authenticated, allow the page to show its own sign-in

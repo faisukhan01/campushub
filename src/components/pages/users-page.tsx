@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/table";
 import {
   Users, Search, UserPlus, Shield, CheckCircle2, XCircle,
-  Loader2, RefreshCw, Eye, EyeOff, AlertCircle, Pencil, Trash2, MoreVertical, Key,
+  Loader2, RefreshCw, Eye, EyeOff, AlertCircle, Pencil, Trash2, MoreVertical, Key, Copy,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
@@ -70,6 +70,7 @@ interface ApiUser {
   employeeId?: string;
   rollNumber?: string;
   classLevel?: string;
+  plainPassword?: string | null;
 }
 
 interface EditUserForm {
@@ -78,6 +79,7 @@ interface EditUserForm {
   email: string;
   phone: string;
   password: string;
+  currentPassword: string;
   employeeId?: string;
   rollNumber?: string;
   classLevel?: string;
@@ -106,6 +108,8 @@ export function UsersPage() {
   const [editFormData, setEditFormData] = useState<EditUserForm | null>(null);
   const [formData, setFormData] = useState({ ...emptyForm });
   const [showPassword, setShowPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [copiedCurrentPassword, setCopiedCurrentPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [formError, setFormError] = useState("");
@@ -249,12 +253,14 @@ export function UsersPage() {
       email: user.email,
       phone: user.phone || "",
       password: "",
+      currentPassword: user.plainPassword || "",
       employeeId: user.employeeId,
       rollNumber: user.rollNumber,
       classLevel: user.classLevel,
     });
     setFormError("");
     setFormSuccess("");
+    setShowCurrentPassword(false);
     setEditOpen(true);
   };
 
@@ -328,6 +334,8 @@ export function UsersPage() {
 
   const handleViewCredentials = (user: ApiUser) => {
     setSelectedUser(user);
+    setShowCurrentPassword(false);
+    setCopiedCurrentPassword(false);
     setCredentialsOpen(true);
   };
 
@@ -816,6 +824,48 @@ export function UsersPage() {
                 />
               </div>
 
+              {/* Current password (read-only) */}
+              <div className="space-y-2">
+                <Label>Current Password</Label>
+                <div className="relative">
+                  <Input
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={editFormData.currentPassword}
+                    readOnly
+                    className="pr-20 bg-muted/50 cursor-default"
+                    placeholder="Not available for old accounts"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                    {editFormData.currentPassword && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(editFormData.currentPassword);
+                          setCopiedCurrentPassword(true);
+                          setTimeout(() => setCopiedCurrentPassword(false), 2000);
+                        }}
+                        className="text-muted-foreground hover:text-foreground p-1"
+                        title="Copy current password"
+                      >
+                        {copiedCurrentPassword ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="text-muted-foreground hover:text-foreground p-1"
+                    >
+                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* New password */}
               <div className="space-y-2">
                 <Label>New Password (leave empty to keep current)</Label>
                 <div className="relative">
@@ -919,11 +969,47 @@ export function UsersPage() {
                 </div>
               </div>
 
-              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                <p className="text-xs text-amber-800 dark:text-amber-200">
-                  <strong>Note:</strong> Passwords are encrypted and cannot be viewed. Use the Edit option to reset the password if needed.
-                </p>
-              </div>
+              {selectedUser.plainPassword ? (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Password</Label>
+                  <div className="relative">
+                    <div className="p-3 bg-muted rounded-lg pr-20 font-mono text-sm">
+                      {showCurrentPassword ? selectedUser.plainPassword : "••••••••"}
+                    </div>
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedUser.plainPassword!);
+                          setCopiedCurrentPassword(true);
+                          setTimeout(() => setCopiedCurrentPassword(false), 2000);
+                        }}
+                        className="text-muted-foreground hover:text-foreground p-1"
+                        title="Copy password"
+                      >
+                        {copiedCurrentPassword ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="text-muted-foreground hover:text-foreground p-1"
+                      >
+                        {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                  <p className="text-xs text-amber-800 dark:text-amber-200">
+                    <strong>Note:</strong> Password not available for this account. Use Edit to reset it.
+                  </p>
+                </div>
+              )}
 
               <DialogFooter>
                 <Button onClick={() => setCredentialsOpen(false)}>Close</Button>

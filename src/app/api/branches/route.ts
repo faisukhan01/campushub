@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     const admins = await db.user.findMany({
       where: { role: "BranchAdmin", branchId: { in: branchIds }, isActive: true },
-      select: { id: true, name: true, email: true, branchId: true },
+      select: { id: true, name: true, email: true, branchId: true, plainPassword: true },
     })
 
     const data = branches.map((branch) => {
@@ -120,6 +120,7 @@ export async function POST(request: NextRequest) {
         name: adminName,
         email: adminEmail,
         passwordHash,
+        plainPassword: adminPassword,
         role: "BranchAdmin",
         instituteId: resolvedInstituteId,
         branchId: branch.id,
@@ -202,6 +203,7 @@ export async function PATCH(request: NextRequest) {
 
         if (adminPassword) {
           updateData.passwordHash = await bcrypt.hash(adminPassword, 12)
+          updateData.plainPassword = adminPassword
         }
 
         if (Object.keys(updateData).length > 0) {

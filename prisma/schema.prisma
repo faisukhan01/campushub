@@ -145,6 +145,7 @@ model User {
   rollNumber    String?
   section       String?
   classLevel    String?
+  plainPassword String?
   isActive      Boolean   @default(true)
   lastLogin     DateTime?
   createdAt     DateTime  @default(now())

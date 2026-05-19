@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
         employeeId: true,
         rollNumber: true,
         classLevel: true,
+        plainPassword: true,
         isActive: true,
         lastLogin: true,
         createdAt: true,
@@ -211,6 +212,7 @@ export async function POST(request: NextRequest) {
         name,
         email: resolvedEmail,
         passwordHash,
+        plainPassword: password,
         role: targetRole,
         instituteId: resolvedInstituteId,
         branchId: resolvedBranchId,
@@ -285,7 +287,10 @@ export async function PATCH(request: NextRequest) {
     if (email !== undefined) updateData.email = email
     if (phone !== undefined) updateData.phone = phone
     if (isActive !== undefined) updateData.isActive = isActive
-    if (passwordHash !== undefined) updateData.passwordHash = passwordHash
+    if (passwordHash !== undefined) {
+      updateData.passwordHash = passwordHash
+      updateData.plainPassword = password
+    }
     if (employeeId !== undefined) updateData.employeeId = employeeId
     if (rollNumber !== undefined) updateData.rollNumber = rollNumber
     if (classLevel !== undefined) updateData.classLevel = classLevel

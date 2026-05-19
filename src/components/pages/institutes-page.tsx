@@ -34,7 +34,7 @@ interface InstituteRecord {
   branchCount: number;
   studentCount: number;
   teacherCount: number;
-  admin: { id: string; name: string; email: string } | null;
+  admin: { id: string; name: string; email: string; plainPassword?: string | null } | null;
 }
 
 const emptyForm = {
@@ -59,6 +59,8 @@ export function InstitutesPage() {
   const [editInst, setEditInst] = useState<InstituteRecord | null>(null);
   const [editForm, setEditForm] = useState({ name: "", email: "", phone: "", address: "", website: "", adminPassword: "" });
   const [showEditPassword, setShowEditPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [copiedCurrentPassword, setCopiedCurrentPassword] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [editError, setEditError] = useState("");
   const [editSuccess, setEditSuccess] = useState("");
@@ -147,6 +149,7 @@ export function InstitutesPage() {
     setEditError("");
     setEditSuccess("");
     setShowEditPassword(false);
+    setShowCurrentPassword(false);
     setViewInst(null);
   };
 
@@ -223,6 +226,12 @@ export function InstitutesPage() {
       setCopiedPassword(true);
       setTimeout(() => setCopiedPassword(false), 2000);
     }
+  };
+
+  const copyCurrentPassword = (pwd: string) => {
+    navigator.clipboard.writeText(pwd);
+    setCopiedCurrentPassword(true);
+    setTimeout(() => setCopiedCurrentPassword(false), 2000);
   };
 
   const handleDelete = async () => {
@@ -705,6 +714,45 @@ export function InstitutesPage() {
                       </div>
                       <Badge className="bg-purple-100 text-purple-700 text-[10px] ml-auto flex-shrink-0">Admin</Badge>
                     </div>
+
+                    {/* Current password (read-only) */}
+                    <div className="space-y-1.5">
+                      <Label>Current Password</Label>
+                      <div className="relative">
+                        <Input
+                          type={showCurrentPassword ? "text" : "password"}
+                          value={editInst.admin.plainPassword ?? ""}
+                          readOnly
+                          className="pr-20 bg-muted/50 cursor-default"
+                          placeholder="Not available for old accounts"
+                        />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                          {editInst.admin.plainPassword && (
+                            <button
+                              type="button"
+                              onClick={() => copyCurrentPassword(editInst.admin!.plainPassword!)}
+                              className="text-muted-foreground hover:text-foreground p-1"
+                              title="Copy current password"
+                            >
+                              {copiedCurrentPassword ? (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                              ) : (
+                                <Copy className="w-4 h-4" />
+                              )}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                            className="text-muted-foreground hover:text-foreground p-1"
+                          >
+                            {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* New password (optional change) */}
                     <div className="space-y-1.5">
                       <Label>New Password (Optional)</Label>
                       <div className="relative">
@@ -722,7 +770,7 @@ export function InstitutesPage() {
                               type="button"
                               onClick={copyPassword}
                               className="text-muted-foreground hover:text-foreground p-1"
-                              title="Copy password"
+                              title="Copy new password"
                             >
                               {copiedPassword ? (
                                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />

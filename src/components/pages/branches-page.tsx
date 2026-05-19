@@ -17,7 +17,7 @@ import {
 import {
   MapPin, Users, GraduationCap, Building2, Phone, Mail, Plus,
   Loader2, RefreshCw, AlertCircle, CheckCircle2, BookOpen,
-  Eye, EyeOff, UserCog, Pencil, Trash2, MoreVertical,
+  Eye, EyeOff, UserCog, Pencil, Trash2, MoreVertical, Copy, Key,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
@@ -41,7 +41,7 @@ interface BranchRecord {
   courseCount: number;
   studentCount: number;
   teacherCount: number;
-  admin: { id: string; name: string; email: string } | null;
+  admin: { id: string; name: string; email: string; plainPassword?: string | null } | null;
 }
 
 interface InstituteOption {
@@ -65,6 +65,7 @@ interface EditFormData {
   address: string;
   adminEmail: string;
   adminPassword: string;
+  currentAdminPassword: string;
 }
 
 export function BranchesPage() {
@@ -83,6 +84,8 @@ export function BranchesPage() {
   const [editFormData, setEditFormData] = useState<EditFormData | null>(null);
   const [formData, setFormData] = useState({ ...emptyForm });
   const [showPassword, setShowPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [copiedCurrentPassword, setCopiedCurrentPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [formError, setFormError] = useState("");
@@ -173,9 +176,11 @@ export function BranchesPage() {
       address: branch.address || "",
       adminEmail: branch.admin?.email || "",
       adminPassword: "",
+      currentAdminPassword: branch.admin?.plainPassword || "",
     });
     setFormError("");
     setFormSuccess("");
+    setShowCurrentPassword(false);
     setEditOpen(true);
   };
 
@@ -602,19 +607,65 @@ export function BranchesPage() {
               <Separator />
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Branch Admin Credentials</p>
-                <p className="text-xs text-muted-foreground mb-3">Update admin email or reset password</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <Key className="w-4 h-4 text-muted-foreground" />
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Branch Admin Credentials</p>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">View current password or reset it</p>
                 <div className="space-y-3">
                   <div className="space-y-1.5">
                     <Label>Admin Email</Label>
-                    <Input 
-                      type="email" 
-                      value={editFormData.adminEmail} 
-                      onChange={(e) => setEditFormData({ ...editFormData, adminEmail: e.target.value })} 
-                      placeholder="admin@branch.edu" 
-                      disabled={isSaving} 
+                    <Input
+                      type="email"
+                      value={editFormData.adminEmail}
+                      onChange={(e) => setEditFormData({ ...editFormData, adminEmail: e.target.value })}
+                      placeholder="admin@branch.edu"
+                      disabled={isSaving}
                     />
                   </div>
+
+                  {/* Current password (read-only) */}
+                  <div className="space-y-1.5">
+                    <Label>Current Password</Label>
+                    <div className="relative">
+                      <Input
+                        type={showCurrentPassword ? "text" : "password"}
+                        value={editFormData.currentAdminPassword}
+                        readOnly
+                        className="pr-20 bg-muted/50 cursor-default"
+                        placeholder="Not available for old accounts"
+                      />
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                        {editFormData.currentAdminPassword && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(editFormData.currentAdminPassword);
+                              setCopiedCurrentPassword(true);
+                              setTimeout(() => setCopiedCurrentPassword(false), 2000);
+                            }}
+                            className="text-muted-foreground hover:text-foreground p-1"
+                            title="Copy current password"
+                          >
+                            {copiedCurrentPassword ? (
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-4 h-4" />
+                            )}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                          className="text-muted-foreground hover:text-foreground p-1"
+                        >
+                          {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* New password (optional) */}
                   <div className="space-y-1.5">
                     <Label>New Password (leave empty to keep current)</Label>
                     <div className="relative">
@@ -626,9 +677,9 @@ export function BranchesPage() {
                         className="pr-10"
                         disabled={isSaving}
                       />
-                      <button 
-                        type="button" 
-                        onClick={() => setShowPassword(!showPassword)} 
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}

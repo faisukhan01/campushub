@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
         email: true,
         role: true,
         instituteId: true,
+        plainPassword: true,
       },
     })
 
@@ -75,7 +76,7 @@ export async function GET(request: NextRequest) {
         branchCount: inst._count.branches,
         studentCount,
         teacherCount,
-        admin: admin ? { id: admin.id, name: admin.name, email: admin.email } : null,
+        admin: admin ? { id: admin.id, name: admin.name, email: admin.email, plainPassword: admin.plainPassword } : null,
       }
     })
 
@@ -152,6 +153,7 @@ export async function POST(request: NextRequest) {
         name: adminName,
         email: adminEmail,
         passwordHash,
+        plainPassword: adminPassword,
         role: "InstituteAdmin",
         instituteId: institute.id,
         isActive: true,
@@ -211,7 +213,6 @@ export async function DELETE(request: NextRequest) {
         _count: {
           select: {
             branches: true,
-            users: true,
           },
         },
       },

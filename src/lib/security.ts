@@ -75,19 +75,6 @@ export async function verifySuperAdminAccess(request: NextRequest): Promise<{
       return { authorized: false, error: 'Forbidden - Insufficient permissions' };
     }
 
-    // Additional security: Verify email matches the authorized SuperAdmin
-    const authorizedEmail = 'faisu577277@gmail.com';
-    if (token.email !== authorizedEmail) {
-      console.error(`[SECURITY] CRITICAL: Unauthorized SuperAdmin email detected:`, {
-        attemptedEmail: token.email,
-        authorizedEmail,
-        userId: token.userId,
-        ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-        timestamp: new Date().toISOString(),
-      });
-      return { authorized: false, error: 'Forbidden - Invalid SuperAdmin account' };
-    }
-
     // Rate limiting for SuperAdmin actions
     const identifier = `superadmin_${token.userId}`;
     const rateCheck = rateLimit(identifier, 100, 60 * 1000); // 100 requests per minute

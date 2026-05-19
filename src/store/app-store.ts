@@ -123,6 +123,7 @@ function getNavigationForRole(role: UserRole): NavigationItem[] {
       { id: "timetable", label: "My Schedule", icon: "Calendar", href: "timetable" },
       { id: "announcements", label: "Announcements", icon: "Megaphone", href: "announcements" },
       { id: "messages", label: "Messages", icon: "MessageSquare", href: "messages", badge: 3 },
+      { id: "user-settings", label: "Settings", icon: "Settings", href: "user-settings" },
     ],
     Student: [
       ...baseNav,
@@ -134,6 +135,7 @@ function getNavigationForRole(role: UserRole): NavigationItem[] {
       { id: "fees", label: "Fee Ledger", icon: "CreditCard", href: "fees", badge: 1 },
       { id: "announcements", label: "Announcements", icon: "Megaphone", href: "announcements" },
       { id: "messages", label: "Messages", icon: "MessageSquare", href: "messages" },
+      { id: "user-settings", label: "Settings", icon: "Settings", href: "user-settings" },
     ],
   };
 

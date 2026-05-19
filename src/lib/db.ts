@@ -11,10 +11,12 @@ function createPrismaClient(): PrismaClient {
   const tursoToken = process.env.TURSO_AUTH_TOKEN
 
   // Check if Turso credentials are available
-  if (tursoUrl && tursoToken && tursoUrl.startsWith('libsql://')) {
+  if (tursoUrl && tursoToken && (tursoUrl.startsWith('libsql://') || tursoUrl.startsWith('https://'))) {
     console.log('[DB] ✅ Using Turso database (Production)')
     console.log('[DB] URL:', tursoUrl)
-    const adapter = new PrismaLibSql({ url: tursoUrl, authToken: tursoToken })
+    // Use https:// to avoid WebSocket connection timeouts between requests
+    const httpUrl = tursoUrl.startsWith('libsql://') ? tursoUrl.replace('libsql://', 'https://') : tursoUrl
+    const adapter = new PrismaLibSql({ url: httpUrl, authToken: tursoToken })
     return new PrismaClient({ adapter })
   }
 
