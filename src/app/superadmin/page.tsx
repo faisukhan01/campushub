@@ -28,6 +28,7 @@ import { BatchesPage } from "@/components/pages/batches-page";
 import { AnalyticsPage } from "@/components/pages/analytics-page";
 import { InstitutesPage } from "@/components/pages/institutes-page";
 import { StudentsPage } from "@/components/pages/students-page";
+import { TeachersPage } from "@/components/pages/teachers-page";
 import { CalendarPage } from "@/components/pages/calendar-page";
 import { SubscriptionPage } from "@/components/pages/subscription-page";
 import { AnimatePresence, motion } from "framer-motion";
@@ -55,6 +56,7 @@ const pageComponents: Record<string, React.ComponentType> = {
   analytics: AnalyticsPage,
   institutes: InstitutesPage,
   students: StudentsPage,
+  teachers: TeachersPage,
   calendar: CalendarPage,
   subscription: SubscriptionPage,
 };

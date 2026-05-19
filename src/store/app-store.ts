@@ -103,7 +103,7 @@ function getNavigationForRole(role: UserRole): NavigationItem[] {
     BranchAdmin: [
       ...baseNav,
       { id: "students", label: "Students", icon: "GraduationCap", href: "students" },
-      { id: "users", label: "Teachers", icon: "Users", href: "users" },
+      { id: "teachers", label: "Teachers", icon: "Users", href: "teachers" },
       { id: "courses", label: "Courses", icon: "BookOpen", href: "courses" },
       { id: "course-management", label: "Course Management", icon: "Settings2", href: "course-management" },
       { id: "attendance", label: "Attendance", icon: "ClipboardCheck", href: "attendance" },

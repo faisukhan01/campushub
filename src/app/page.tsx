@@ -29,6 +29,7 @@ import { BatchesPage } from "@/components/pages/batches-page";
 import { AnalyticsPage } from "@/components/pages/analytics-page";
 import { InstitutesPage } from "@/components/pages/institutes-page";
 import { StudentsPage } from "@/components/pages/students-page";
+import { TeachersPage } from "@/components/pages/teachers-page";
 import { CalendarPage } from "@/components/pages/calendar-page";
 import { SubscriptionPage } from "@/components/pages/subscription-page";
 import { UserSettingsPage } from "@/components/pages/user-settings-page";
@@ -56,6 +57,7 @@ const pageComponents: Record<string, React.ComponentType> = {
   analytics: AnalyticsPage,
   institutes: InstitutesPage,
   students: StudentsPage,
+  teachers: TeachersPage,
   calendar: CalendarPage,
   subscription: SubscriptionPage,
   "user-settings": UserSettingsPage,

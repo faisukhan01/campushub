@@ -176,6 +176,51 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PATCH(request: NextRequest) {
+  try {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+    if (!["SuperAdmin", "InstituteAdmin", "BranchAdmin"].includes(token.role as string)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const { id, isPrimary } = body
+
+    if (!id || isPrimary === undefined) {
+      return NextResponse.json({ error: "id and isPrimary are required" }, { status: 400 })
+    }
+
+    const assignment = await db.courseTeacher.findUnique({
+      where: { id },
+      include: { course: { include: { branch: true } } },
+    })
+
+    if (!assignment) return NextResponse.json({ error: "Assignment not found" }, { status: 404 })
+
+    if (token.role === "BranchAdmin" && assignment.course.branchId !== token.branchId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+    if (token.role === "InstituteAdmin" && assignment.course.branch.instituteId !== token.instituteId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    if (isPrimary) {
+      await db.courseTeacher.updateMany({
+        where: { courseId: assignment.courseId, isPrimary: true },
+        data: { isPrimary: false },
+      })
+    }
+
+    const updated = await db.courseTeacher.update({ where: { id }, data: { isPrimary } })
+    return NextResponse.json({ success: true, data: updated })
+  } catch (error) {
+    console.error('PATCH /api/course-teachers error:', error)
+    return NextResponse.json({ success: false, error: 'Failed to update assignment' }, { status: 500 })
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
