@@ -60,3 +60,4 @@ server.log
 # Credentials and sensitive files
 CREDENTIALS.md
 vercel-env-setup.txt
+.vercel
