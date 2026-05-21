@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, Building2, Building, GraduationCap, User, ArrowLeft } from 'lucide-react';
 import { signIn } from 'next-auth/react';
+import { setTabUser } from '@/lib/tab-session';
 
 // ==================== SVG Illustration ====================
 
@@ -150,6 +151,23 @@ export default function SignInPage({ onBack }: SignInPageProps) {
         });
         await fetch('/api/auth/signout', { method: 'POST' });
         return;
+      }
+
+      // Store in this tab's session BEFORE reloading so page.tsx
+      // initialises from the tab session and doesn't inherit another tab's cookie.
+      if (session?.user) {
+        setTabUser({
+          id: session.user.id,
+          name: session.user.name ?? '',
+          email: session.user.email ?? '',
+          role: session.user.role,
+          avatar: '',
+          instituteId: session.user.instituteId ?? 'platform',
+          instituteName: '',
+          branchId: session.user.branchId ?? undefined,
+          classLevel: session.user.classLevel ?? undefined,
+          section: session.user.section ?? undefined,
+        });
       }
 
       window.location.reload();

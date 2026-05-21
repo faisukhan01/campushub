@@ -148,13 +148,14 @@ export default function Home() {
     // Check if this tab already has a session
     const tabUser = typeof window !== 'undefined' ? getTabUser() : null;
 
-    // If tab has a user, validate it against the current NextAuth session
+    // If this tab has a session, validate it then use it
     if (tabUser) {
-      // If NextAuth has a different authenticated user, the JWT is authoritative — clear stale tab data
+      // If NextAuth shows a completely different user the tab session is stale — clear it
       if (status === "authenticated" && session?.user && tabUser.email !== session.user.email) {
         clearTabUser();
-        // Fall through to NextAuth session handling below
+        // Fall through — no valid tab session, show sign-in page
       } else {
+        // Tab session is good — log in from it and stop here
         if (!isAuthenticated || useAppStore.getState().currentUser?.id !== tabUser.id) {
           login({
             id: tabUser.id,
@@ -171,30 +172,11 @@ export default function Home() {
       }
     }
 
-    // No (valid) tab-specific session — use NextAuth
-    if (status === "authenticated" && session?.user) {
-      // SuperAdmin uses the /superadmin portal, not the main app
-      if (session.user.role === "SuperAdmin") {
-        return;
-      }
-
-      // For other roles, login to Zustand store when they successfully authenticate
-      if (!isAuthenticated || useAppStore.getState().currentUser?.id !== session.user.id) {
-        login({
-          id: session.user.id,
-          name: session.user.name ?? "",
-          email: session.user.email ?? "",
-          role: session.user.role as UserRole,
-          instituteId: session.user.instituteId,
-          branchId: session.user.branchId,
-          classLevel: session.user.classLevel,
-          section: session.user.section,
-        });
-      }
-    } else if (status === "unauthenticated") {
-      if (isAuthenticated) {
-        logout();
-      }
+    // No tab session for this tab — show sign-in page.
+    // Do NOT auto-login from the NextAuth cookie; another tab may be signed in
+    // and every tab must sign in independently to get its own tab session.
+    if (isAuthenticated) {
+      logout();
     }
   }, [status, hasInitialized, tabId]); // Added tabId to ensure tab-specific behavior
 
