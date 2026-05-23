@@ -400,7 +400,7 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
       </motion.header>
 
       {/* ─── HERO ─── */}
-      <section className="relative min-h-[90vh] flex flex-col justify-center pt-24 pb-24 sm:pt-32 sm:pb-32 overflow-hidden bg-gradient-to-br from-slate-950 via-[#041f1a] to-slate-900">
+      <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28 md:pt-44 md:pb-36 overflow-hidden bg-gradient-to-br from-slate-950 via-[#041f1a] to-slate-900">
         {/* Gradient orbs */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden>
           <div className="absolute -top-32 -left-24 w-[500px] h-[500px] rounded-full bg-emerald-500/[0.12] blur-[110px]" />
