@@ -400,19 +400,22 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
       </motion.header>
 
       {/* ─── HERO ─── */}
-      <section className="relative min-h-[90vh] flex flex-col justify-center pt-24 pb-24 sm:pt-32 sm:pb-32 overflow-hidden">
-        {/* Video background */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          onCanPlay={(e) => { (e.currentTarget as HTMLVideoElement).playbackRate = 0.4; }}
-          className="absolute inset-0 w-full h-full object-cover"
-          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260511_131941_d136af49-e243-493a-be14-6ff3f24e09e6.mp4"
+      <section className="relative min-h-[90vh] flex flex-col justify-center pt-24 pb-24 sm:pt-32 sm:pb-32 overflow-hidden bg-gradient-to-br from-slate-950 via-[#041f1a] to-slate-900">
+        {/* Gradient orbs */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden>
+          <div className="absolute -top-32 -left-24 w-[500px] h-[500px] rounded-full bg-emerald-500/[0.12] blur-[110px]" />
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[360px] rounded-full bg-emerald-700/[0.10] blur-[90px]" />
+          <div className="absolute -bottom-32 -right-24 w-[480px] h-[480px] rounded-full bg-teal-500/[0.10] blur-[110px]" />
+        </div>
+        {/* Subtle grid overlay */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.025]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
         />
-        {/* Overlay — dark enough to read, light enough to see the video */}
-        <div className="absolute inset-0 bg-black/45 pointer-events-none" />
 
         <div className="relative mx-auto max-w-6xl px-5 sm:px-6 text-center">
           {/* Badge */}
