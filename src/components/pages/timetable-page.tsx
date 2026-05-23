@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useAppStore } from "@/store/app-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -83,8 +83,8 @@ const emptyForm = {
 };
 
 export function TimetablePage() {
-  const { data: session } = useSession();
-  const callerRole = session?.user?.role as string | undefined;
+  const currentUser = useAppStore((s) => s.currentUser);
+  const callerRole = currentUser?.role as string | undefined;
 
   const [slots, setSlots] = useState<TimetableSlot[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);

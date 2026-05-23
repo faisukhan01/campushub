@@ -32,9 +32,9 @@ import { TeachersPage } from "@/components/pages/teachers-page";
 import { CalendarPage } from "@/components/pages/calendar-page";
 import { SubscriptionPage } from "@/components/pages/subscription-page";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Shield, AlertTriangle } from "lucide-react";
+import { Loader2, Shield } from "lucide-react";
 import { TabIndicator } from "@/components/tab-indicator";
-import { useRouter } from "next/navigation";
+import { getTabUser, clearTabUser } from "@/lib/tab-session";
 
 const pageComponents: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
@@ -124,8 +124,7 @@ function AppShell() {
 }
 
 export default function SuperAdminPage() {
-  const router = useRouter();
-  const { data: session, status } = useSession({
+  const { status } = useSession({
     refetchOnWindowFocus: false,
   });
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
@@ -134,41 +133,46 @@ export default function SuperAdminPage() {
   const [sessionError, setSessionError] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
 
-  // Sync NextAuth session → Zustand store ONLY on initial load
+  // Sync tab session → Zustand store on initial load.
+  // We deliberately do NOT read from the NextAuth cookie here.
+  // The shared cookie means every tab would inherit another tab's sign-in,
+  // so we only trust the tab-specific sessionStorage entry written by
+  // SuperAdminSignIn after a successful sign-in on THIS tab.
   useEffect(() => {
-    // Only run once when component first mounts
     if (hasInitialized) return;
-    
     if (status === "loading") return;
-    
+
     setHasInitialized(true);
 
-    if (status === "authenticated" && session?.user) {
-      // If user is not SuperAdmin, don't log them in to Zustand
-      if (session.user.role !== "SuperAdmin") {
-        // Clear any existing auth state
+    const tabUser = typeof window !== "undefined" ? getTabUser() : null;
+
+    if (tabUser) {
+      // This tab has its own session — validate it is SuperAdmin.
+      if (tabUser.role !== "SuperAdmin") {
+        clearTabUser();
         logout();
         return;
       }
-      
-      // Only login if not already authenticated or if user changed
-      if (!isAuthenticated || useAppStore.getState().currentUser?.id !== session.user.id) {
+      if (!isAuthenticated || useAppStore.getState().currentUser?.id !== tabUser.id) {
         login({
-          id: session.user.id,
-          name: session.user.name ?? "",
-          email: session.user.email ?? "",
-          role: session.user.role as UserRole,
-          instituteId: session.user.instituteId,
-          branchId: session.user.branchId,
+          id: tabUser.id,
+          name: tabUser.name,
+          email: tabUser.email,
+          role: tabUser.role as UserRole,
+          instituteId: tabUser.instituteId,
+          branchId: tabUser.branchId,
         });
       }
-    } else if (status === "unauthenticated") {
-      // Clear Zustand auth if NextAuth session is gone
-      if (isAuthenticated) {
-        logout();
-      }
+      return;
     }
-  }, [status, hasInitialized]); // Removed session, isAuthenticated, login, logout from deps
+
+    // No tab session — this tab has not signed in yet.
+    // Log out of Zustand in case it has stale state; the page will
+    // render the sign-in form.
+    if (isAuthenticated) {
+      logout();
+    }
+  }, [status, hasInitialized]);
 
   // Timeout to detect stuck loading state
   useEffect(() => {
@@ -200,8 +204,11 @@ export default function SuperAdminPage() {
     );
   }
 
-  // If authenticated as SuperAdmin — show the main app
-  if (status === "authenticated" && session?.user?.role === "SuperAdmin" && isAuthenticated) {
+  // Zustand store is the single source of truth here.
+  // It is only populated when THIS tab went through SuperAdminSignIn,
+  // so checking isAuthenticated is sufficient — no need to inspect the
+  // shared NextAuth cookie which would let other tabs sneak through.
+  if (isAuthenticated) {
     return (
       <motion.div
         key="app"
@@ -211,35 +218,6 @@ export default function SuperAdminPage() {
       >
         <AppShell />
       </motion.div>
-    );
-  }
-
-  // If authenticated but NOT SuperAdmin — show access denied
-  if (status === "authenticated" && session?.user?.role !== "SuperAdmin") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full mx-4"
-        >
-          <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-8 h-8 text-red-600" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-            <p className="text-gray-600 mb-6">
-              You do not have permission to access the Super Admin portal. This area is restricted to Super Administrators only.
-            </p>
-            <button
-              onClick={() => router.push("/")}
-              className="w-full py-3 px-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-semibold rounded-lg transition-all"
-            >
-              Return to Home
-            </button>
-          </div>
-        </motion.div>
-      </div>
     );
   }
 

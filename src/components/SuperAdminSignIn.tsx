@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Lock, User, Loader2, AlertTriangle } from 'lucide-react';
 import { signIn } from 'next-auth/react';
+import { setTabUser } from '@/lib/tab-session';
 
 export default function SuperAdminSignIn() {
   const [email, setEmail] = useState('');
@@ -33,7 +34,30 @@ export default function SuperAdminSignIn() {
         setError('Invalid credentials or insufficient permissions.');
         setIsLoading(false);
       } else {
-        // Success - the page will handle the redirect
+        // Fetch the session and pin it to THIS tab before reloading.
+        // Without this, any other tab open at /superadmin would also
+        // auto-login because they share the same NextAuth cookie.
+        const response = await fetch('/api/auth/session');
+        const session = await response.json();
+
+        if (session?.user?.role !== 'SuperAdmin') {
+          setError('Invalid credentials or insufficient permissions.');
+          await fetch('/api/auth/signout', { method: 'POST' });
+          setIsLoading(false);
+          return;
+        }
+
+        setTabUser({
+          id: session.user.id,
+          name: session.user.name ?? '',
+          email: session.user.email ?? '',
+          role: session.user.role,
+          avatar: '',
+          instituteId: session.user.instituteId ?? 'platform',
+          instituteName: '',
+          branchId: session.user.branchId ?? undefined,
+        });
+
         window.location.reload();
       }
     } catch (err) {

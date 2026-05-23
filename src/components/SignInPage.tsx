@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, Building2, Building, GraduationCap, User, ArrowLeft } from 'lucide-react';
 import { signIn } from 'next-auth/react';
@@ -87,36 +87,30 @@ export default function SignInPage({ onBack }: SignInPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
-  const [placeholder, setPlaceholder] = useState('Enter your email, ID, or roll number');
-  const [namePlaceholder, setNamePlaceholder] = useState('Enter your full name');
+  const [placeholder, setPlaceholder] = useState('Enter your email');
   const [showNameField, setShowNameField] = useState(false);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [fieldsEnabled, setFieldsEnabled] = useState(false);
-  const [isPrefilledEmail, setIsPrefilledEmail] = useState(false);
-  const [isPrefilledName, setIsPrefilledName] = useState(false);
-  const [isPrefilledPassword, setIsPrefilledPassword] = useState(false);
 
-  const handleRoleSelection = (role: string, credentials: { email: string; password: string; name?: string }) => {
+  const handleRoleSelection = (role: string) => {
     setSelectedRole(role);
     setFieldsEnabled(true);
-    setEmail(credentials.email);
-    setPassword(credentials.password);
-    setIsPrefilledEmail(true);
-    setIsPrefilledPassword(true);
-    
-    if (credentials.name) {
-      setName(credentials.name);
+    // Clear any previous credentials so the user always types their own
+    setEmail('');
+    setPassword('');
+    setName('');
+    setErrors({});
+
+    if (role === 'Teacher') {
       setShowNameField(true);
-      setIsPrefilledName(true);
-      setPlaceholder('Enter your ID or roll number');
+      setPlaceholder('Enter your Employee ID');
+    } else if (role === 'Student') {
+      setShowNameField(true);
+      setPlaceholder('Enter your Roll Number');
     } else {
-      setName('');
       setShowNameField(false);
-      setIsPrefilledName(false);
       setPlaceholder('Enter your email');
     }
-    
-    setErrors({});
   };
 
   const performSignIn = async (identifier: string, pwd: string, fullName?: string) => {
@@ -148,6 +142,15 @@ export default function SignInPage({ onBack }: SignInPageProps) {
         setIsLoading(false);
         setErrors({
           general: 'Super Admin accounts cannot sign in here. Please visit /superadmin to access the Super Admin portal.',
+        });
+        await fetch('/api/auth/signout', { method: 'POST' });
+        return;
+      }
+
+      if (selectedRole && session?.user?.role !== selectedRole) {
+        setIsLoading(false);
+        setErrors({
+          general: `These credentials belong to a ${session?.user?.role} account. Please select "${session?.user?.role}" and try again.`,
         });
         await fetch('/api/auth/signout', { method: 'POST' });
         return;
@@ -238,7 +241,9 @@ export default function SignInPage({ onBack }: SignInPageProps) {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email / Username / Roll Number</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {selectedRole === 'Teacher' ? 'Employee ID' : selectedRole === 'Student' ? 'Roll Number' : 'Email'}
+                </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
@@ -246,15 +251,9 @@ export default function SignInPage({ onBack }: SignInPageProps) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={!fieldsEnabled}
-                    onFocus={() => {
-                      if (isPrefilledEmail) {
-                        setEmail('');
-                        setIsPrefilledEmail(false);
-                      }
-                    }}
-                    className={`w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all ${
+                    className={`w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 ${
                       !fieldsEnabled ? 'bg-gray-100 cursor-not-allowed opacity-60' : 'bg-white'
-                    } ${isPrefilledEmail ? 'text-gray-400' : 'text-gray-900'}`}
+                    }`}
                     placeholder={fieldsEnabled ? placeholder : 'Select a role below to enable'}
                   />
                 </div>
@@ -271,16 +270,10 @@ export default function SignInPage({ onBack }: SignInPageProps) {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       disabled={!fieldsEnabled}
-                      onFocus={() => {
-                        if (isPrefilledName) {
-                          setName('');
-                          setIsPrefilledName(false);
-                        }
-                      }}
-                      className={`w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all ${
+                      className={`w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 ${
                         !fieldsEnabled ? 'bg-gray-100 cursor-not-allowed opacity-60' : 'bg-white'
-                      } ${isPrefilledName ? 'text-gray-400' : 'text-gray-900'}`}
-                      placeholder={fieldsEnabled ? namePlaceholder : 'Select a role below to enable'}
+                      }`}
+                      placeholder="Enter your full name"
                     />
                   </div>
                 </div>
@@ -295,15 +288,9 @@ export default function SignInPage({ onBack }: SignInPageProps) {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={!fieldsEnabled}
-                    onFocus={() => {
-                      if (isPrefilledPassword) {
-                        setPassword('');
-                        setIsPrefilledPassword(false);
-                      }
-                    }}
-                    className={`w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all ${
+                    className={`w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 ${
                       !fieldsEnabled ? 'bg-gray-100 cursor-not-allowed opacity-60' : 'bg-white'
-                    } ${isPrefilledPassword ? 'text-gray-400' : 'text-gray-900'}`}
+                    }`}
                     placeholder={fieldsEnabled ? 'Enter your password' : 'Select a role below to enable'}
                   />
                   <button
@@ -337,29 +324,26 @@ export default function SignInPage({ onBack }: SignInPageProps) {
 
               {/* Quick Role-Based Sign In Buttons */}
               <div className="mt-6 pt-6 border-t border-gray-200">
-                <p className="text-xs text-gray-500 text-center mb-3">Quick Sign In As</p>
+                <p className="text-xs text-gray-500 text-center mb-3">Select your role to sign in</p>
                 <div className="grid grid-cols-3 gap-2 mb-2">
                   <button
                     type="button"
                     disabled={isLoading}
-                    onClick={() => handleRoleSelection('InstituteAdmin', { 
-                      email: 'institute@example.com', 
-                      password: 'Test@123' 
-                    })}
+                    onClick={() => handleRoleSelection('InstituteAdmin')}
                     className={`group relative px-2 py-2 bg-white border-2 rounded-lg transition-all duration-200 flex flex-col items-center justify-center gap-1 shadow-sm hover:shadow-md disabled:opacity-50 ${
-                      selectedRole === 'InstituteAdmin' 
-                        ? 'border-emerald-500 bg-emerald-50' 
+                      selectedRole === 'InstituteAdmin'
+                        ? 'border-emerald-500 bg-emerald-50'
                         : 'border-gray-200 hover:border-emerald-500 hover:bg-emerald-50'
                     }`}
                   >
                     <Building2 className={`w-4 h-4 transition-colors ${
-                      selectedRole === 'InstituteAdmin' 
-                        ? 'text-emerald-600' 
+                      selectedRole === 'InstituteAdmin'
+                        ? 'text-emerald-600'
                         : 'text-gray-600 group-hover:text-emerald-600'
                     }`} />
                     <span className={`text-[10px] font-medium transition-colors leading-tight text-center ${
-                      selectedRole === 'InstituteAdmin' 
-                        ? 'text-emerald-700' 
+                      selectedRole === 'InstituteAdmin'
+                        ? 'text-emerald-700'
                         : 'text-gray-700 group-hover:text-emerald-700'
                     }`}>Institute Admin</span>
                   </button>
@@ -367,24 +351,21 @@ export default function SignInPage({ onBack }: SignInPageProps) {
                   <button
                     type="button"
                     disabled={isLoading}
-                    onClick={() => handleRoleSelection('BranchAdmin', { 
-                      email: 'branch@example.com', 
-                      password: 'Test@123' 
-                    })}
+                    onClick={() => handleRoleSelection('BranchAdmin')}
                     className={`group relative px-2 py-2 bg-white border-2 rounded-lg transition-all duration-200 flex flex-col items-center justify-center gap-1 shadow-sm hover:shadow-md disabled:opacity-50 ${
-                      selectedRole === 'BranchAdmin' 
-                        ? 'border-blue-500 bg-blue-50' 
+                      selectedRole === 'BranchAdmin'
+                        ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50'
                     }`}
                   >
                     <Building className={`w-4 h-4 transition-colors ${
-                      selectedRole === 'BranchAdmin' 
-                        ? 'text-blue-600' 
+                      selectedRole === 'BranchAdmin'
+                        ? 'text-blue-600'
                         : 'text-gray-600 group-hover:text-blue-600'
                     }`} />
                     <span className={`text-[10px] font-medium transition-colors leading-tight text-center ${
-                      selectedRole === 'BranchAdmin' 
-                        ? 'text-blue-700' 
+                      selectedRole === 'BranchAdmin'
+                        ? 'text-blue-700'
                         : 'text-gray-700 group-hover:text-blue-700'
                     }`}>Branch Admin</span>
                   </button>
@@ -392,25 +373,21 @@ export default function SignInPage({ onBack }: SignInPageProps) {
                   <button
                     type="button"
                     disabled={isLoading}
-                    onClick={() => handleRoleSelection('Teacher', { 
-                      email: 'T0001', 
-                      password: 'Test@123', 
-                      name: 'Test Teacher' 
-                    })}
+                    onClick={() => handleRoleSelection('Teacher')}
                     className={`group relative px-2 py-2 bg-white border-2 rounded-lg transition-all duration-200 flex flex-col items-center justify-center gap-1 shadow-sm hover:shadow-md disabled:opacity-50 ${
-                      selectedRole === 'Teacher' 
-                        ? 'border-purple-500 bg-purple-50' 
+                      selectedRole === 'Teacher'
+                        ? 'border-purple-500 bg-purple-50'
                         : 'border-gray-200 hover:border-purple-500 hover:bg-purple-50'
                     }`}
                   >
                     <GraduationCap className={`w-4 h-4 transition-colors ${
-                      selectedRole === 'Teacher' 
-                        ? 'text-purple-600' 
+                      selectedRole === 'Teacher'
+                        ? 'text-purple-600'
                         : 'text-gray-600 group-hover:text-purple-600'
                     }`} />
                     <span className={`text-[10px] font-medium transition-colors leading-tight text-center ${
-                      selectedRole === 'Teacher' 
-                        ? 'text-purple-700' 
+                      selectedRole === 'Teacher'
+                        ? 'text-purple-700'
                         : 'text-gray-700 group-hover:text-purple-700'
                     }`}>Teacher</span>
                   </button>
@@ -419,25 +396,21 @@ export default function SignInPage({ onBack }: SignInPageProps) {
                 <button
                   type="button"
                   disabled={isLoading}
-                  onClick={() => handleRoleSelection('Student', { 
-                    email: 'S0001', 
-                    password: 'Test@123', 
-                    name: 'Test Student' 
-                  })}
+                  onClick={() => handleRoleSelection('Student')}
                   className={`group w-full px-2 py-2 bg-white border-2 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 ${
-                    selectedRole === 'Student' 
-                      ? 'border-orange-500 bg-orange-50' 
+                    selectedRole === 'Student'
+                      ? 'border-orange-500 bg-orange-50'
                       : 'border-gray-200 hover:border-orange-500 hover:bg-orange-50'
                   }`}
                 >
                   <User className={`w-4 h-4 transition-colors ${
-                    selectedRole === 'Student' 
-                      ? 'text-orange-600' 
+                    selectedRole === 'Student'
+                      ? 'text-orange-600'
                       : 'text-gray-600 group-hover:text-orange-600'
                   }`} />
                   <span className={`text-[10px] font-medium transition-colors ${
-                    selectedRole === 'Student' 
-                      ? 'text-orange-700' 
+                    selectedRole === 'Student'
+                      ? 'text-orange-700'
                       : 'text-gray-700 group-hover:text-orange-700'
                   }`}>Student</span>
                 </button>

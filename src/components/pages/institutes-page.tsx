@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useAppStore } from "@/store/app-store";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,7 @@ const emptyForm = {
 };
 
 export function InstitutesPage() {
-  const { data: session } = useSession();
+  const currentUser = useAppStore((s) => s.currentUser);
   const [institutes, setInstitutes] = useState<InstituteRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -71,7 +71,7 @@ export function InstitutesPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
-  const callerRole = session?.user?.role;
+  const callerRole = currentUser?.role;
 
   const fetchInstitutes = useCallback(async () => {
     if (callerRole && callerRole !== "SuperAdmin") {

@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
 import { useAppStore } from "@/store/app-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import {
-  Building2, MapPin, Users, GraduationCap, Activity,
-  CheckCircle2, BookOpen, Loader2, ArrowRight,
+  Building2, MapPin, Users, GraduationCap,
+  CheckCircle2, BookOpen, Loader2, ArrowRight, RefreshCw, AlertCircle,
 } from "lucide-react";
 
 interface InstituteRow {
@@ -23,29 +21,31 @@ interface InstituteRow {
 }
 
 export function SuperAdminDashboard() {
-  const { data: session } = useSession();
   const currentUser = useAppStore((s) => s.currentUser);
   const setPage = useAppStore((s) => s.setCurrentPage);
 
   const [institutes, setInstitutes] = useState<InstituteRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  const callerRole = session?.user?.role;
+  const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (callerRole && callerRole !== "SuperAdmin") {
-      setIsLoading(false);
-      return;
-    }
+    setIsLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/institutes");
       if (res.ok) {
         const json = await res.json();
         setInstitutes(json.data ?? []);
+      } else {
+        const json = await res.json().catch(() => ({}));
+        setError(json.error ?? `Server error ${res.status}`);
       }
-    } catch { /* silent */ }
-    finally { setIsLoading(false); }
-  }, [callerRole]);
+    } catch (e) {
+      setError("Network error — please check your connection");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -56,10 +56,29 @@ export function SuperAdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Welcome back, {currentUser?.name?.split(" ")[0]}</h1>
-        <p className="text-muted-foreground mt-1">Platform overview — all institutes at a glance</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Welcome back, {currentUser?.name?.split(" ")[0]}</h1>
+          <p className="text-muted-foreground mt-1">Platform overview — all institutes at a glance</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={fetchData} disabled={isLoading}>
+          <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />Refresh
+        </Button>
       </div>
+
+      {/* Error State */}
+      {error && (
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-800">
+          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-red-800 dark:text-red-300">Failed to load institutes</p>
+            <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">{error}</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={fetchData} className="border-red-300 text-red-700 hover:bg-red-100">
+            Retry
+          </Button>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">

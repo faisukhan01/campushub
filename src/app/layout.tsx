@@ -20,7 +20,8 @@ export const metadata: Metadata = {
   keywords: ["CampusHub", "Campus Management", "Education", "Institute", "University", "Next.js"],
   authors: [{ name: "CampusHub Team" }],
   icons: {
-    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>',
+    icon: '/logo.png',
+    apple: '/logo.png',
   },
   openGraph: {
     title: "CampusHub",

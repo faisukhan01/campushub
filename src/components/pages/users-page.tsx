@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useAppStore } from "@/store/app-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -88,8 +88,8 @@ interface EditUserForm {
 const emptyForm = { name: "", email: "", password: "", role: "", phone: "", instituteId: "", branchId: "", employeeId: "", rollNumber: "", classLevel: "" };
 
 export function UsersPage() {
-  const { data: session } = useSession();
-  const callerRole = session?.user?.role as string | undefined;
+  const currentUser = useAppStore((s) => s.currentUser);
+  const callerRole = currentUser?.role as string | undefined;
 
   const [users, setUsers] = useState<ApiUser[]>([]);
   const [roleDistribution, setRoleDistribution] = useState<Record<string, number>>({});

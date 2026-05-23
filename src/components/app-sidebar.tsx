@@ -4,7 +4,7 @@ import React from "react";
 import { useAppStore } from "@/store/app-store";
 import { getIcon } from "@/lib/icon-map";
 import { cn } from "@/lib/utils";
-import { LogOut, Sparkles } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 import {
   Sidebar,
@@ -129,12 +129,10 @@ export function AppSidebar() {
       {/* ── Brand Header ── */}
       <SidebarHeader className="border-0 p-0 gap-0">
         <div className="bg-gradient-to-br from-emerald-600 to-teal-600 px-4 h-14 flex items-center border-b-2 border-emerald-500/40">
-          <div className="flex items-center gap-3 w-full group-data-[collapsible=icon]:justify-center">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/15 backdrop-blur-sm">
-              <Sparkles className="h-4.5 w-4.5 text-white" />
-            </div>
+          <div className="flex items-center gap-1 w-full group-data-[collapsible=icon]:justify-center">
+            <img src="/logo.png" alt="CampusHub" className="h-12 w-12 shrink-0 object-contain" />
             <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-              <h2 className="text-[15px] font-bold tracking-tight text-white truncate leading-tight">
+              <h2 className="text-[17px] font-bold tracking-tight text-white truncate leading-tight">
                 CampusHub
               </h2>
               <p className="text-[11px] text-emerald-100/80 truncate leading-tight mt-0.5">

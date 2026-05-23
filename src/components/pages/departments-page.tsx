@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw, FolderTree } from "lucide-react";
 
 export function DepartmentsPage() {
-  const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
 
   return (

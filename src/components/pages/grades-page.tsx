@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw, Award } from "lucide-react";
@@ -14,7 +13,6 @@ interface CourseOption {
 }
 
 export function GradesPage() {
-  const { data: session } = useSession();
   const [courses, setCourses] = useState<CourseOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 

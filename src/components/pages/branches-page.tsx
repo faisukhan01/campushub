@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useAppStore } from "@/store/app-store";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -69,8 +69,8 @@ interface EditFormData {
 }
 
 export function BranchesPage() {
-  const { data: session } = useSession();
-  const callerRole = session?.user?.role as string | undefined;
+  const currentUser = useAppStore((s) => s.currentUser);
+  const callerRole = currentUser?.role as string | undefined;
 
   const [branches, setBranches] = useState<BranchRecord[]>([]);
   const [institutes, setInstitutes] = useState<InstituteOption[]>([]);

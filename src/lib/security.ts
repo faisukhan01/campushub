@@ -3,7 +3,8 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 
 /**
  * Rate limiting store (in-memory for development, use Redis in production)
@@ -55,20 +56,20 @@ export async function verifySuperAdminAccess(request: NextRequest): Promise<{
   error?: string;
 }> {
   try {
-    // Get authentication token
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    // Use getServerSession which relies on authOptions.secret (not raw env var)
+    // This is the recommended App Router approach and handles all secret sources
+    const session = await getServerSession(authOptions);
 
-    if (!token) {
-      return { authorized: false, error: 'Unauthorized - No token' };
+    if (!session?.user) {
+      return { authorized: false, error: 'Unauthorized - No session' };
     }
 
     // Verify SuperAdmin role
-    if (token.role !== 'SuperAdmin') {
-      // Log unauthorized access attempt
+    if (session.user.role !== 'SuperAdmin') {
       console.warn(`[SECURITY] Unauthorized SuperAdmin access attempt:`, {
-        userId: token.userId,
-        email: token.email,
-        role: token.role,
+        userId: session.user.id,
+        email: session.user.email,
+        role: session.user.role,
         ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
         timestamp: new Date().toISOString(),
       });
@@ -76,13 +77,13 @@ export async function verifySuperAdminAccess(request: NextRequest): Promise<{
     }
 
     // Rate limiting for SuperAdmin actions
-    const identifier = `superadmin_${token.userId}`;
+    const identifier = `superadmin_${session.user.id}`;
     const rateCheck = rateLimit(identifier, 100, 60 * 1000); // 100 requests per minute
 
     if (!rateCheck.allowed) {
       console.warn(`[SECURITY] Rate limit exceeded for SuperAdmin:`, {
-        userId: token.userId,
-        email: token.email,
+        userId: session.user.id,
+        email: session.user.email,
         resetTime: new Date(rateCheck.resetTime).toISOString(),
       });
       return { authorized: false, error: 'Rate limit exceeded' };
@@ -90,8 +91,8 @@ export async function verifySuperAdminAccess(request: NextRequest): Promise<{
 
     return {
       authorized: true,
-      userId: token.userId as string,
-      email: token.email as string,
+      userId: session.user.id,
+      email: session.user.email ?? undefined,
     };
   } catch (error) {
     console.error('[SECURITY] Error verifying SuperAdmin access:', error);

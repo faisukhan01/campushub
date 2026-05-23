@@ -1,5 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 import { db } from '@/lib/db'
+
+export async function POST(request: NextRequest) {
+  try {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!['Teacher', 'BranchAdmin', 'InstituteAdmin', 'SuperAdmin'].includes(token.role as string)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const { courseId, date, records } = body
+
+    if (!courseId || !date || !records || !Array.isArray(records) || records.length === 0) {
+      return NextResponse.json({ error: 'courseId, date and records are required' }, { status: 400 })
+    }
+
+    const markerId = (token.userId ?? token.sub) as string
+    if (!markerId) return NextResponse.json({ error: 'Cannot identify teacher' }, { status: 401 })
+
+    const session = await db.attendanceSession.create({
+      data: {
+        courseId,
+        date: new Date(date),
+        markedBy: markerId,
+        records: {
+          create: records.map((r: { studentId: string; status?: string; comment?: string }) => ({
+            studentId: r.studentId,
+            status: r.status ?? 'Present',
+            comment: r.comment ?? '',
+          })),
+        },
+      },
+      include: { records: { select: { id: true, studentId: true, status: true } } },
+    })
+
+    return NextResponse.json({ success: true, data: session }, { status: 201 })
+  } catch (error) {
+    console.error('POST /api/attendance error:', error)
+    return NextResponse.json({ success: false, error: 'Failed to mark attendance' }, { status: 500 })
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {

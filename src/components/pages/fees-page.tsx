@@ -1,11 +1,11 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { DollarSign } from "lucide-react";
+import { useAppStore } from "@/store/app-store";
 
 export function FeesPage() {
-  const { data: session } = useSession();
-  const role = session?.user?.role;
+  const currentUser = useAppStore((s) => s.currentUser);
+  const role = currentUser?.role;
 
   return (
     <div className="space-y-6 page-transition">

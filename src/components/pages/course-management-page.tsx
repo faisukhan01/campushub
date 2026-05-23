@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useAppStore } from "@/store/app-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -67,18 +67,8 @@ const CLASSES = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
 const SUBJECT_TYPES = ["Core", "Elective", "Lab", "Project", "Extra-Curricular"];
 
 export function CourseManagementPage() {
-  const { data: session, status } = useSession();
-  const callerRole = session?.user?.role as string | undefined;
-
-  // Show loading while session is being fetched
-  if (status === "loading") {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mr-2" />
-        <span className="text-sm text-muted-foreground">Loading...</span>
-      </div>
-    );
-  }
+  const currentUser = useAppStore((s) => s.currentUser);
+  const callerRole = currentUser?.role as string | undefined;
 
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [courses, setCourses] = useState<Course[]>([]);

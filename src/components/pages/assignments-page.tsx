@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw, FileText } from "lucide-react";
 
 interface CourseOption { id: string; code: string; title: string }
 
 export function AssignmentsPage() {
-  const { data: session } = useSession();
   const [courses, setCourses] = useState<CourseOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 

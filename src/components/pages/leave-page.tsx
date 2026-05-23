@@ -1,10 +1,8 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { CalendarOff } from "lucide-react";
 
 export function LeavePage() {
-  const { data: session } = useSession();
   return (
     <div className="space-y-6 page-transition">
       <div>

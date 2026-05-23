@@ -3,8 +3,6 @@
 import { useRef } from "react";
 import {
   motion,
-  useScroll,
-  useTransform,
   useInView,
   AnimatePresence,
 } from "framer-motion";
@@ -17,7 +15,7 @@ import {
   BookOpen,
   MessageSquare,
   BarChart3,
-  Sparkles,
+
   Shield,
   Zap,
   Globe,
@@ -266,13 +264,6 @@ const pricingPlans = [
 
 export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const heroRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"],
-  });
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 150]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   // Close mobile menu on resize
   useEffect(() => {
@@ -307,11 +298,9 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
         <nav className="mx-auto max-w-6xl px-6">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-sm shadow-emerald-500/20">
-                <Sparkles className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="text-[15px] font-semibold tracking-tight">
+            <div className="flex items-center gap-1">
+              <img src="/logo.png" alt="CampusHub" className="w-11 h-11 object-contain" />
+              <span className="text-[17px] font-semibold tracking-tight">
                 CampusHub
               </span>
             </div>
@@ -411,51 +400,30 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
       </motion.header>
 
       {/* ─── HERO ─── */}
-      <motion.section
-        ref={heroRef}
-        style={{ y: heroY, opacity: heroOpacity }}
-        className="relative pt-32 pb-20 sm:pt-40 sm:pb-28 overflow-hidden"
-      >
-        {/* Animated gradient orbs */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <motion.div
-            animate={{
-              x: [0, 30, -20, 0],
-              y: [0, -40, 20, 0],
-              scale: [1, 1.1, 0.95, 1],
-            }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-emerald-100/60 to-teal-100/40 blur-3xl"
-          />
-          <motion.div
-            animate={{
-              x: [0, -30, 20, 0],
-              y: [0, 30, -20, 0],
-              scale: [1, 0.95, 1.1, 1],
-            }}
-            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-            className="absolute -bottom-32 -left-32 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-blue-100/50 to-indigo-100/40 blur-3xl"
-          />
-          <motion.div
-            animate={{
-              x: [0, 20, -30, 0],
-              y: [0, -20, 30, 0],
-            }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-gradient-to-br from-amber-50/40 to-orange-50/30 blur-3xl"
-          />
-        </div>
+      <section className="relative min-h-[90vh] flex flex-col justify-center pt-24 pb-24 sm:pt-32 sm:pb-32 overflow-hidden">
+        {/* Video background */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          onCanPlay={(e) => { (e.currentTarget as HTMLVideoElement).playbackRate = 0.4; }}
+          className="absolute inset-0 w-full h-full object-cover"
+          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260511_131941_d136af49-e243-493a-be14-6ff3f24e09e6.mp4"
+        />
+        {/* Overlay — dark enough to read, light enough to see the video */}
+        <div className="absolute inset-0 bg-black/45 pointer-events-none" />
 
-        <div className="relative mx-auto max-w-6xl px-6 text-center">
+        <div className="relative mx-auto max-w-6xl px-5 sm:px-6 text-center">
           {/* Badge */}
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-8"
+            className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-white/10 border border-white/20 mb-6 sm:mb-8 backdrop-blur-sm"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-medium text-emerald-700">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+            <span className="text-[11px] sm:text-xs font-medium text-emerald-300 whitespace-nowrap">
               Now available &mdash; 1 month free trial
             </span>
           </motion.div>
@@ -465,13 +433,12 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="mx-auto max-w-4xl text-4xl sm:text-5xl md:text-6xl lg:text-[68px] font-bold tracking-tight leading-[1.08]"
+            className="mx-auto max-w-4xl text-[28px] sm:text-[46px] md:text-[58px] lg:text-[68px] font-bold tracking-tight leading-[1.13] sm:leading-[1.08] text-white drop-shadow-lg"
           >
             The campus management
             <br />
-            platform{" "}
-            <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 bg-clip-text text-transparent">
-              that just works.
+            <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">
+              platform that just works.
             </span>
           </motion.h1>
 
@@ -480,11 +447,9 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="mx-auto mt-6 max-w-2xl text-base sm:text-lg leading-relaxed text-slate-500"
+            className="mx-auto mt-5 sm:mt-6 max-w-[290px] sm:max-w-lg md:max-w-2xl text-[13.5px] sm:text-base md:text-lg leading-[1.7] text-white/65 sm:text-white/75"
           >
-            From attendance to analytics, fees to communication — manage every
-            aspect of your educational institution from one powerful, intuitive
-            platform.
+            Manage attendance, grades, fees, and communication — all from one powerful, intuitive platform.
           </motion.p>
 
           {/* CTA buttons */}
@@ -492,16 +457,16 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.3 }}
-            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3"
+            className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3"
           >
             <button
               onClick={onGoToSignUp}
               className={cn(
-                "group flex items-center gap-2 px-8 py-3 rounded-xl",
-                "bg-slate-900 text-white font-medium text-[15px]",
-                "hover:bg-slate-800 shadow-lg shadow-slate-900/15",
+                "group flex items-center justify-center gap-2 px-8 py-3.5 sm:py-3 rounded-xl",
+                "bg-emerald-500 text-white font-medium text-[15px]",
+                "hover:bg-emerald-400 shadow-lg shadow-emerald-500/30",
                 "transition-all duration-300",
-                "hover:shadow-xl hover:shadow-slate-900/20"
+                "hover:shadow-xl hover:shadow-emerald-500/40"
               )}
             >
               Start Free Trial
@@ -510,24 +475,29 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
             <button
               onClick={onGoToSignIn}
               className={cn(
-                "flex items-center gap-2 px-8 py-3 rounded-xl",
-                "bg-white text-slate-700 font-medium text-[15px]",
-                "border border-slate-200 hover:border-slate-300 hover:bg-slate-50",
-                "transition-all duration-300"
+                "flex items-center justify-center gap-2 px-8 py-3.5 sm:py-3 rounded-xl",
+                "bg-white/10 text-white font-medium text-[15px]",
+                "border border-white/25 hover:bg-white/20 hover:border-white/40",
+                "backdrop-blur-sm transition-all duration-300"
               )}
             >
               Sign in
             </button>
           </motion.div>
 
-          {/* Product screenshot mockup */}
+        </div>
+      </section>
+
+      {/* ─── DASHBOARD PREVIEW ─── */}
+      <section className="py-12 sm:py-20 bg-white">
+        <div className="mx-auto max-w-5xl px-6">
           <motion.div
             initial={{ y: 60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.9, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-16 sm:mt-20 relative"
+            transition={{ duration: 0.9, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="relative"
           >
-            <div className="relative mx-auto max-w-4xl rounded-xl sm:rounded-2xl border border-slate-200 bg-slate-50 shadow-2xl shadow-slate-900/10 overflow-hidden">
+            <div className="relative mx-auto rounded-xl sm:rounded-2xl border border-slate-200 bg-slate-50 shadow-2xl shadow-slate-900/10 overflow-hidden">
               {/* Browser chrome */}
               <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-200 bg-white">
                 <div className="flex gap-1.5">
@@ -569,7 +539,7 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
                       key={stat.label}
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.8 + Math.random() * 0.3 }}
+                      transition={{ delay: 0.4 + Math.random() * 0.3 }}
                       className="bg-white rounded-xl p-3 sm:p-4 border border-slate-100 shadow-sm"
                     >
                       <div className="flex items-center gap-2 mb-2">
@@ -587,86 +557,38 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
                 {/* Chart area */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="sm:col-span-2 bg-white rounded-xl p-4 border border-slate-100 shadow-sm h-40 sm:h-48 flex items-end justify-between gap-1">
-                    {[35, 52, 48, 70, 65, 82, 78, 90, 85, 95, 88, 92].map(
-                      (h, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ height: 0 }}
-                          animate={{ height: `${h}%` }}
-                          transition={{
-                            delay: 1 + i * 0.05,
-                            duration: 0.5,
-                            ease: [0.22, 1, 0.36, 1],
-                          }}
-                          className="flex-1 rounded-t bg-gradient-to-t from-emerald-500 to-emerald-400 opacity-80"
-                        />
-                      )
-                    )}
+                    {[35, 52, 48, 70, 65, 82, 78, 90, 85, 95, 88, 92].map((h, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ height: 0 }}
+                        animate={{ height: `${h}%` }}
+                        transition={{ delay: 0.6 + i * 0.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                        className="flex-1 rounded-t bg-gradient-to-t from-emerald-500 to-emerald-400 opacity-80"
+                      />
+                    ))}
                   </div>
                   <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm h-40 sm:h-48 flex flex-col items-center justify-center">
                     <div className="relative w-20 h-20 sm:w-24 sm:h-24">
                       <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                        <circle
-                          cx="18"
-                          cy="18"
-                          r="15"
-                          fill="none"
-                          stroke="#f1f5f9"
-                          strokeWidth="3"
-                        />
+                        <circle cx="18" cy="18" r="15" fill="none" stroke="#f1f5f9" strokeWidth="3" />
                         <motion.circle
-                          cx="18"
-                          cy="18"
-                          r="15"
-                          fill="none"
-                          stroke="#059669"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          strokeDasharray="94.2"
+                          cx="18" cy="18" r="15" fill="none" stroke="#059669"
+                          strokeWidth="3" strokeLinecap="round" strokeDasharray="94.2"
                           initial={{ strokeDashoffset: 94.2 }}
                           animate={{ strokeDashoffset: 5.6 }}
-                          transition={{ delay: 1.2, duration: 0.8 }}
+                          transition={{ delay: 0.8, duration: 0.8 }}
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-sm sm:text-base font-bold text-slate-900">
-                          94%
-                        </span>
+                        <span className="text-sm sm:text-base font-bold text-slate-900">94%</span>
                       </div>
                     </div>
-                    <span className="text-[10px] sm:text-xs text-slate-400 mt-2">
-                      Attendance
-                    </span>
+                    <span className="text-[10px] sm:text-xs text-slate-400 mt-2">Attendance</span>
                   </div>
                 </div>
               </div>
             </div>
-            {/* Fade out bottom */}
-            <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent" />
           </motion.div>
-        </div>
-      </motion.section>
-
-      {/* ─── CAPABILITIES STRIP ─── */}
-      <section className="border-y border-slate-100 bg-slate-50/50 py-8 sm:py-10">
-        <div className="mx-auto max-w-6xl px-6">
-          <StaggerContainer className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-            {capabilities.map((cap) => {
-              const Icon = cap.icon;
-              return (
-                <StaggerItem key={cap.label}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-                      <Icon className="w-4 h-4 text-slate-600" />
-                    </div>
-                    <span className="text-sm font-medium text-slate-700">
-                      {cap.label}
-                    </span>
-                  </div>
-                </StaggerItem>
-              );
-            })}
-          </StaggerContainer>
         </div>
       </section>
 
@@ -897,11 +819,9 @@ export function LandingPage({ onGoToSignIn, onGoToSignUp }: LandingPageProps) {
           <div className="grid grid-cols-2 gap-10 md:grid-cols-4">
             {/* Brand */}
             <div className="col-span-2 md:col-span-1">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-                  <Sparkles className="w-3.5 h-3.5 text-white" />
-                </div>
-                <span className="text-[15px] font-semibold tracking-tight">
+              <div className="flex items-center gap-1 mb-4">
+                <img src="/logo.png" alt="CampusHub" className="w-11 h-11 object-contain" />
+                <span className="text-[17px] font-semibold tracking-tight">
                   CampusHub
                 </span>
               </div>

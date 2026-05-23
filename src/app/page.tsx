@@ -33,6 +33,8 @@ import { TeachersPage } from "@/components/pages/teachers-page";
 import { CalendarPage } from "@/components/pages/calendar-page";
 import { SubscriptionPage } from "@/components/pages/subscription-page";
 import { UserSettingsPage } from "@/components/pages/user-settings-page";
+import { SchoolClassesPage } from "@/components/pages/school-classes-page";
+import { TeacherClassesPage } from "@/components/pages/teacher-classes-page";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { TabIndicator } from "@/components/tab-indicator";
@@ -61,6 +63,8 @@ const pageComponents: Record<string, React.ComponentType> = {
   calendar: CalendarPage,
   subscription: SubscriptionPage,
   "user-settings": UserSettingsPage,
+  "school-classes": SchoolClassesPage,
+  "teacher-classes": TeacherClassesPage,
 };
 
 function AppShell() {
@@ -122,7 +126,7 @@ function AppShell() {
 type UnauthView = "landing" | "signin";
 
 export default function Home() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
   const login = useAppStore((s) => s.login);
   const logout = useAppStore((s) => s.logout);
@@ -148,28 +152,22 @@ export default function Home() {
     // Check if this tab already has a session
     const tabUser = typeof window !== 'undefined' ? getTabUser() : null;
 
-    // If this tab has a session, validate it then use it
+    // If this tab has a session, it is authoritative — use it unconditionally.
+    // Never invalidate it based on the shared NextAuth cookie (another tab may have changed it).
     if (tabUser) {
-      // If NextAuth shows a completely different user the tab session is stale — clear it
-      if (status === "authenticated" && session?.user && tabUser.email !== session.user.email) {
-        clearTabUser();
-        // Fall through — no valid tab session, show sign-in page
-      } else {
-        // Tab session is good — log in from it and stop here
-        if (!isAuthenticated || useAppStore.getState().currentUser?.id !== tabUser.id) {
-          login({
-            id: tabUser.id,
-            name: tabUser.name,
-            email: tabUser.email,
-            role: tabUser.role as UserRole,
-            instituteId: tabUser.instituteId,
-            branchId: tabUser.branchId,
-            classLevel: tabUser.classLevel,
-            section: tabUser.section,
-          });
-        }
-        return;
+      if (!isAuthenticated || useAppStore.getState().currentUser?.id !== tabUser.id) {
+        login({
+          id: tabUser.id,
+          name: tabUser.name,
+          email: tabUser.email,
+          role: tabUser.role as UserRole,
+          instituteId: tabUser.instituteId,
+          branchId: tabUser.branchId,
+          classLevel: tabUser.classLevel,
+          section: tabUser.section,
+        });
       }
+      return;
     }
 
     // No tab session for this tab — show sign-in page.

@@ -1,10 +1,8 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { Heart } from "lucide-react";
 
 export function ChildrenPage() {
-  const { data: session } = useSession();
   return (
     <div className="space-y-6 page-transition">
       <div>

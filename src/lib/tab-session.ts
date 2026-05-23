@@ -1,59 +1,95 @@
 /**
- * Tab-specific session management
- * Allows different users to be logged in on different tabs
+ * Tab-specific session management.
+ * Allows different users to be logged in on different browser tabs.
+ *
+ * Key guarantee: when a browser opens a new tab from an existing one
+ * (right-click → "Open in new tab", Ctrl+click, window.open), Chrome/Edge
+ * copies sessionStorage into the child tab.  We break that inheritance on
+ * every non-reload navigation so every new tab starts anonymous.
  */
 
 const TAB_SESSION_KEY = 'tab_session_id';
 const TAB_USER_KEY = 'tab_user_data';
 
-// Check if we're in browser environment
 const isBrowser = typeof window !== 'undefined';
 
-// Generate unique tab ID
-export function getTabId(): string {
-  if (!isBrowser) return '';
-  
-  // Check if tab already has an ID in sessionStorage
-  let tabId = sessionStorage.getItem(TAB_SESSION_KEY);
-  
-  if (!tabId) {
-    // Generate new unique ID for this tab
-    tabId = `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    sessionStorage.setItem(TAB_SESSION_KEY, tabId);
+// Module-level cache so getTabId() is idempotent within one page lifetime.
+let _cachedTabId: string | null = null;
+
+function isPageReload(): boolean {
+  try {
+    // Modern API (supported in all evergreen browsers)
+    const nav = performance.getEntriesByType(
+      'navigation'
+    )[0] as PerformanceNavigationTiming | undefined;
+    if (nav) return nav.type === 'reload' || nav.type === 'back_forward';
+
+    // Deprecated fallback for older browsers
+    if (typeof performance !== 'undefined' && performance.navigation) {
+      // 1 = reload, 2 = back/forward
+      return performance.navigation.type === 1 || performance.navigation.type === 2;
+    }
+  } catch {
+    // Ignore — treat as new navigation
   }
-  
-  return tabId;
+  return false;
 }
 
-// Store user data for this specific tab
+/**
+ * Returns the unique ID for this browser tab.
+ *
+ * On a reload the existing ID is kept so the signed-in session survives.
+ * On any other navigation (fresh tab, link open, typed URL) a new ID is
+ * generated and any inherited sessionStorage data is cleared.
+ */
+export function getTabId(): string {
+  if (!isBrowser) return '';
+
+  // Return cached value for the current page lifetime.
+  if (_cachedTabId) return _cachedTabId;
+
+  const stored = sessionStorage.getItem(TAB_SESSION_KEY);
+  const reload = isPageReload();
+
+  if (stored && reload) {
+    // Reload of an existing tab — keep the session.
+    _cachedTabId = stored;
+  } else {
+    // New tab, fresh navigation, or inherited sessionStorage — start clean.
+    if (stored) {
+      // Remove any user data that may have been copied from a parent tab.
+      sessionStorage.removeItem(`${TAB_USER_KEY}_${stored}`);
+    }
+    _cachedTabId = `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    sessionStorage.setItem(TAB_SESSION_KEY, _cachedTabId);
+  }
+
+  return _cachedTabId;
+}
+
+/** Store user data for this specific tab. */
 export function setTabUser(userData: any) {
   if (!isBrowser) return;
-  
-  const tabId = getTabId();
-  const key = `${TAB_USER_KEY}_${tabId}`;
+  const key = `${TAB_USER_KEY}_${getTabId()}`;
   sessionStorage.setItem(key, JSON.stringify(userData));
 }
 
-// Get user data for this specific tab
+/** Get user data for this specific tab. Returns null if not signed in. */
 export function getTabUser() {
   if (!isBrowser) return null;
-  
-  const tabId = getTabId();
-  const key = `${TAB_USER_KEY}_${tabId}`;
+  const key = `${TAB_USER_KEY}_${getTabId()}`;
   const data = sessionStorage.getItem(key);
   return data ? JSON.parse(data) : null;
 }
 
-// Clear user data for this specific tab
+/** Clear user data for this specific tab (sign-out). */
 export function clearTabUser() {
   if (!isBrowser) return;
-  
-  const tabId = getTabId();
-  const key = `${TAB_USER_KEY}_${tabId}`;
+  const key = `${TAB_USER_KEY}_${getTabId()}`;
   sessionStorage.removeItem(key);
 }
 
-// Check if this tab has an active session
+/** True when this tab has an active session. */
 export function hasTabSession(): boolean {
   return getTabUser() !== null;
 }
