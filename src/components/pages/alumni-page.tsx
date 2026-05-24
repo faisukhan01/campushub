@@ -210,7 +210,7 @@ function getInitials(name: string) {
 
 const allDepartments = [...new Set(mockAlumni.map((a) => a.department))];
 const allBatches = [...new Set(mockAlumni.map((a) => a.batch))].sort().reverse();
-const allCompanies = [...new Set(mockAlumni.map((a) => a.company))];
+const allCompanies = [...new Set(mockAlumni.map((a) => a.currentCompany))];
 const allLocations = [...new Set(mockAlumni.map((a) => a.location))];
 
 // ---- Main Component ----
@@ -241,7 +241,7 @@ export function AlumniPage() {
         a.location.toLowerCase().includes(searchQuery.toLowerCase());
       const matchBatch = filterBatch === "all" || a.batch === filterBatch;
       const matchDept = filterDept === "all" || a.department === filterDept;
-      const matchCompany = filterCompany === "all" || a.company === filterCompany;
+      const matchCompany = filterCompany === "all" || a.currentCompany === filterCompany;
       const matchLocation = filterLocation === "all" || a.location === filterLocation;
       return matchSearch && matchBatch && matchDept && matchCompany && matchLocation;
     });

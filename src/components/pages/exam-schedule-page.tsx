@@ -239,7 +239,7 @@ export function ExamSchedulePage() {
   const isAdmin = currentRole === "InstituteAdmin" || currentRole === "SuperAdmin" || currentRole === "BranchAdmin";
   const isTeacher = currentRole === "Teacher";
   const isStudent = currentRole === "Student";
-  const isParent = currentRole === "Parent";
+  const isParent = false; // Parent role has been removed from the system
 
   return (
     <div className="page-transition space-y-4 sm:space-y-6">

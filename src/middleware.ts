@@ -18,16 +18,11 @@ const INSTITUTE_LEVEL = ["/api/branches", "/api/departments"]
 // These routes require at minimum BranchAdmin role
 const BRANCH_LEVEL = ["/api/batches", "/api/course-teachers"]
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Always let NextAuth handle its own routes
   if (pathname.startsWith("/api/auth")) {
-    return NextResponse.next()
-  }
-
-  // Temporary diagnostic endpoint — no auth required
-  if (pathname.startsWith("/api/debug-auth") || pathname.startsWith("/api/diagnose")) {
     return NextResponse.next()
   }
 

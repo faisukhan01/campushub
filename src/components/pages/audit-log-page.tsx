@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAppStore } from "@/store/app-store";
 import {
-  ScrollText, Search, Download, Filter, Shield, User, Settings,
+  ScrollText, Search, Download, Filter, Shield, User, Users, Settings,
   LogIn, LogOut, Edit, Trash2, FileText, CreditCard, Activity,
   AlertTriangle, CheckCircle2, Clock, ChevronDown, ChevronUp,
   Eye, RefreshCw, Monitor, Globe, Fingerprint,

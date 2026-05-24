@@ -126,7 +126,7 @@ export function CoursesPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          classLevel: selectedClass || formData.classLevel,
+          classLevel: selectedClass || "",
         }),
       });
       const json = await res.json();

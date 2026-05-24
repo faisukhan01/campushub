@@ -180,7 +180,7 @@ export function PlagiarismPage() {
   const [comparisonMode, setComparisonMode] = useState<"table" | "sidebyside">("table");
 
   // Role check: students get access denied
-  if (currentRole === "Student" || currentRole === "Parent") {
+  if (currentRole === "Student") {
     return (
       <div className="page-transition flex items-center justify-center min-h-[60vh]">
         <div className="text-center">

@@ -242,12 +242,7 @@ export interface Teacher extends User {
   batchIds: string[];
 }
 
-export interface Parent extends User {
-  role: "Parent";
-  childrenIds: string[];
-  children: Student[];
-  occupation?: string;
-}
+// Parent role has been removed from the system
 
 // -------------------- Course --------------------
 

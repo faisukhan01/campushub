@@ -124,9 +124,7 @@ function AppShell() {
 }
 
 export default function SuperAdminPage() {
-  const { status } = useSession({
-    refetchOnWindowFocus: false,
-  });
+  const { status } = useSession();
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
   const login = useAppStore((s) => s.login);
   const logout = useAppStore((s) => s.logout);

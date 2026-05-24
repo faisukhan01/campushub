@@ -168,7 +168,7 @@ export function TransportPage() {
   }, [searchQuery]);
 
   // ---- Student View ----
-  if (currentRole === "Student" || currentRole === "Parent") {
+  if (currentRole === "Student") {
     const myRoute = mockRoutes[0];
     const myBus = mockTracking[0];
 

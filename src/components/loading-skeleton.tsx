@@ -1,16 +1,19 @@
 import { cn } from "@/lib/utils";
+import type { CSSProperties } from "react";
 
 interface SkeletonProps {
   className?: string;
+  style?: CSSProperties;
 }
 
-function SkeletonBlock({ className }: SkeletonProps) {
+function SkeletonBlock({ className, style }: SkeletonProps) {
   return (
     <div
       className={cn(
         "skeleton-shine animate-pulse rounded-md",
         className
       )}
+      style={style}
     />
   );
 }

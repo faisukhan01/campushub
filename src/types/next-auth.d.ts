@@ -7,6 +7,8 @@ declare module "next-auth" {
       role: string
       instituteId?: string | null
       branchId?: string | null
+      classLevel?: string | null
+      section?: string | null
     } & DefaultSession["user"]
   }
 
@@ -14,6 +16,8 @@ declare module "next-auth" {
     role: string
     instituteId?: string | null
     branchId?: string | null
+    classLevel?: string | null
+    section?: string | null
   }
 }
 
@@ -23,5 +27,7 @@ declare module "next-auth/jwt" {
     role: string
     instituteId?: string | null
     branchId?: string | null
+    classLevel?: string | null
+    section?: string | null
   }
 }

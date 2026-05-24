@@ -243,7 +243,7 @@ export function HostelPage() {
   };
 
   // ---- Student View ----
-  if (currentRole === "Student" || currentRole === "Parent") {
+  if (currentRole === "Student") {
     const myRoom = mockRooms[0]; // Room 101
 
     return (
