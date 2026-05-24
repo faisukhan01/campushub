@@ -38,22 +38,13 @@ export async function proxy(request: NextRequest) {
                        request.headers.get("x-real-ip") ||
                        "unknown";
 
-      // If not authenticated, allow the page to show its own sign-in
-      if (!token) {
-        console.log(`[SUPER ADMIN ACCESS] Unauthenticated access attempt from ${clientIP}`);
-        return NextResponse.next();
+      // Always let the /superadmin page load — it has its own sign-in form.
+      // The page component handles rendering either the sign-in form or the
+      // dashboard depending on the tab-specific SuperAdmin session.
+      // We only block API routes (handled below), not the page itself.
+      if (token?.role === "SuperAdmin") {
+        console.log(`[SUPER ADMIN ACCESS] GRANTED - Authorized access by SuperAdmin ${token.userId} from ${clientIP}`);
       }
-
-      // If authenticated but not SuperAdmin, redirect to home and log
-      if (token.role !== "SuperAdmin") {
-        console.log(`[SUPER ADMIN ACCESS] BLOCKED - Unauthorized access attempt by user ${token.userId} (${token.role}) from ${clientIP}`);
-        const url = request.nextUrl.clone();
-        url.pathname = "/";
-        return NextResponse.redirect(url);
-      }
-
-      // Successful SuperAdmin access
-      console.log(`[SUPER ADMIN ACCESS] GRANTED - Authorized access by SuperAdmin ${token.userId} from ${clientIP}`);
       return NextResponse.next();
     } catch (error) {
       console.error("[SUPER ADMIN ACCESS] Error in route protection:", error);
