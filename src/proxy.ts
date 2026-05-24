@@ -18,7 +18,7 @@ const INSTITUTE_LEVEL = ["/api/branches", "/api/departments"]
 // These routes require at minimum BranchAdmin role
 const BRANCH_LEVEL = ["/api/batches", "/api/course-teachers"]
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Always let NextAuth handle its own routes
