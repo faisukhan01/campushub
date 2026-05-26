@@ -1,10 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useCallback } from "react";
 import { useAppStore } from "@/store/app-store";
-import type { UserRole } from "@/types";
-import SignInPage from "@/components/SignInPage";
 import SuperAdminSignIn from "@/components/SuperAdminSignIn";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AppHeader } from "@/components/app-header";
@@ -32,9 +29,8 @@ import { TeachersPage } from "@/components/pages/teachers-page";
 import { CalendarPage } from "@/components/pages/calendar-page";
 import { SubscriptionPage } from "@/components/pages/subscription-page";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Shield } from "lucide-react";
+import { Shield } from "lucide-react";
 import { TabIndicator } from "@/components/tab-indicator";
-import { getTabUser, clearTabUser } from "@/lib/tab-session";
 
 const pageComponents: Record<string, React.ComponentType> = {
   dashboard: DashboardPage,
@@ -85,7 +81,7 @@ function AppShell() {
             <Shield className="w-5 h-5 text-red-600" />
             <span className="text-sm font-semibold text-red-800">Super Admin Access</span>
           </div>
-          
+
           <AnimatePresence mode="wait">
             {PageComponent ? (
               <motion.div
@@ -123,89 +119,25 @@ function AppShell() {
   );
 }
 
+/**
+ * Super Admin portal entry point.
+ *
+ * Auth source of truth: Zustand store, initialised synchronously from THIS
+ * tab's sessionStorage on module load.  SuperAdminSignIn writes the JWT and
+ * user data to sessionStorage then calls login() directly on the store —
+ * no shared cookie is touched, no other tab is affected.
+ */
 export default function SuperAdminPage() {
-  const { status } = useSession();
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
-  const login = useAppStore((s) => s.login);
-  const logout = useAppStore((s) => s.logout);
-  const [sessionError, setSessionError] = useState(false);
-  const [hasInitialized, setHasInitialized] = useState(false);
+  const currentUser = useAppStore((s) => s.currentUser);
 
-  // Sync tab session → Zustand store on initial load.
-  // We deliberately do NOT read from the NextAuth cookie here.
-  // The shared cookie means every tab would inherit another tab's sign-in,
-  // so we only trust the tab-specific sessionStorage entry written by
-  // SuperAdminSignIn after a successful sign-in on THIS tab.
-  useEffect(() => {
-    if (hasInitialized) return;
-    if (status === "loading") return;
-
-    setHasInitialized(true);
-
-    const tabUser = typeof window !== "undefined" ? getTabUser() : null;
-
-    if (tabUser) {
-      // This tab has its own session — validate it is SuperAdmin.
-      if (tabUser.role !== "SuperAdmin") {
-        clearTabUser();
-        logout();
-        return;
-      }
-      if (!isAuthenticated || useAppStore.getState().currentUser?.id !== tabUser.id) {
-        login({
-          id: tabUser.id,
-          name: tabUser.name,
-          email: tabUser.email,
-          role: tabUser.role as UserRole,
-          instituteId: tabUser.instituteId,
-          branchId: tabUser.branchId,
-        });
-      }
-      return;
-    }
-
-    // No tab session — this tab has not signed in yet.
-    // Log out of Zustand in case it has stale state; the page will
-    // render the sign-in form.
-    if (isAuthenticated) {
-      logout();
-    }
-  }, [status, hasInitialized]);
-
-  // Timeout to detect stuck loading state
-  useEffect(() => {
-    if (status === "loading") {
-      const timeout = setTimeout(() => {
-        // If still loading after 5 seconds, show error
-        if (status === "loading") {
-          setSessionError(true);
-        }
-      }, 5000);
-      return () => clearTimeout(timeout);
-    }
-  }, [status]);
-
-  // If session error detected, show sign-in page
-  if (sessionError) {
+  // If this tab's session somehow belongs to a non-SuperAdmin user, show the
+  // sign-in form.  This is a safety net; it should not occur in normal use
+  // because SuperAdminSignIn already checks the role before calling login().
+  if (isAuthenticated && currentUser?.role !== "SuperAdmin") {
     return <SuperAdminSignIn />;
   }
 
-  // Loading state while NextAuth checks session
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-red-900 to-slate-900">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-red-500" />
-          <p className="text-sm text-red-200">Verifying Super Admin Access...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Zustand store is the single source of truth here.
-  // It is only populated when THIS tab went through SuperAdminSignIn,
-  // so checking isAuthenticated is sufficient — no need to inspect the
-  // shared NextAuth cookie which would let other tabs sneak through.
   if (isAuthenticated) {
     return (
       <motion.div
@@ -219,6 +151,6 @@ export default function SuperAdminPage() {
     );
   }
 
-  // Unauthenticated — show Super Admin sign-in
+  // Not authenticated in this tab — show the sign-in form
   return <SuperAdminSignIn />;
 }

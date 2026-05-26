@@ -1,12 +1,13 @@
+import { getRouteToken } from '@/lib/security'
 import { NextRequest, NextResponse } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+
 import { db } from '@/lib/db'
 
 const GRADES = ['1','2','3','4','5','6','7','8','9','10','11','12']
 
 export async function GET(request: NextRequest) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    const token = getRouteToken(request)
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const allowed = ['BranchAdmin','InstituteAdmin','SuperAdmin','Teacher']
@@ -92,7 +93,7 @@ export async function GET(request: NextRequest) {
 // Enroll a student into a class (set classLevel + section on the user)
 export async function PATCH(request: NextRequest) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    const token = getRouteToken(request)
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (token.role !== 'BranchAdmin' && token.role !== 'InstituteAdmin' && token.role !== 'SuperAdmin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

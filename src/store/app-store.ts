@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { UserRole, NavigationItem } from "@/types";
-import { getTabUser, setTabUser, clearTabUser } from "@/lib/tab-session";
+import { getTabUser, setTabUser, clearTabUser, clearTabJwt } from "@/lib/tab-session";
 
 // -------------------- Demo Users --------------------
 
@@ -267,9 +267,10 @@ export const useAppStore = create<AppState>((set, get) => {
     },
 
     logout: () => {
-      // Clear tab-specific session
+      // Clear this tab's session data and per-tab JWT
       clearTabUser();
-      
+      clearTabJwt();
+
       set({
         isAuthenticated: false,
         currentUser: null,
@@ -321,9 +322,10 @@ export const useAppStore = create<AppState>((set, get) => {
   },
 
   clearAll: () => {
-    // Clear tab-specific session
+    // Clear this tab's session data and JWT
     clearTabUser();
-    
+    clearTabJwt();
+
     set({
       isAuthenticated: false,
       currentUser: null,

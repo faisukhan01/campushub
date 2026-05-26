@@ -27,7 +27,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Bell, Moon, Search, Sun, User, LogOut, Settings } from "lucide-react";
-import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -230,19 +229,11 @@ export function AppHeader() {
             <DropdownMenuItem
               variant="destructive"
               className="cursor-pointer"
-              onClick={async () => {
-                // Clear Zustand store
+              onClick={() => {
+                // Clear this tab's Zustand state, sessionStorage user data,
+                // and per-tab JWT.  Other tabs are completely unaffected.
+                // Zustand reactively updates → page re-renders to sign-in form.
                 logout();
-                // Sign out from NextAuth
-                await signOut({ redirect: false });
-                // Check if we're on super admin page
-                const isSuperAdmin = window.location.pathname.startsWith('/superadmin');
-                // Reload to show login page (stay on superadmin if that's where we are)
-                if (isSuperAdmin) {
-                  window.location.reload();
-                } else {
-                  window.location.href = '/';
-                }
               }}
             >
               <LogOut className="mr-2 h-4 w-4" />

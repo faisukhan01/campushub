@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
-import { getToken } from "next-auth/jwt"
+
 import { db } from "@/lib/db"
-import { verifySuperAdminAccess, logSecurityEvent } from "@/lib/security"
+import { getRouteToken, verifySuperAdminAccess, logSecurityEvent } from "@/lib/security"
 
 export async function GET(request: NextRequest) {
   try {
     // Enhanced security check
-    const securityCheck = await verifySuperAdminAccess(request);
+    const securityCheck = verifySuperAdminAccess(request);
     if (!securityCheck.authorized) {
       logSecurityEvent({
         type: 'access_denied',
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Enhanced security check
-    const securityCheck = await verifySuperAdminAccess(request);
+    const securityCheck = verifySuperAdminAccess(request);
     if (!securityCheck.authorized) {
       logSecurityEvent({
         type: 'access_denied',
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    const token = getRouteToken(request)
     if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     if (token.role !== "SuperAdmin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
@@ -198,7 +198,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    const token = getRouteToken(request)
     if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     if (token.role !== "SuperAdmin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 

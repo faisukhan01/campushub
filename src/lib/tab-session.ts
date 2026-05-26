@@ -10,6 +10,7 @@
 
 const TAB_SESSION_KEY = 'tab_session_id';
 const TAB_USER_KEY = 'tab_user_data';
+const TAB_JWT_KEY = 'tab_jwt';
 
 const isBrowser = typeof window !== 'undefined';
 
@@ -57,8 +58,9 @@ export function getTabId(): string {
   } else {
     // New tab, fresh navigation, or inherited sessionStorage — start clean.
     if (stored) {
-      // Remove any user data that may have been copied from a parent tab.
+      // Remove any user / JWT data that may have been copied from a parent tab.
       sessionStorage.removeItem(`${TAB_USER_KEY}_${stored}`);
+      sessionStorage.removeItem(`${TAB_JWT_KEY}_${stored}`);
     }
     _cachedTabId = `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     sessionStorage.setItem(TAB_SESSION_KEY, _cachedTabId);
@@ -92,4 +94,29 @@ export function clearTabUser() {
 /** True when this tab has an active session. */
 export function hasTabSession(): boolean {
   return getTabUser() !== null;
+}
+
+// ─── Per-tab JWT (used for API Authorization header) ────────────────────────
+
+/**
+ * Store the per-tab JWT returned by /api/auth/tab-login.
+ * This token is sent as `Authorization: Bearer <token>` for every /api/ call
+ * so that different tabs can authenticate as different users simultaneously,
+ * completely independent of the shared next-auth session cookie.
+ */
+export function setTabJwt(jwt: string) {
+  if (!isBrowser) return;
+  sessionStorage.setItem(`${TAB_JWT_KEY}_${getTabId()}`, jwt);
+}
+
+/** Get the per-tab JWT for this browser tab. Returns null if not signed in. */
+export function getTabJwt(): string | null {
+  if (!isBrowser) return null;
+  return sessionStorage.getItem(`${TAB_JWT_KEY}_${getTabId()}`);
+}
+
+/** Remove the per-tab JWT (sign-out). */
+export function clearTabJwt() {
+  if (!isBrowser) return;
+  sessionStorage.removeItem(`${TAB_JWT_KEY}_${getTabId()}`);
 }

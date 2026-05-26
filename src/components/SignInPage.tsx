@@ -1,10 +1,14 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, Building2, Building, GraduationCap, User, ArrowLeft } from 'lucide-react';
-import { signIn } from 'next-auth/react';
-import { setTabUser } from '@/lib/tab-session';
+import {
+  Mail, Lock, Eye, EyeOff, Loader2, ArrowRight,
+  Building2, Building, GraduationCap, User, ArrowLeft,
+} from 'lucide-react';
+import { setTabUser, setTabJwt } from '@/lib/tab-session';
+import { useAppStore } from '@/store/app-store';
+import type { UserRole } from '@/types';
 
 // ==================== SVG Illustration ====================
 
@@ -81,6 +85,8 @@ interface SignInPageProps {
 }
 
 export default function SignInPage({ onBack }: SignInPageProps) {
+  const login = useAppStore((s) => s.login);
+
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -95,7 +101,6 @@ export default function SignInPage({ onBack }: SignInPageProps) {
   const handleRoleSelection = (role: string) => {
     setSelectedRole(role);
     setFieldsEnabled(true);
-    // Clear any previous credentials so the user always types their own
     setEmail('');
     setPassword('');
     setName('');
@@ -117,63 +122,93 @@ export default function SignInPage({ onBack }: SignInPageProps) {
     setIsLoading(true);
     setErrors({});
 
-    const credentials: Record<string, string> = {
-      email: identifier.trim(),
-      password: pwd,
-    };
+    try {
+      // ── Call our tab-specific login endpoint ──────────────────────────────
+      // This endpoint verifies credentials server-side and returns a signed
+      // JWT in the response body — it never touches the shared session cookie.
+      const res = await fetch('/api/auth/tab-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identifier: identifier.trim(),
+          password: pwd,
+          name: fullName?.trim(),
+        }),
+      });
 
-    if (fullName) {
-      credentials.name = fullName.trim();
-    }
+      const data = await res.json();
 
-    const result = await signIn('credentials', { 
-      ...credentials, 
-      redirect: false 
-    });
+      if (!res.ok) {
+        setIsLoading(false);
+        setErrors({ general: 'Invalid credentials. Please check your information and try again.' });
+        return;
+      }
 
-    if (result?.error) {
-      setIsLoading(false);
-      setErrors({ general: 'Invalid credentials. Please check your information and try again.' });
-    } else {
-      const response = await fetch('/api/auth/session');
-      const session = await response.json();
+      const { token, user } = data as {
+        token: string;
+        user: {
+          id: string;
+          email: string;
+          name: string;
+          role: string;
+          instituteId: string | null;
+          branchId: string | null;
+          classLevel: string | null;
+          section: string | null;
+        };
+      };
 
-      if (session?.user?.role === 'SuperAdmin') {
+      // SuperAdmin must use the dedicated /superadmin portal
+      if (user.role === 'SuperAdmin') {
         setIsLoading(false);
         setErrors({
           general: 'Super Admin accounts cannot sign in here. Please visit /superadmin to access the Super Admin portal.',
         });
-        await fetch('/api/auth/signout', { method: 'POST' });
         return;
       }
 
-      if (selectedRole && session?.user?.role !== selectedRole) {
+      // Role mismatch — the credentials belong to a different role
+      if (selectedRole && user.role !== selectedRole) {
         setIsLoading(false);
         setErrors({
-          general: `These credentials belong to a ${session?.user?.role} account. Please select "${session?.user?.role}" and try again.`,
+          general: `These credentials belong to a ${user.role} account. Please select "${user.role}" and try again.`,
         });
-        await fetch('/api/auth/signout', { method: 'POST' });
         return;
       }
 
-      // Store in this tab's session BEFORE reloading so page.tsx
-      // initialises from the tab session and doesn't inherit another tab's cookie.
-      if (session?.user) {
-        setTabUser({
-          id: session.user.id,
-          name: session.user.name ?? '',
-          email: session.user.email ?? '',
-          role: session.user.role,
-          avatar: '',
-          instituteId: session.user.instituteId ?? 'platform',
-          instituteName: '',
-          branchId: session.user.branchId ?? undefined,
-          classLevel: session.user.classLevel ?? undefined,
-          section: session.user.section ?? undefined,
-        });
-      }
+      // ── Store in this tab's sessionStorage ───────────────────────────────
+      // setTabJwt: used by the fetch interceptor for Authorization headers
+      // setTabUser: used for UI state initialisation on page reload
+      setTabJwt(token);
+      setTabUser({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: '',
+        instituteId: user.instituteId ?? 'platform',
+        instituteName: '',
+        branchId: user.branchId ?? undefined,
+        classLevel: user.classLevel ?? undefined,
+        section: user.section ?? undefined,
+      });
 
-      window.location.reload();
+      // ── Update Zustand store directly — no page reload needed ────────────
+      login({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role as UserRole,
+        instituteId: user.instituteId,
+        branchId: user.branchId,
+        classLevel: user.classLevel,
+        section: user.section,
+      });
+
+      // isAuthenticated is now true → page.tsx will re-render the AppShell
+    } catch {
+      setIsLoading(false);
+      setErrors({ general: 'A network error occurred. Please try again.' });
     }
   };
 
@@ -202,13 +237,12 @@ export default function SignInPage({ onBack }: SignInPageProps) {
         <div className="absolute top-20 left-10 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '8s' }} />
         <div className="absolute bottom-20 right-10 w-[500px] h-[500px] bg-green-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
       </div>
-      
+
       <div className="w-full max-w-5xl relative z-10">
         <div className="grid md:grid-cols-2 gap-0 bg-white rounded-2xl shadow-2xl overflow-hidden">
           {/* Left Panel */}
           <div className="relative flex flex-col items-center justify-center px-6 py-8 sm:px-8 sm:py-10 md:p-12 min-h-[200px] md:min-h-full bg-gradient-to-br from-emerald-700 via-green-700 to-emerald-800">
             <FloatingShapes />
-            
             <div className="relative z-10 text-center">
               <div className="mb-4 md:mb-6">
                 <WelcomePersonIllustration />
@@ -337,14 +371,10 @@ export default function SignInPage({ onBack }: SignInPageProps) {
                     }`}
                   >
                     <Building2 className={`w-4 h-4 transition-colors ${
-                      selectedRole === 'InstituteAdmin'
-                        ? 'text-emerald-600'
-                        : 'text-gray-600 group-hover:text-emerald-600'
+                      selectedRole === 'InstituteAdmin' ? 'text-emerald-600' : 'text-gray-600 group-hover:text-emerald-600'
                     }`} />
                     <span className={`text-[10px] font-medium transition-colors leading-tight text-center ${
-                      selectedRole === 'InstituteAdmin'
-                        ? 'text-emerald-700'
-                        : 'text-gray-700 group-hover:text-emerald-700'
+                      selectedRole === 'InstituteAdmin' ? 'text-emerald-700' : 'text-gray-700 group-hover:text-emerald-700'
                     }`}>Institute Admin</span>
                   </button>
 
@@ -359,14 +389,10 @@ export default function SignInPage({ onBack }: SignInPageProps) {
                     }`}
                   >
                     <Building className={`w-4 h-4 transition-colors ${
-                      selectedRole === 'BranchAdmin'
-                        ? 'text-blue-600'
-                        : 'text-gray-600 group-hover:text-blue-600'
+                      selectedRole === 'BranchAdmin' ? 'text-blue-600' : 'text-gray-600 group-hover:text-blue-600'
                     }`} />
                     <span className={`text-[10px] font-medium transition-colors leading-tight text-center ${
-                      selectedRole === 'BranchAdmin'
-                        ? 'text-blue-700'
-                        : 'text-gray-700 group-hover:text-blue-700'
+                      selectedRole === 'BranchAdmin' ? 'text-blue-700' : 'text-gray-700 group-hover:text-blue-700'
                     }`}>Branch Admin</span>
                   </button>
 
@@ -381,14 +407,10 @@ export default function SignInPage({ onBack }: SignInPageProps) {
                     }`}
                   >
                     <GraduationCap className={`w-4 h-4 transition-colors ${
-                      selectedRole === 'Teacher'
-                        ? 'text-purple-600'
-                        : 'text-gray-600 group-hover:text-purple-600'
+                      selectedRole === 'Teacher' ? 'text-purple-600' : 'text-gray-600 group-hover:text-purple-600'
                     }`} />
                     <span className={`text-[10px] font-medium transition-colors leading-tight text-center ${
-                      selectedRole === 'Teacher'
-                        ? 'text-purple-700'
-                        : 'text-gray-700 group-hover:text-purple-700'
+                      selectedRole === 'Teacher' ? 'text-purple-700' : 'text-gray-700 group-hover:text-purple-700'
                     }`}>Teacher</span>
                   </button>
                 </div>
@@ -404,14 +426,10 @@ export default function SignInPage({ onBack }: SignInPageProps) {
                   }`}
                 >
                   <User className={`w-4 h-4 transition-colors ${
-                    selectedRole === 'Student'
-                      ? 'text-orange-600'
-                      : 'text-gray-600 group-hover:text-orange-600'
+                    selectedRole === 'Student' ? 'text-orange-600' : 'text-gray-600 group-hover:text-orange-600'
                   }`} />
                   <span className={`text-[10px] font-medium transition-colors ${
-                    selectedRole === 'Student'
-                      ? 'text-orange-700'
-                      : 'text-gray-700 group-hover:text-orange-700'
+                    selectedRole === 'Student' ? 'text-orange-700' : 'text-gray-700 group-hover:text-orange-700'
                   }`}>Student</span>
                 </button>
               </div>

@@ -1,10 +1,11 @@
+import { getRouteToken } from '@/lib/security'
 import { NextRequest, NextResponse } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+
 import { db } from '@/lib/db'
 
 export async function POST(request: NextRequest) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    const token = getRouteToken(request)
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (!['Teacher', 'BranchAdmin', 'InstituteAdmin', 'SuperAdmin'].includes(token.role as string)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

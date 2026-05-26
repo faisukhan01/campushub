@@ -1,10 +1,11 @@
+import { getRouteToken } from '@/lib/security'
 import { NextRequest, NextResponse } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+
 import { db } from '@/lib/db'
 
 export async function GET(request: NextRequest) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    const token = getRouteToken(request)
     
     const { searchParams } = request.nextUrl
     const role = searchParams.get('role') || token?.role || 'Student'

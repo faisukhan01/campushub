@@ -3,10 +3,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Lock, User, Loader2, AlertTriangle } from 'lucide-react';
-import { signIn } from 'next-auth/react';
-import { setTabUser } from '@/lib/tab-session';
+import { setTabUser, setTabJwt } from '@/lib/tab-session';
+import { useAppStore } from '@/store/app-store';
+import type { UserRole } from '@/types';
 
 export default function SuperAdminSignIn() {
+  const login = useAppStore((s) => s.login);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -14,7 +17,7 @@ export default function SuperAdminSignIn() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       setError('Please enter both email and password.');
       return;
@@ -24,43 +27,70 @@ export default function SuperAdminSignIn() {
     setError('');
 
     try {
-      const result = await signIn('credentials', {
-        email: email.trim(),
-        password,
-        redirect: false,
+      // ── Call our tab-specific login endpoint ──────────────────────────────
+      // Returns a signed JWT in the response body — never touches the shared
+      // session cookie, so other tabs are completely unaffected.
+      const res = await fetch('/api/auth/tab-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identifier: email.trim(),
+          password,
+        }),
       });
 
-      if (result?.error) {
+      const data = await res.json();
+
+      if (!res.ok) {
         setError('Invalid credentials or insufficient permissions.');
         setIsLoading(false);
-      } else {
-        // Fetch the session and pin it to THIS tab before reloading.
-        // Without this, any other tab open at /superadmin would also
-        // auto-login because they share the same NextAuth cookie.
-        const response = await fetch('/api/auth/session');
-        const session = await response.json();
-
-        if (session?.user?.role !== 'SuperAdmin') {
-          setError('Invalid credentials or insufficient permissions.');
-          await fetch('/api/auth/signout', { method: 'POST' });
-          setIsLoading(false);
-          return;
-        }
-
-        setTabUser({
-          id: session.user.id,
-          name: session.user.name ?? '',
-          email: session.user.email ?? '',
-          role: session.user.role,
-          avatar: '',
-          instituteId: session.user.instituteId ?? 'platform',
-          instituteName: '',
-          branchId: session.user.branchId ?? undefined,
-        });
-
-        window.location.reload();
+        return;
       }
-    } catch (err) {
+
+      const { token, user } = data as {
+        token: string;
+        user: {
+          id: string;
+          email: string;
+          name: string;
+          role: string;
+          instituteId: string | null;
+          branchId: string | null;
+        };
+      };
+
+      // Only SuperAdmin can access this portal
+      if (user.role !== 'SuperAdmin') {
+        setError('Invalid credentials or insufficient permissions.');
+        setIsLoading(false);
+        return;
+      }
+
+      // ── Store in this tab's sessionStorage ───────────────────────────────
+      setTabJwt(token);
+      setTabUser({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: '',
+        instituteId: user.instituteId ?? 'platform',
+        instituteName: '',
+        branchId: user.branchId ?? undefined,
+      });
+
+      // ── Update Zustand store directly — no page reload needed ────────────
+      login({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role as UserRole,
+        instituteId: user.instituteId,
+        branchId: user.branchId,
+      });
+
+      // isAuthenticated is now true → superadmin/page.tsx re-renders AppShell
+    } catch {
       setError('An error occurred. Please try again.');
       setIsLoading(false);
     }
@@ -191,7 +221,7 @@ export default function SuperAdminSignIn() {
             <div className="flex items-start gap-2 text-xs text-gray-500">
               <Lock className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <p>
-                This is a secure area. All access attempts are logged and monitored. 
+                This is a secure area. All access attempts are logged and monitored.
                 Unauthorized access is strictly prohibited.
               </p>
             </div>

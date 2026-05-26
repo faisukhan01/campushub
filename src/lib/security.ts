@@ -3,8 +3,40 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+
+// ─── Middleware-injected auth context ────────────────────────────────────────
+
+/**
+ * Read the authenticated user context that the middleware (proxy.ts) injected
+ * into the request headers after verifying the per-tab JWT (or NextAuth cookie).
+ *
+ * Route handlers MUST use this instead of calling getToken() / getServerSession()
+ * directly.  By the time a handler runs, the middleware has already:
+ *   1. Verified the Authorization: Bearer <tab-jwt> header (or cookie fallback)
+ *   2. Written the verified identity into x-user-* request headers
+ *
+ * Those headers cannot be spoofed by the client because the middleware
+ * overwrites them with values it derives from the verified JWT.
+ *
+ * Returns null only if the route somehow bypassed the middleware (shouldn't
+ * happen for any route under /api/ except /api/auth/*).
+ */
+export function getRouteToken(request: NextRequest) {
+  const userId = request.headers.get('x-user-id');
+  const role   = request.headers.get('x-user-role');
+
+  if (!userId || !role) return null;
+
+  return {
+    userId,
+    role,
+    sub: userId,                                                   // NextAuth-compat alias
+    instituteId: request.headers.get('x-user-institute-id') || undefined,
+    branchId:    request.headers.get('x-user-branch-id')    || undefined,
+  };
+}
+
+// ─── SuperAdmin access helper ─────────────────────────────────────────────────
 
 /**
  * Rate limiting store (in-memory for development, use Redis in production)
@@ -47,57 +79,46 @@ export function rateLimit(
 }
 
 /**
- * Verify SuperAdmin access with enhanced security
+ * Verify SuperAdmin access with enhanced security.
+ *
+ * Reads the verified identity from middleware-injected headers — no cookie
+ * or re-verification needed, since the middleware already validated the JWT.
  */
-export async function verifySuperAdminAccess(request: NextRequest): Promise<{
+export function verifySuperAdminAccess(request: NextRequest): {
   authorized: boolean;
   userId?: string;
   email?: string;
   error?: string;
-}> {
-  try {
-    // Use getServerSession which relies on authOptions.secret (not raw env var)
-    // This is the recommended App Router approach and handles all secret sources
-    const session = await getServerSession(authOptions);
+} {
+  const token = getRouteToken(request);
 
-    if (!session?.user) {
-      return { authorized: false, error: 'Unauthorized - No session' };
-    }
-
-    // Verify SuperAdmin role
-    if (session.user.role !== 'SuperAdmin') {
-      console.warn(`[SECURITY] Unauthorized SuperAdmin access attempt:`, {
-        userId: session.user.id,
-        email: session.user.email,
-        role: session.user.role,
-        ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-        timestamp: new Date().toISOString(),
-      });
-      return { authorized: false, error: 'Forbidden - Insufficient permissions' };
-    }
-
-    // Rate limiting for SuperAdmin actions
-    const identifier = `superadmin_${session.user.id}`;
-    const rateCheck = rateLimit(identifier, 100, 60 * 1000); // 100 requests per minute
-
-    if (!rateCheck.allowed) {
-      console.warn(`[SECURITY] Rate limit exceeded for SuperAdmin:`, {
-        userId: session.user.id,
-        email: session.user.email,
-        resetTime: new Date(rateCheck.resetTime).toISOString(),
-      });
-      return { authorized: false, error: 'Rate limit exceeded' };
-    }
-
-    return {
-      authorized: true,
-      userId: session.user.id,
-      email: session.user.email ?? undefined,
-    };
-  } catch (error) {
-    console.error('[SECURITY] Error verifying SuperAdmin access:', error);
-    return { authorized: false, error: 'Internal security error' };
+  if (!token) {
+    return { authorized: false, error: 'Unauthorized - No session' };
   }
+
+  if (token.role !== 'SuperAdmin') {
+    console.warn(`[SECURITY] Unauthorized SuperAdmin access attempt:`, {
+      userId: token.userId,
+      role: token.role,
+      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+      timestamp: new Date().toISOString(),
+    });
+    return { authorized: false, error: 'Forbidden - Insufficient permissions' };
+  }
+
+  // Rate limiting for SuperAdmin actions
+  const identifier = `superadmin_${token.userId}`;
+  const rateCheck = rateLimit(identifier, 100, 60 * 1000); // 100 requests per minute
+
+  if (!rateCheck.allowed) {
+    console.warn(`[SECURITY] Rate limit exceeded for SuperAdmin:`, {
+      userId: token.userId,
+      resetTime: new Date(rateCheck.resetTime).toISOString(),
+    });
+    return { authorized: false, error: 'Rate limit exceeded' };
+  }
+
+  return { authorized: true, userId: token.userId };
 }
 
 /**

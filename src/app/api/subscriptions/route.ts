@@ -1,5 +1,6 @@
+import { getRouteToken } from '@/lib/security'
 import { NextRequest, NextResponse } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+
 import { db } from '@/lib/db'
 
 const PLAN_LIMITS: Record<string, { maxBranches: number | 'Unlimited'; maxUsers: number | 'Unlimited'; storage: string }> = {
@@ -10,7 +11,7 @@ const PLAN_LIMITS: Record<string, { maxBranches: number | 'Unlimited'; maxUsers:
 
 export async function GET(request: NextRequest) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    const token = getRouteToken(request)
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (token.role !== 'SuperAdmin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    const token = getRouteToken(request)
     if (!token || token.role !== 'SuperAdmin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = await request.json()
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    const token = getRouteToken(request)
     if (!token || token.role !== 'SuperAdmin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = await request.json()

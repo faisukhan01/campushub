@@ -1,9 +1,10 @@
+import { getRouteToken } from '@/lib/security'
 import { NextRequest, NextResponse } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+
 import { db } from '@/lib/db'
 
 export async function GET(request: NextRequest) {
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+  const token = getRouteToken(request)
   if (!token) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   }

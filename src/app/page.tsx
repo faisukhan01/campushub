@@ -1,10 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useState, useCallback } from "react";
 import { useAppStore } from "@/store/app-store";
-import { getTabUser, clearTabUser } from "@/lib/tab-session";
-import type { UserRole } from "@/types";
 import { LandingPage } from "@/components/landing-page";
 import SignInPage from "@/components/SignInPage";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -36,7 +33,6 @@ import { UserSettingsPage } from "@/components/pages/user-settings-page";
 import { SchoolClassesPage } from "@/components/pages/school-classes-page";
 import { TeacherClassesPage } from "@/components/pages/teacher-classes-page";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
 import { TabIndicator } from "@/components/tab-indicator";
 
 const pageComponents: Record<string, React.ComponentType> = {
@@ -125,72 +121,23 @@ function AppShell() {
 
 type UnauthView = "landing" | "signin";
 
+/**
+ * Main entry point for the regular portal (InstituteAdmin, BranchAdmin,
+ * Teacher, Student).
+ *
+ * Auth source of truth: Zustand store, which is initialised synchronously
+ * from THIS tab's sessionStorage on module load (see app-store.ts).
+ *
+ * No useSession(), no hasInitialized flag, no cross-tab shared-cookie reads.
+ * Each tab's Zustand instance is completely independent.
+ */
 export default function Home() {
-  const { status } = useSession();
+  // isAuthenticated is read from Zustand, which was populated synchronously
+  // from sessionStorage at module load — no async wait required.
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
-  const login = useAppStore((s) => s.login);
-  const logout = useAppStore((s) => s.logout);
   const [unauthView, setUnauthView] = useState<UnauthView>("landing");
-  const [hasInitialized, setHasInitialized] = useState(false);
-  const [tabId] = useState(() => {
-    // Generate unique tab ID on mount
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('tab_session_id') || `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    }
-    return '';
-  });
 
-  // Sync NextAuth session → Zustand store ONLY for THIS TAB
-  useEffect(() => {
-    // Only run once when component first mounts
-    if (hasInitialized) return;
-    
-    if (status === "loading") return;
-    
-    setHasInitialized(true);
-
-    // Check if this tab already has a session
-    const tabUser = typeof window !== 'undefined' ? getTabUser() : null;
-
-    // If this tab has a session, it is authoritative — use it unconditionally.
-    // Never invalidate it based on the shared NextAuth cookie (another tab may have changed it).
-    if (tabUser) {
-      if (!isAuthenticated || useAppStore.getState().currentUser?.id !== tabUser.id) {
-        login({
-          id: tabUser.id,
-          name: tabUser.name,
-          email: tabUser.email,
-          role: tabUser.role as UserRole,
-          instituteId: tabUser.instituteId,
-          branchId: tabUser.branchId,
-          classLevel: tabUser.classLevel,
-          section: tabUser.section,
-        });
-      }
-      return;
-    }
-
-    // No tab session for this tab — show sign-in page.
-    // Do NOT auto-login from the NextAuth cookie; another tab may be signed in
-    // and every tab must sign in independently to get its own tab session.
-    if (isAuthenticated) {
-      logout();
-    }
-  }, [status, hasInitialized, tabId]); // Added tabId to ensure tab-specific behavior
-
-  // Loading state while NextAuth checks session
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Authenticated — show the main app
+  // Authenticated: show the main application shell
   if (isAuthenticated) {
     return (
       <motion.div
@@ -204,7 +151,7 @@ export default function Home() {
     );
   }
 
-  // Unauthenticated — show landing or sign-in
+  // Unauthenticated: show landing page or sign-in form
   return (
     <AnimatePresence mode="wait">
       {unauthView === "signin" ? (
